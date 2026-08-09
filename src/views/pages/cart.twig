@@ -1,0 +1,56 @@
+{#
+    Cart page.
+    | Variable   | Type  | Description                                |
+    | cart_items | array | each: name, quantity, price, image, url    |
+    | cart_total | array | subtotal, total                            |
+#}
+{% extends "layouts.master" %}
+
+{% block title %}{{ trans('cart.title') }} — {{ store.name }}{% endblock %}
+
+{% block content %}
+    <div class="container cart-page">
+        <header class="page-head">
+            <h1>{{ trans('cart.title') }}</h1>
+        </header>
+
+        {% if cart_items|length > 0 %}
+            <div class="cart-layout">
+                <ul class="cart-items">
+                    {% for item in cart_items %}
+                        <li class="cart-item">
+                            {% if item.image %}
+                                <img src="{{ item.image }}" alt="{{ item.name }}">
+                            {% endif %}
+                            <div class="cart-item__info">
+                                <a href="{{ item.url }}">{{ item.name }}</a>
+                                <span class="cart-item__meta">{{ item.quantity }} × {{ item.price }}</span>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+
+                <aside class="cart-summary" aria-label="{{ trans('cart.summary') }}">
+                    <h2>{{ trans('cart.summary') }}</h2>
+                    <div class="cart-summary__row">
+                        <span>{{ trans('cart.subtotal') }}</span>
+                        <span>{{ falak_currency(cart_total.subtotal) }}</span>
+                    </div>
+                    <div class="cart-summary__row cart-summary__row--total">
+                        <span>{{ trans('cart.total') }}</span>
+                        <span>{{ falak_currency(cart_total.total) }}</span>
+                    </div>
+                    <button class="btn btn--primary btn--block" type="button">{{ trans('cart.checkout') }}</button>
+                </aside>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-state__icon" aria-hidden="true">🛒</div>
+                <p>{{ trans('cart.empty') }}</p>
+                <a class="btn btn--primary" href="/products">{{ trans('cart.start_shopping') }}</a>
+            </div>
+        {% endif %}
+    </div>
+
+    {% component cart_below %}
+{% endblock %}

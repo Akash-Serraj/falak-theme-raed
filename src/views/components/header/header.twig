@@ -1,0 +1,61 @@
+{#
+    Site header — statically included from master.twig via {% component 'header.header' %}.
+
+    Al-Mahud layout: the top bar carries the brand, the page menu (main-menu)
+    and actions; the second bar carries ONLY the categories menu — a separate
+    tenant menu with the handle `categories-menu`, managed like any other menu.
+    No categories menu -> no second bar.
+#}
+<header class="site-header{{ theme.settings.get('header_is_sticky', true) ? ' site-header--sticky' : '' }}">
+    <div class="site-header__topbar">
+        <div class="container site-header__topbar-inner">
+            <button class="menu-toggle" type="button" data-menu-toggle
+                    aria-label="{{ trans('common.menu') }}" aria-expanded="false" aria-controls="main-menu">
+                <span></span><span></span><span></span>
+            </button>
+
+            <a href="{{ store.url }}" class="site-header__logo" aria-label="{{ store.name }}">
+                {% if store.logo %}
+                    <img src="{{ store.logo }}" alt="{{ store.name }}" width="42" height="42">
+                {% else %}
+                    <span>{{ store.name }}</span>
+                {% endif %}
+            </a>
+
+            {% component 'header.menu' %}
+
+            <div class="site-header__actions">
+                {# Switches ?lang= and reloads; app.js keeps the choice on every internal link. #}
+                <a href="#" class="lang-switch" data-set-lang="{{ user.language.code == 'ar' ? 'en' : 'ar' }}">
+                    {{ trans('lang.other') }}
+                </a>
+
+                <a href="/cart" class="cart-link">
+                    <span>{{ trans('cart.title') }}</span>
+                    <span class="cart-link__count" id="cart-count">{{ cart_count }}</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {% if menus.categories_menu|default([])|length > 0 %}
+        <div class="site-header__navbar">
+            <div class="container">
+                <nav class="cat-bar" aria-label="{{ trans('common.categories') }}">
+                    <ul>
+                        {% for item in menus.categories_menu %}
+                            <li>
+                                <a href="{{ item.url }}"{{ item.is_new_tab ? ' target="_blank" rel="noopener"' : '' }}>
+                                    {% if item.image %}<img src="{{ item.image }}" alt="" width="22" height="22">{% endif %}
+                                    {{ item.title }}
+                                </a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="menu-backdrop" data-menu-backdrop hidden></div>
+</header>

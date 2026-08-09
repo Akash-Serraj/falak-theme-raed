@@ -1,0 +1,31 @@
+{#
+    Customer-area layout — account pages share a side navigation.
+    Extends master; pages fill `account_content` and set `account_page`
+    (a key matching one of the nav items) to highlight the current item.
+
+    NOTE: the customer storefront phase is not wired yet — every page under
+    pages/customer/ is data-guarded and renders an empty state until the
+    platform provides page data.
+#}
+{% extends "layouts.master" %}
+
+{% block content %}
+    <div class="container account">
+        <div class="account__layout">
+            <aside class="account__nav" aria-label="{{ trans('account.title') }}">
+                <nav>
+                    <ul>
+                        <li><a href="/customer/profile"{{ account_page|default('') == 'profile' ? ' class="is-active"' : '' }}>{{ trans('account.profile') }}</a></li>
+                        <li><a href="/customer/orders"{{ account_page|default('') == 'orders' ? ' class="is-active"' : '' }}>{{ trans('account.orders') }}</a></li>
+                        <li><a href="/customer/wishlist"{{ account_page|default('') == 'wishlist' ? ' class="is-active"' : '' }}>{{ trans('account.wishlist') }}</a></li>
+                        <li><a href="/customer/notifications"{{ account_page|default('') == 'notifications' ? ' class="is-active"' : '' }}>{{ trans('account.notifications') }}</a></li>
+                    </ul>
+                </nav>
+            </aside>
+
+            <div class="account__content">
+                {% block account_content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

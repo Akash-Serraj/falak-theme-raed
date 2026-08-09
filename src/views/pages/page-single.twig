@@ -1,0 +1,26 @@
+{#
+    Generic merchant page — renders EVERY merchant-created page (content + builder types).
+    | Variable     | Type    | Description                                    |
+    | page.id      | int     |                                                |
+    | page.title   | string  | localized server-side                          |
+    | page.slug    | string  |                                                |
+    | page.type    | string  | 'content' or 'builder'                         |
+    | page.content | ?string | sanitized HTML — content type only             |
+#}
+{% extends "layouts.master" %}
+
+{% block title %}{{ page.title }} — {{ store.name }}{% endblock %}
+
+{% block content %}
+    {% if page.type == 'builder' %}
+        {# merchant-composed sections for THIS page (tenant_theme_components by tenant_page_id) #}
+        {% component page %}
+    {% else %}
+        <div class="container content-page">
+            <h1>{{ page.title }}</h1>
+            <div class="content-page__body">
+                {{ page.content|raw }}
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}

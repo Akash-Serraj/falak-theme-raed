@@ -1,0 +1,38 @@
+{#
+    Blog listing.
+    | Variable | Type  | Description                                            |
+    | articles | array | each: title, excerpt, image, url, created_at — pending |
+#}
+{% extends "layouts.master" %}
+
+{% block title %}{{ trans('blog.title') }} — {{ store.name }}{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <header class="page-head">
+            <h1>{{ trans('blog.title') }}</h1>
+        </header>
+
+        {% if articles|default([])|length > 0 %}
+            <div class="article-grid">
+                {% for article in articles %}
+                    <a class="article-card" href="{{ article.url }}">
+                        {% if article.image %}
+                            <img src="{{ article.image }}" alt="{{ article.title }}" loading="lazy">
+                        {% endif %}
+                        <div class="article-card__body">
+                            <h3>{{ article.title }}</h3>
+                            {% if article.excerpt|default(null) %}<p>{{ article.excerpt }}</p>{% endif %}
+                            <time>{{ article.created_at|date('Y/m/d') }}</time>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-state__icon" aria-hidden="true">📝</div>
+                <p>{{ trans('blog.no_articles') }}</p>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

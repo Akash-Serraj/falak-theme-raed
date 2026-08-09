@@ -1,0 +1,28 @@
+{#
+    Post-checkout confirmation.
+    | Variable | Type   | Description                                  |
+    | order    | ?array | number, total, url — pending checkout phase  |
+#}
+{% extends "layouts.master" %}
+
+{% block title %}{{ trans('thank_you.title') }} — {{ store.name }}{% endblock %}
+
+{% block content %}
+    <div class="container thank-you">
+        <div class="thank-you__icon" aria-hidden="true">✓</div>
+        <h1>{{ trans('thank_you.title') }}</h1>
+        <p>{{ trans('thank_you.message') }}</p>
+
+        {% if order|default(null) %}
+            <p class="thank-you__order">
+                {{ trans('account.order') }} <strong>#{{ order.number }}</strong>
+                — {{ falak_currency(order.total|default(0)) }}
+            </p>
+            {% if order.url|default(null) %}
+                <a class="btn btn--primary" href="{{ order.url }}">{{ trans('thank_you.view_order') }}</a>
+            {% endif %}
+        {% endif %}
+
+        <a class="btn btn--outline" href="{{ store.url }}">{{ trans('common.back_home') }}</a>
+    </div>
+{% endblock %}

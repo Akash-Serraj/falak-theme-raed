@@ -1,0 +1,34 @@
+{#
+    Search results — same card shape as the product listing.
+    | Variable | Type    | Description                       |
+    | products | array   | matching products — pending wiring |
+    | query    | ?string | the search term                    |
+#}
+{% extends "layouts.master" %}
+
+{% block title %}{{ trans('search.title') }} — {{ store.name }}{% endblock %}
+
+{% block content %}
+    <div class="container product-listing">
+        <header class="page-head">
+            <h1>{{ trans('search.title') }}</h1>
+            {% if query|default('') %}
+                <p class="page-head__meta">{{ trans('search.results_for') }} «{{ query }}»</p>
+            {% endif %}
+        </header>
+
+        {% if products|default([])|length > 0 %}
+            <div class="product-grid">
+                {% for product in products %}
+                    {% include 'pages.partials.product-card' %}
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-state__icon" aria-hidden="true">🔍</div>
+                <p>{{ trans('search.no_results') }}</p>
+                <a class="btn btn--outline" href="/products">{{ trans('common.products') }}</a>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

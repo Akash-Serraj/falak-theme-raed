@@ -1,0 +1,169 @@
+{
+    "name": {
+        "ar": "فلك 2026",
+        "en": "Falak Theme 2026"
+    },
+    "slug": "falak-theme-2026",
+    "version": "1.0.0",
+    "author": "Falak Cart",
+    "author_email": "themes@falakcart.sa",
+    "support_url": "https://falakcart.sa/support",
+    "description": {
+        "ar": "الثيم الافتراضي لمنصة فلك كارت — المرجع الرسمي لبنية الثيمات",
+        "en": "Falak Cart's default theme — the official reference implementation of the theme structure"
+    },
+    "features": [
+        "fonts",
+        "color",
+        "breadcrumb"
+    ],
+    "compatibility": {
+        "platform_min": "1.0.0",
+        "platform_max": null
+    },
+    "settings": [
+        {
+            "group": "header",
+            "name": { "ar": "خيارات أعلى الصفحة", "en": "Top of page options" },
+            "icon": "layout-top-line",
+            "fields": [
+                {
+                    "id": "header_is_sticky",
+                    "type": "boolean",
+                    "format": "switch",
+                    "label": { "ar": "تثبيت القائمة الرئيسية أعلى الصفحة عند التمرير", "en": "Keep the main menu fixed at the top when scrolling" },
+                    "description": { "ar": "يُنصح بإلغاء تفعيلها في حال وجود عناصر كثيرة في القائمة", "en": "Recommended off if the menu has many items" },
+                    "value": true
+                },
+                {
+                    "id": "topnav_is_dark",
+                    "type": "boolean",
+                    "format": "switch",
+                    "label": { "ar": "شريط علوي داكن", "en": "Dark top bar" },
+                    "value": false
+                }
+            ]
+        },
+        {
+            "group": "footer",
+            "name": { "ar": "خيارات أسفل الصفحة", "en": "Bottom of page options" },
+            "icon": "layout-bottom-line",
+            "fields": [
+                {
+                    "id": "footer_is_dark",
+                    "type": "boolean",
+                    "format": "switch",
+                    "label": { "ar": "الوضع الداكن للفوتر", "en": "Dark footer" },
+                    "value": false
+                },
+                {
+                    "id": "footer_about",
+                    "type": "string",
+                    "format": "textarea",
+                    "label": { "ar": "نبذة عن المتجر", "en": "About the store" },
+                    "description": { "ar": "نص قصير يظهر أسفل اسم المتجر في الفوتر", "en": "A short line shown under the store name in the footer" },
+                    "multilanguage": true,
+                    "required": false,
+                    "maxLength": 200
+                }
+            ]
+        },
+        {
+            "group": "social",
+            "name": { "ar": "حسابات التواصل الاجتماعي", "en": "Social media accounts" },
+            "icon": "share-line",
+            "fields": [
+                {
+                    "id": "social_instagram",
+                    "type": "string",
+                    "format": "text",
+                    "label": { "ar": "انستقرام", "en": "Instagram" },
+                    "description": { "ar": "رابط الحساب كاملاً", "en": "Full profile URL" },
+                    "required": false,
+                    "maxLength": 255
+                },
+                {
+                    "id": "social_x",
+                    "type": "string",
+                    "format": "text",
+                    "label": { "ar": "إكس (تويتر)", "en": "X (Twitter)" },
+                    "required": false,
+                    "maxLength": 255
+                },
+                {
+                    "id": "social_tiktok",
+                    "type": "string",
+                    "format": "text",
+                    "label": { "ar": "تيك توك", "en": "TikTok" },
+                    "required": false,
+                    "maxLength": 255
+                },
+                {
+                    "id": "social_snapchat",
+                    "type": "string",
+                    "format": "text",
+                    "label": { "ar": "سناب شات", "en": "Snapchat" },
+                    "required": false,
+                    "maxLength": 255
+                },
+                {
+                    "id": "social_youtube",
+                    "type": "string",
+                    "format": "text",
+                    "label": { "ar": "يوتيوب", "en": "YouTube" },
+                    "required": false,
+                    "maxLength": 255
+                },
+                {
+                    "id": "social_whatsapp",
+                    "type": "string",
+                    "format": "text",
+                    "label": { "ar": "واتساب", "en": "WhatsApp" },
+                    "description": { "ar": "مثال: https://wa.me/9665xxxxxxxx", "en": "Example: https://wa.me/9665xxxxxxxx" },
+                    "required": false,
+                    "maxLength": 255
+                }
+            ]
+        },
+        {
+            "group": "product",
+            "name": { "ar": "خيارات صفحة المنتج", "en": "Product page options" },
+            "icon": "shopping-bag-line",
+            "fields": [
+                {
+                    "id": "product_show_breadcrumbs",
+                    "type": "boolean",
+                    "format": "switch",
+                    "label": { "ar": "إظهار مسار التنقل في صفحة المنتج", "en": "Show breadcrumbs on the product page" },
+                    "value": true
+                },
+                {
+                    "id": "product_image_fit",
+                    "type": "items",
+                    "format": "dropdown-list",
+                    "label": { "ar": "طريقة عرض صور المنتج", "en": "Product image display mode" },
+                    "value": "contain",
+                    "options": [
+                        { "label": { "ar": "تغطية كامل المساحة (Cover)", "en": "Cover the full area (Cover)" }, "value": "cover" },
+                        { "label": { "ar": "إظهار الصورة كاملة في المنتصف (Contain)", "en": "Show the full image centered (Contain)" }, "value": "contain" }
+                    ]
+                }
+            ]
+        }
+    ],
+    "presets": [
+        {
+            "id": "default",
+            "name": { "ar": "الأساسي", "en": "Default" },
+            "settings": {}
+        },
+        {
+            "id": "dark",
+            "name": { "ar": "داكن", "en": "Dark" },
+            "settings": {
+                "topnav_is_dark": true,
+                "footer_is_dark": true
+            }
+        }
+    ]
+}

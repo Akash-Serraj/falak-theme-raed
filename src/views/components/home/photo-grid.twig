@@ -1,0 +1,32 @@
+{#
+    Photo grid — merchant-placeable image tiles with optional links.
+    | Variable                 | Type    | Description                 |
+    | component.title          | ?string | section title               |
+    | component.items[].image  | string  | image URL                   |
+    | component.items[].title  | ?string | caption, localized          |
+    | component.items[].url    | ?string | tile link                   |
+    | position                 | int     |                             |
+#}
+<section class="block block--photo-grid" id="photo-grid-{{ position }}">
+    <div class="container">
+        {% if component.title %}
+            <h2 class="block__title">{{ component.title }}</h2>
+        {% endif %}
+
+        <div class="photo-grid">
+            {% for item in component.items %}
+                {% if item.url|default(null) %}
+                    <a class="photo-tile" href="{{ item.url }}">
+                        <img src="{{ item.image }}" alt="{{ item.title|default('') }}" loading="lazy">
+                        {% if item.title %}<span class="photo-tile__caption">{{ item.title }}</span>{% endif %}
+                    </a>
+                {% else %}
+                    <div class="photo-tile">
+                        <img src="{{ item.image }}" alt="{{ item.title|default('') }}" loading="lazy">
+                        {% if item.title %}<span class="photo-tile__caption">{{ item.title }}</span>{% endif %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</section>

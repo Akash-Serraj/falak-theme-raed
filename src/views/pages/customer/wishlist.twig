@@ -1,0 +1,28 @@
+{#
+    Customer wishlist.
+    | Variable | Type  | Description                             |
+    | products | array | product-card shape — pending wiring     |
+#}
+{% extends "layouts.customer" %}
+
+{% set account_page = 'wishlist' %}
+
+{% block title %}{{ trans('account.wishlist') }} — {{ store.name }}{% endblock %}
+
+{% block account_content %}
+    <h1>{{ trans('account.wishlist') }}</h1>
+
+    {% if products|default([])|length > 0 %}
+        <div class="product-grid">
+            {% for product in products %}
+                {% include 'pages.partials.product-card' %}
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-state__icon" aria-hidden="true">♡</div>
+            <p>{{ trans('account.no_wishlist') }}</p>
+            <a class="btn btn--primary" href="/products">{{ trans('cart.start_shopping') }}</a>
+        </div>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,35 @@
+{#
+    Customer orders list.
+    | Variable | Type  | Description                                                |
+    | orders   | array | each: id, number, status, created_at, total, url — pending |
+#}
+{% extends "layouts.customer" %}
+
+{% set account_page = 'orders' %}
+
+{% block title %}{{ trans('account.orders') }} — {{ store.name }}{% endblock %}
+
+{% block account_content %}
+    <h1>{{ trans('account.orders') }}</h1>
+
+    {% if orders|default([])|length > 0 %}
+        <ul class="order-list">
+            {% for order in orders %}
+                <li class="order-row">
+                    <a href="{{ order.url }}" class="order-row__main">
+                        <span class="order-row__number">#{{ order.number }}</span>
+                        <span class="order-row__date">{{ order.created_at|date('Y/m/d') }}</span>
+                    </a>
+                    <span class="order-status order-status--{{ order.status }}">{{ trans('account.status.' ~ order.status) }}</span>
+                    <span class="order-row__total">{{ falak_currency(order.total) }}</span>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-state__icon" aria-hidden="true">📦</div>
+            <p>{{ trans('account.no_orders') }}</p>
+            <a class="btn btn--primary" href="/products">{{ trans('cart.start_shopping') }}</a>
+        </div>
+    {% endif %}
+{% endblock %}

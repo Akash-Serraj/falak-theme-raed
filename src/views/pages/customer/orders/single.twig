@@ -1,0 +1,60 @@
+{#
+    Single order.
+    | Variable | Type   | Description                                                     |
+    | order    | ?array | number, status, created_at, items[], subtotal, shipping, total  |
+    |          |        | items[]: name, quantity, price, image, url                      |
+#}
+{% extends "layouts.customer" %}
+
+{% set account_page = 'orders' %}
+
+{% block title %}{{ trans('account.order') }} #{{ order.number|default('') }} — {{ store.name }}{% endblock %}
+
+{% block account_content %}
+    {% if order|default(null) %}
+        <header class="order-head">
+            <h1>{{ trans('account.order') }} #{{ order.number }}</h1>
+            <span class="order-status order-status--{{ order.status }}">{{ trans('account.status.' ~ order.status) }}</span>
+        </header>
+        <p class="order-head__date">{{ order.created_at|date('Y/m/d') }}</p>
+
+        <ul class="cart-items">
+            {% for item in order.items|default([]) %}
+                <li class="cart-item">
+                    {% if item.image %}<img src="{{ item.image }}" alt="{{ item.name }}">{% endif %}
+                    <div class="cart-item__info">
+                        {% if item.url %}
+                            <a href="{{ item.url }}">{{ item.name }}</a>
+                        {% else %}
+                            <span>{{ item.name }}</span>
+                        {% endif %}
+                        <span class="cart-item__meta">{{ item.quantity }} × {{ falak_currency(item.price) }}</span>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+
+        <div class="order-totals">
+            <div class="cart-summary__row">
+                <span>{{ trans('cart.subtotal') }}</span>
+                <span>{{ falak_currency(order.subtotal|default(0)) }}</span>
+            </div>
+            {% if order.shipping|default(null) %}
+                <div class="cart-summary__row">
+                    <span>{{ trans('account.shipping') }}</span>
+                    <span>{{ falak_currency(order.shipping) }}</span>
+                </div>
+            {% endif %}
+            <div class="cart-summary__row cart-summary__row--total">
+                <span>{{ trans('cart.total') }}</span>
+                <span>{{ falak_currency(order.total|default(0)) }}</span>
+            </div>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-state__icon" aria-hidden="true">📦</div>
+            <p>{{ trans('account.order_not_found') }}</p>
+            <a class="btn btn--outline" href="/customer/orders">{{ trans('account.orders') }}</a>
+        </div>
+    {% endif %}
+{% endblock %}

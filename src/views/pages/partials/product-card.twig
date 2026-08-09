@@ -1,0 +1,24 @@
+{#
+    Product card — shared by listing, search, brand and wishlist pages.
+    Expects `product`: id, name, price (formatted), image, url.
+    The name link stretches over the card; the buy button sits above it.
+#}
+<div class="product-card">
+    <span class="product-card__media">
+        {% if product.image %}
+            <img src="{{ product.image }}" alt="{{ product.name }}" loading="lazy">
+        {% else %}
+            <span class="product-card__placeholder" aria-hidden="true">🛍</span>
+        {% endif %}
+    </span>
+
+    <h3><a class="product-card__link" href="{{ product.url }}">{{ product.name }}</a></h3>
+    <p class="product-card__price">{{ product.price }}</p>
+
+    <button class="btn btn--card" type="button"
+            data-add-to-cart
+            data-product-id="{{ product.id }}"
+            data-added-text="{{ trans('product.added_to_cart') }}">
+        <span data-label>{{ trans('product.add_to_cart') }}</span>
+    </button>
+</div>

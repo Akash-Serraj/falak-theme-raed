@@ -1,0 +1,73 @@
+{
+    "key": "falak-testimonials",
+    "path": "home.testimonials",
+    "title": {
+        "ar": "آراء العملاء",
+        "en": "Testimonials"
+    },
+    "icon": "chat-smile-line",
+    "is_default": true,
+    "areas": ["home", "pages"],
+    "fields": [
+        {
+            "id": "title",
+            "type": "string",
+            "format": "text",
+            "label": { "ar": "العنوان", "en": "Title" },
+            "multilanguage": true,
+            "required": false,
+            "maxLength": 100,
+            "value": { "ar": "آراء عملائنا", "en": "What our customers say" }
+        },
+        {
+            "id": "items",
+            "type": "collection",
+            "format": "collection",
+            "label": { "ar": "التقييمات", "en": "Reviews" },
+            "item_label": { "ar": "تقييم", "en": "Review" },
+            "required": true,
+            "minLength": 1,
+            "maxLength": 30,
+            "value": [
+                {
+                    "items.name": "ندى الحسيني",
+                    "items.stars": 5,
+                    "items.text": { "ar": "تجربة تسوق رائعة وسرعة في التوصيل ❤️", "en": "Amazing shopping experience and fast delivery ❤️" }
+                },
+                {
+                    "items.name": "خالد الأحمد",
+                    "items.stars": 5,
+                    "items.text": { "ar": "منتجات عالية الجودة وتعامل راقٍ 👏", "en": "High quality products and great service 👏" }
+                }
+            ],
+            "fields": [
+                {
+                    "id": "items.name",
+                    "type": "string",
+                    "format": "text",
+                    "label": { "ar": "اسم العميل", "en": "Customer name" },
+                    "required": true,
+                    "maxLength": 80
+                },
+                {
+                    "id": "items.stars",
+                    "type": "number",
+                    "format": "integer",
+                    "label": { "ar": "عدد النجوم", "en": "Stars" },
+                    "value": 5,
+                    "minimum": 1,
+                    "maximum": 5
+                },
+                {
+                    "id": "items.text",
+                    "type": "string",
+                    "format": "textarea",
+                    "label": { "ar": "نص التقييم", "en": "Review text" },
+                    "multilanguage": true,
+                    "required": true,
+                    "maxLength": 255
+                }
+            ]
+        }
+    ]
+}

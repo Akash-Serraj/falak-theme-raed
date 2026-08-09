@@ -1,0 +1,33 @@
+{#
+    Single brand — its products, same card shape as the listing.
+    | Variable | Type   | Description                          |
+    | brand    | ?array | name, logo                           |
+    | products | array  | product cards — pending wiring       |
+#}
+{% extends "layouts.master" %}
+
+{% block title %}{{ brand.name|default(trans('brands.title')) }} — {{ store.name }}{% endblock %}
+
+{% block content %}
+    <div class="container product-listing">
+        <header class="page-head brand-head">
+            {% if brand.logo|default(null) %}
+                <img class="brand-head__logo" src="{{ brand.logo }}" alt="{{ brand.name }}">
+            {% endif %}
+            <h1>{{ brand.name|default(trans('brands.title')) }}</h1>
+        </header>
+
+        {% if products|default([])|length > 0 %}
+            <div class="product-grid">
+                {% for product in products %}
+                    {% include 'pages.partials.product-card' %}
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-state__icon" aria-hidden="true">🛒</div>
+                <p>{{ trans('common.no_products') }}</p>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

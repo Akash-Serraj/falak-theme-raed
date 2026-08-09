@@ -1,0 +1,23 @@
+{#
+    Promo banner — merchant-placeable component (home + builder pages).
+    | Variable              | Type    | Description                       |
+    | component.image       | string  | background image URL              |
+    | component.title       | ?string | localized server-side             |
+    | component.description | ?string | localized server-side             |
+    | component.button_text | ?string | CTA label, localized server-side  |
+    | component.button_url  | ?string | CTA target                        |
+    | position              | int     |                                   |
+#}
+<section class="block block--banner" id="banner-{{ position }}">
+    <div class="container">
+        <div class="banner" style="background-image: url({{ component.image }});">
+            <div class="banner__content">
+                {% if component.title %}<h2>{{ component.title }}</h2>{% endif %}
+                {% if component.description %}<p>{{ component.description }}</p>{% endif %}
+                {% if component.button_text and component.button_url %}
+                    <a class="btn btn--primary" href="{{ component.button_url }}">{{ component.button_text }}</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>

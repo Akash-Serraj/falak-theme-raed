@@ -1,0 +1,35 @@
+{#
+    Brands listing.
+    | Variable | Type  | Description                              |
+    | brands   | array | each: name, logo, url — pending wiring   |
+#}
+{% extends "layouts.master" %}
+
+{% block title %}{{ trans('brands.title') }} — {{ store.name }}{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <header class="page-head">
+            <h1>{{ trans('brands.title') }}</h1>
+        </header>
+
+        {% if brands|default([])|length > 0 %}
+            <div class="brand-grid">
+                {% for brand in brands %}
+                    <a class="brand-card" href="{{ brand.url }}">
+                        {% if brand.logo %}
+                            <img src="{{ brand.logo }}" alt="{{ brand.name }}" loading="lazy">
+                        {% else %}
+                            <span class="brand-card__name">{{ brand.name }}</span>
+                        {% endif %}
+                    </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-state__icon" aria-hidden="true">🏷</div>
+                <p>{{ trans('brands.no_brands') }}</p>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

@@ -1,0 +1,14 @@
+{#
+    Home page — the body is a merchant-composed component area.
+    `{% component home %}` (bare word) renders this store's tenant_theme_components
+    rows for area 'home', in merchant order, each with its own saved settings.
+#}
+{% extends "layouts.master" %}
+
+{% block content %}
+    {% component home %}
+{% endblock %}
+
+{% block scripts %}
+    <script defer src="{{ 'js/home.js'|asset }}?v=4"></script>
+{% endblock %}

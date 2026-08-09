@@ -1,0 +1,27 @@
+{#
+    Image with text — merchant-placeable content block (home + builder pages).
+    | Variable              | Type    | Description                          |
+    | component.image       | string  | image URL                            |
+    | component.title       | ?string | localized server-side                |
+    | component.text        | ?string | localized server-side                |
+    | component.button_text | ?string | CTA label                            |
+    | component.button_url  | ?string | CTA target                           |
+    | component.flipped     | ?bool   | image on the end side instead        |
+    | position              | int     |                                      |
+#}
+<section class="block block--image-text" id="image-text-{{ position }}">
+    <div class="container">
+        <div class="image-text{{ component.flipped ? ' image-text--flipped' : '' }}">
+            <div class="image-text__media">
+                <img src="{{ component.image }}" alt="{{ component.title|default('') }}" loading="lazy">
+            </div>
+            <div class="image-text__body">
+                {% if component.title %}<h2>{{ component.title }}</h2>{% endif %}
+                {% if component.text %}<p>{{ component.text }}</p>{% endif %}
+                {% if component.button_text and component.button_url %}
+                    <a class="btn btn--outline" href="{{ component.button_url }}">{{ component.button_text }}</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>

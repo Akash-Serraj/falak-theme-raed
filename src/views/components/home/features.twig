@@ -1,0 +1,28 @@
+{#
+    Store features row (shipping, support, returns…) — merchant-placeable.
+    | Variable                 | Type    | Description                 |
+    | component.title          | ?string | section title               |
+    | component.items[].icon   | ?string | small image URL             |
+    | component.items[].title  | string  | localized server-side       |
+    | component.items[].text   | ?string | localized server-side       |
+    | position                 | int     |                             |
+#}
+<section class="block block--features" id="features-{{ position }}">
+    <div class="container">
+        {% if component.title %}
+            <h2 class="block__title">{{ component.title }}</h2>
+        {% endif %}
+
+        <div class="features-grid">
+            {% for item in component.items %}
+                <div class="feature-card">
+                    <div class="feature-card__icon" aria-hidden="true">
+                        {% if item.icon %}<img src="{{ item.icon }}" alt="">{% else %}✦{% endif %}
+                    </div>
+                    <h3>{{ item.title }}</h3>
+                    {% if item.text %}<p>{{ item.text }}</p>{% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>

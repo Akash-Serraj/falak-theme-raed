@@ -1,0 +1,36 @@
+{#
+    Product listing — category, search results, and tag listing all share this shape.
+    | Variable | Type   | Description                          |
+    | products | array  | list of product cards                |
+    | category | ?array | present when listing a category      |
+#}
+{% extends "layouts.master" %}
+
+{% block title %}{{ category ? category.name : trans('common.products') }} — {{ store.name }}{% endblock %}
+
+{% block content %}
+    {% component listing_top %}
+
+    <div class="container product-listing">
+        <header class="page-head">
+            <h1>{{ category ? category.name : trans('common.products') }}</h1>
+            {% if products|length > 0 %}
+                <p class="page-head__meta">{{ products|length }} {{ trans('common.products_count') }}</p>
+            {% endif %}
+        </header>
+
+        {% if products|length > 0 %}
+            <div class="product-grid">
+                {% for product in products %}
+                    {% include 'pages.partials.product-card' %}
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-state__icon" aria-hidden="true">🛒</div>
+                <p>{{ trans('common.no_products') }}</p>
+                <a class="btn btn--outline" href="{{ store.url }}">{{ trans('common.back_home') }}</a>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

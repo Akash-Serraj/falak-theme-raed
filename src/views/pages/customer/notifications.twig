@@ -1,0 +1,35 @@
+{#
+    Customer notifications.
+    | Variable      | Type  | Description                                     |
+    | notifications | array | each: title, body, created_at, is_read, url     |
+#}
+{% extends "layouts.customer" %}
+
+{% set account_page = 'notifications' %}
+
+{% block title %}{{ trans('account.notifications') }} — {{ store.name }}{% endblock %}
+
+{% block account_content %}
+    <h1>{{ trans('account.notifications') }}</h1>
+
+    {% if notifications|default([])|length > 0 %}
+        <ul class="notification-list">
+            {% for item in notifications %}
+                <li class="notification{{ item.is_read|default(false) ? '' : ' notification--unread' }}">
+                    {% if item.url|default(null) %}
+                        <a href="{{ item.url }}">{{ item.title }}</a>
+                    {% else %}
+                        <span>{{ item.title }}</span>
+                    {% endif %}
+                    {% if item.body|default(null) %}<p>{{ item.body }}</p>{% endif %}
+                    <time>{{ item.created_at|date('Y/m/d') }}</time>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-state__icon" aria-hidden="true">🔔</div>
+            <p>{{ trans('account.no_notifications') }}</p>
+        </div>
+    {% endif %}
+{% endblock %}

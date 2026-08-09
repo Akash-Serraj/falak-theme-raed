@@ -1,0 +1,38 @@
+{#
+    Customer profile.
+    | Variable | Type   | Description                                  |
+    | customer | ?array | name, email, phone — absent until wired      |
+#}
+{% extends "layouts.customer" %}
+
+{% set account_page = 'profile' %}
+
+{% block title %}{{ trans('account.profile') }} — {{ store.name }}{% endblock %}
+
+{% block account_content %}
+    <h1>{{ trans('account.profile') }}</h1>
+
+    {% if customer|default(null) %}
+        <dl class="account-details">
+            <div class="account-details__row">
+                <dt>{{ trans('account.name') }}</dt>
+                <dd>{{ customer.name }}</dd>
+            </div>
+            <div class="account-details__row">
+                <dt>{{ trans('account.email') }}</dt>
+                <dd>{{ customer.email }}</dd>
+            </div>
+            {% if customer.phone|default(null) %}
+                <div class="account-details__row">
+                    <dt>{{ trans('account.phone') }}</dt>
+                    <dd dir="ltr">{{ customer.phone }}</dd>
+                </div>
+            {% endif %}
+        </dl>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-state__icon" aria-hidden="true">👤</div>
+            <p>{{ trans('account.sign_in_prompt') }}</p>
+        </div>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends "layouts.master" %}
+
+{% block title %}404 — {{ store.name }}{% endblock %}
+
+{% block content %}
+    <div class="container error-page">
+        <div class="error-page__code" aria-hidden="true">404</div>
+        <h1>{{ trans('common.errors.404_title') }}</h1>
+        <p>{{ trans('common.errors.404') }}</p>
+        <a class="btn btn--primary" href="{{ store.url }}">{{ trans('common.back_home') }}</a>
+    </div>
+{% endblock %}

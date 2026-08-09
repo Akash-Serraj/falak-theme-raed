@@ -1,0 +1,31 @@
+{#
+    Blog article.
+    | Variable | Type   | Description                                          |
+    | article  | ?array | title, content (sanitized HTML), image, created_at   |
+#}
+{% extends "layouts.master" %}
+
+{% block title %}{{ article.title|default(trans('blog.title')) }} — {{ store.name }}{% endblock %}
+
+{% block content %}
+    <div class="container content-page">
+        {% if article|default(null) %}
+            <article>
+                <h1>{{ article.title }}</h1>
+                <time class="article-date">{{ article.created_at|date('Y/m/d') }}</time>
+                {% if article.image %}
+                    <img class="article-cover" src="{{ article.image }}" alt="{{ article.title }}">
+                {% endif %}
+                <div class="content-page__body">
+                    {{ article.content|raw }}
+                </div>
+            </article>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-state__icon" aria-hidden="true">📝</div>
+                <p>{{ trans('blog.not_found') }}</p>
+                <a class="btn btn--outline" href="/blog">{{ trans('blog.title') }}</a>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

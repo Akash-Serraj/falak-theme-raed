@@ -1,0 +1,81 @@
+{#
+    Product detail page.
+    | Variable | Type  | Description                                                        |
+    | product  | array | id, name, description, price (formatted), price_amount, currency,  |
+    |          |       | image, images[], url                                               |
+#}
+{% extends "layouts.master" %}
+
+{% block title %}{{ product.name }} — {{ store.name }}{% endblock %}
+{% block meta_description %}{{ product.description|default(product.name)|escape }}{% endblock %}
+
+{% block content %}
+    <div class="container product-single">
+        {% if theme.settings.get('product_show_breadcrumbs', true) %}
+            <nav class="breadcrumbs" aria-label="{{ trans('common.breadcrumbs') }}">
+                <a href="{{ store.url }}">{{ trans('common.home') }}</a>
+                <span aria-hidden="true">/</span>
+                <a href="/products">{{ trans('common.products') }}</a>
+                <span aria-hidden="true">/</span>
+                <span>{{ product.name }}</span>
+            </nav>
+        {% endif %}
+
+        <div class="product-single__layout">
+            <div class="product-single__gallery">
+                {% if product.images|length > 0 %}
+                    <div class="gallery__main">
+                        <img src="{{ product.images|first }}" alt="{{ product.name }}"
+                             data-gallery-main
+                             class="product-image--{{ theme.settings.get('product_image_fit', 'contain') }}">
+                    </div>
+
+                    {% if product.images|length > 1 %}
+                        <div class="gallery__thumbs">
+                            {% for image in product.images %}
+                                <button type="button"
+                                        class="gallery__thumb{{ loop.first ? ' is-active' : '' }}"
+                                        data-gallery-thumb="{{ image }}"
+                                        aria-label="{{ product.name }} {{ loop.index }}">
+                                    <img src="{{ image }}" alt="{{ product.name }}" loading="lazy">
+                                </button>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="gallery__main">
+                        <div class="product-card__placeholder" aria-hidden="true">🛍</div>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="product-single__info">
+                <h1>{{ product.name }}</h1>
+                <p class="product-single__price">{{ product.price }}</p>
+
+                {% if product.description %}
+                    <div class="product-single__description">{{ product.description }}</div>
+                {% endif %}
+
+                <div class="buy-box">
+                    <div class="qty">
+                        <button type="button" data-qty-step="-1" aria-label="{{ trans('product.decrease_qty') }}">−</button>
+                        <input type="number" value="1" min="1" inputmode="numeric"
+                               data-qty-input aria-label="{{ trans('product.quantity') }}">
+                        <button type="button" data-qty-step="1" aria-label="{{ trans('product.increase_qty') }}">+</button>
+                    </div>
+
+                    <button class="btn btn--primary" type="button"
+                            data-add-to-cart
+                            data-product-id="{{ product.id }}"
+                            data-added-text="{{ trans('product.added_to_cart') }}">
+                        <span data-label>{{ trans('product.add_to_cart') }}</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# theme-exposed merchant-composable area below the buy box #}
+    {% component product_below %}
+{% endblock %}

@@ -1,0 +1,22 @@
+{#
+    Video embed — merchant-placeable.
+    | Variable            | Type    | Description                                        |
+    | component.title     | ?string | section title                                      |
+    | component.embed_url | string  | full embed URL (e.g. https://www.youtube.com/embed/ID) |
+    | position            | int     |                                                    |
+#}
+<section class="block block--video" id="video-{{ position }}">
+    <div class="container">
+        {% if component.title %}
+            <h2 class="block__title">{{ component.title }}</h2>
+        {% endif %}
+
+        <div class="video-embed">
+            <iframe src="{{ component.embed_url }}"
+                    title="{{ component.title|default('Video') }}"
+                    loading="lazy"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen></iframe>
+        </div>
+    </div>
+</section>

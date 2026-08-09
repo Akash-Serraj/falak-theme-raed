@@ -1,0 +1,31 @@
+{
+    "key": "falak-video",
+    "path": "home.video",
+    "title": {
+        "ar": "فيديو",
+        "en": "Video"
+    },
+    "icon": "video-line",
+    "is_default": false,
+    "areas": ["home", "pages"],
+    "fields": [
+        {
+            "id": "title",
+            "type": "string",
+            "format": "text",
+            "label": { "ar": "عنوان القسم", "en": "Section title" },
+            "multilanguage": true,
+            "required": false,
+            "maxLength": 100
+        },
+        {
+            "id": "embed_url",
+            "type": "string",
+            "format": "text",
+            "label": { "ar": "رابط التضمين", "en": "Embed URL" },
+            "description": { "ar": "مثال: https://www.youtube.com/embed/VIDEO_ID", "en": "Example: https://www.youtube.com/embed/VIDEO_ID" },
+            "required": true,
+            "maxLength": 255
+        }
+    ]
+}
