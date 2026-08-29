@@ -11,6 +11,11 @@
 
 {% block content %}
     <div class="container product-listing">
+        {# Seeds the session trail with the category name, so a product
+           reached from here shows Home / Category / Product instead of just
+           Home / Product — see <falak-breadcrumb>'s own doc comment. #}
+        <falak-breadcrumb></falak-breadcrumb>
+
         <header class="page-head">
             <h1>{{ category ? category.name : trans('common.products') }}</h1>
             {% if products|length > 0 %}
