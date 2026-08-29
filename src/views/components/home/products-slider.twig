@@ -1,0 +1,49 @@
+{#
+    Products carousel — merchant-placeable.
+
+    The grid sibling (home.products) and this one differ only in how they lay
+    the same cards out, so both delegate to platform components rather than
+    duplicating card markup: <falak-products-slider> fetches, and hands each
+    product to <falak-product-card> inside a <falak-slider>.
+
+    | Variable              | Type    | Description                          |
+    | component.title       | ?string | section title, localized server-side |
+    | component.limit       | ?int    | how many products to fetch           |
+    | component.slides      | ?string | slides visible on desktop            |
+    | component.category    | ?string | category id; empty means all         |
+    | component.autoplay    | ?bool   | advance on a timer                   |
+    | component.all_url     | ?string | optional "view all" link             |
+    | position              | int     |                                      |
+
+    Customizer bindings — full rules in README, "Customizer annotations".
+    | Element         | Tag                      |
+    | h2.block__title | data-falak-field="title" |
+
+    The title lives on the component rather than in this template, because the
+    slider renders its own header row alongside the arrows. It is tagged for the
+    customizer all the same.
+#}
+<section class="block block--products-slider" id="products-slider-{{ position }}">
+    <div class="container">
+        <falak-products-slider
+            data-falak-field="title"
+            data-falak-label="{{ trans('editor.field.title') }}"
+            data-falak-bind="none"
+            block-title="{{ component.title }}"
+            source="{{ component.category ? 'category' : 'latest' }}"
+            {% if component.category %}source-value="{{ component.category }}"{% endif %}
+            limit="{{ component.limit|default(10) }}"
+            slides-per-view="{{ component.slides|default(4) }}"
+            {% if component.all_url %}display-all-url="{{ component.all_url }}"{% endif %}
+            {# Autoplay implies loop: without it the carousel advances to the
+               last slide and stalls there for good, which reads as broken.
+               A shopper interacting still stops it permanently, and
+               prefers-reduced-motion disables it entirely. #}
+            {% if component.autoplay %}auto-play loop auto-play-delay="{{ component.autoplay_speed|default('5000') }}"{% endif %}
+            show-controls
+            controls-outer
+            static-when-single
+            card-button
+            source-label="home.slider"></falak-products-slider>
+    </div>
+</section>

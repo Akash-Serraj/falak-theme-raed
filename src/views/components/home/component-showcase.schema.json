@@ -1,0 +1,39 @@
+{
+    "key": "falak-component-showcase",
+    "path": "home.component-showcase",
+    "title": {
+        "ar": "معاينة المكوّنات",
+        "en": "Component Showcase"
+    },
+    "icon": "layout-grid-line",
+    "is_default": false,
+    "areas": ["home", "pages"],
+    "fields": [
+        {
+            "id": "title",
+            "type": "string",
+            "format": "text",
+            "label": { "ar": "عنوان القسم", "en": "Section title" },
+            "description": {
+                "ar": "قسم للمراجعة فقط — أضفه لمعاينة كل المكوّنات بألوان متجرك ثم احذفه",
+                "en": "A review-only section — add it to see every component in your store's own styling, then remove it"
+            },
+            "multilanguage": true,
+            "required": false,
+            "maxLength": 100,
+            "value": { "ar": "معاينة المكوّنات", "en": "Component showcase" }
+        },
+        {
+            "id": "product_id",
+            "type": "string",
+            "format": "text",
+            "label": { "ar": "رقم منتج للتقييمات", "en": "Product ID for reviews" },
+            "description": {
+                "ar": "اتركه فارغاً لإخفاء قسم التقييمات",
+                "en": "Leave empty to hide the reviews block"
+            },
+            "required": false,
+            "maxLength": 20
+        }
+    ]
+}

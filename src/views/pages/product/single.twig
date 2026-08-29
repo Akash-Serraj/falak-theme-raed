@@ -12,13 +12,7 @@
 {% block content %}
     <div class="container product-single">
         {% if theme.settings.get('product_show_breadcrumbs', true) %}
-            <nav class="breadcrumbs" aria-label="{{ trans('common.breadcrumbs') }}">
-                <a href="{{ store.url }}">{{ trans('common.home') }}</a>
-                <span aria-hidden="true">/</span>
-                <a href="/products">{{ trans('common.products') }}</a>
-                <span aria-hidden="true">/</span>
-                <span>{{ product.name }}</span>
-            </nav>
+            <falak-breadcrumb></falak-breadcrumb>
         {% endif %}
 
         <div class="product-single__layout">
@@ -51,31 +45,132 @@
 
             <div class="product-single__info">
                 <h1>{{ product.name }}</h1>
-                <p class="product-single__price">{{ product.price }}</p>
+
+                {#
+                    Platform component. `fetch` is opt-in per element — here it
+                    is on because the product page is one product and one extra
+                    request; the listing grid below leaves it off.
+                #}
+                <falak-rating-stars product-id="{{ product.id }}" fetch show-value></falak-rating-stars>
+
+                {# data-product-price: app.js rewrites it when a variant is chosen. #}
+                <p class="product-single__price" data-product-price>
+                    {{ product.price }}{% if product.compare_at %} <del>{{ product.compare_at }}</del>{% endif %}
+                </p>
 
                 {% if product.description %}
                     <div class="product-single__description">{{ product.description }}</div>
                 {% endif %}
 
-                <div class="buy-box">
-                    <div class="qty">
-                        <button type="button" data-qty-step="-1" aria-label="{{ trans('product.decrease_qty') }}">−</button>
-                        <input type="number" value="1" min="1" inputmode="numeric"
-                               data-qty-input aria-label="{{ trans('product.quantity') }}">
-                        <button type="button" data-qty-step="1" aria-label="{{ trans('product.increase_qty') }}">+</button>
-                    </div>
+                {# Size guide — renders nothing unless the merchant set one. #}
+                <falak-product-size-guide product-id="{{ product.id }}"
+                                          content="{{ product.size_guide|default('')|escape('html_attr') }}"
+                                          image="{{ product.size_guide_image|default('') }}"
+                                          class="product-single__size-guide"></falak-product-size-guide>
 
-                    <button class="btn btn--primary" type="button"
-                            data-add-to-cart
-                            data-product-id="{{ product.id }}"
-                            data-added-text="{{ trans('product.added_to_cart') }}">
-                        <span data-label>{{ trans('product.add_to_cart') }}</span>
-                    </button>
+                {% if product.variations|length > 0 %}
+                    {# Variant chooser — the platform component. One pill group per
+                       attribute; the add button below consults it before adding. #}
+                    <falak-product-options product-id="{{ product.id }}"
+                                           variations="{{ product.variations|json_encode|escape('html_attr') }}"
+                                           class="product-single__options"></falak-product-options>
+                {% endif %}
+
+                <div class="buy-box">
+                    {#
+                        Replaces the hand-rolled stepper. It renders a hidden
+                        input named `quantity` so a plain form post still works,
+                        and exposes .value plus a `change` event for app.js.
+                    #}
+                    <falak-quantity-input
+                        name="quantity"
+                        product-id="{{ product.id }}"
+                        value="1"
+                        min="1"{% if product.available is defined and product.available is not null %} max="{{ product.available }}"{% endif %}></falak-quantity-input>
+
+                    {# SDK add button: reads the stepper above via
+                       quantity-selector, adds for guest or customer, and
+                       reports back itself. Sold out disables it. #}
+                    <falak-add-product-button product-id="{{ product.id }}"
+                                              product-status="{{ (product.in_stock is defined and not product.in_stock) ? 'out' : 'sale' }}"
+                                              quantity-selector="falak-quantity-input"
+                                              button-class="btn btn--primary"
+                                              source="product"></falak-add-product-button>
+
+                    {# Buy now — a single-item checkout that skips the cart
+                       entirely, in its own modal (mini-checkout). Shares
+                       add-to-cart's option/quantity/stock handling — it
+                       extends the same component — but never calls the cart
+                       API at all. #}
+                    <falak-quick-buy product-id="{{ product.id }}"
+                                     product-status="{{ (product.in_stock is defined and not product.in_stock) ? 'out' : 'sale' }}"
+                                     quantity-selector="falak-quantity-input"
+                                     button-class="btn btn--outline"
+                                     product-name="{{ product.name }}"
+                                     product-image="{{ product.image }}"
+                                     product-price="{{ product.price }}"
+                                     mini-checkout
+                                     source="product"></falak-quick-buy>
+
+                    {# Save for later — the platform heart, works signed out too. #}
+                    <falak-wishlist-button product-id="{{ product.id }}" button-class="btn btn--outline btn--wishlist f-card__wishlist"></falak-wishlist-button>
                 </div>
+
+                {# Sold out (product or chosen variant): "notify me when it's back". #}
+                <falak-product-availability product-id="{{ product.id }}"
+                                            product-status="{{ (product.in_stock is defined and not product.in_stock) ? 'out' : 'sale' }}"
+                                            button-class="btn btn--outline btn--notify"
+                                            class="product-single__availability"></falak-product-availability>
+
+
+                {# Offers targeting THIS product — the legacy ProductSpecialOffers
+                   port. Gated by the dashboard Marketing Settings (enable special
+                   offers + show below product); renders nothing otherwise, and
+                   only for offers whose product list names this product. #}
+                <falak-offers below-product product-id="{{ product.id }}" limit="3"
+                              class="product-single__offers"></falak-offers>
+
+                {# Collapsible detail panels — state is data-collapsed, styling is CSS. #}
+                <div class="product-single__panels">
+                    {% if product.description %}
+                        <falak-accordion collapsible bordered name="details">
+                            <falak-accordion-head>
+                                <span slot="title">{{ trans('product.details') }}</span>
+                            </falak-accordion-head>
+                            <falak-accordion-body>{{ product.description }}</falak-accordion-body>
+                        </falak-accordion>
+                    {% endif %}
+
+                    <falak-accordion collapsible bordered name="shipping">
+                        <falak-accordion-head>
+                            <span slot="title">{{ trans('product.shipping_returns') }}</span>
+                        </falak-accordion-head>
+                        <falak-accordion-body>
+                            {{ theme.settings.get('shipping_note', '') }}
+                        </falak-accordion-body>
+                    </falak-accordion>
+                </div>
+
+                {# Share — a quiet, labelled secondary action closing the info
+                   column, after the purchase flow rather than inside it. #}
+                <falak-social mode="share" class="product-single__share"
+                              share-text="{{ product.name }}"></falak-social>
             </div>
         </div>
-    </div>
 
-    {# theme-exposed merchant-composable area below the buy box #}
-    {% component product_below %}
+        {# Approved reviews, plus a form for signed-in customers. Stands down
+           entirely when the merchant has reviews switched off. #}
+        <section class="product-single__reviews">
+            <h2>{{ trans('reviews.title') }}</h2>
+            {# The reviews at a glance: average, count, one bar per star. #}
+            <falak-reviews-summary product-id="{{ product.id }}" class="product-single__reviews-summary"></falak-reviews-summary>
+            <falak-comments product-id="{{ product.id }}" per-page="5"></falak-comments>
+        </section>
+
+        {# Fetches and renders its own <falak-product-card> children. #}
+        <section class="product-single__related">
+            <h2>{{ trans('product.related') }}</h2>
+            <falak-products-list limit="4" columns="4" card-button source="product.single"></falak-products-list>
+        </section>
+    </div>
 {% endblock %}

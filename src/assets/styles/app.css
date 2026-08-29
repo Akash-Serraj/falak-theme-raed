@@ -12,18 +12,18 @@
 
 :root {
     /* fallbacks — overridden by the platform-injected block in master.twig */
-    --color-primary: #1d9e75;
-    --color-primary-dark: #17825f;
-    --color-primary-light: #2fb98c;
+
+    --color-primary: #eb3b67;
+    --color-primary-dark: #176082;
+    --color-primary-light: #382fb9;
     --color-text: #1f2430;
     --font-main: 'Cairo', sans-serif;
-
     /* derived neutrals */
-    --color-bg: #ffffff;
+    --color-bg: #f0f0f0;
     --color-surface: #f7f8fa;
     --color-border: #e8eaef;
     --color-text-soft: #6b7280;
-    --color-text-faint: #9aa1ad;
+    --color-text-faint: #9aa1ad;    
     --color-danger: #c0392b;
     --color-on-primary: #ffffff;
 
@@ -52,9 +52,21 @@ body {
     background: var(--color-bg);
     line-height: 1.65;
     font-size: 1rem;
+    /* Nothing may widen the page: stray overflow clips instead of adding a
+       horizontal scrollbar on small screens. `clip` (unlike `hidden`) creates
+       no scroll container, so the sticky header keeps working. */
+    overflow-x: clip;
 }
 
 img { max-width: 100%; height: auto; }
+
+/* Content imagery shows a quiet surface, not a white flash, while loading.
+   (Product cards already get this from their media box.) */
+.hero-slider__img,
+.photo-tile img,
+.article-card > img {
+    background: var(--color-surface);
+}
 
 h1, h2, h3, h4 {
     line-height: 1.3;
@@ -73,6 +85,10 @@ a { color: var(--color-primary); }
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
     border-radius: 2px;
+}
+
+::selection {
+    background: color-mix(in srgb, var(--color-primary) 22%, var(--color-bg));
 }
 
 .container {
@@ -130,25 +146,3642 @@ a { color: var(--color-primary); }
     border-color: var(--color-border);
     color: var(--color-text);
 }
-.btn--outline:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.btn--outline:hover {
+    background: var(--color-surface);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
 
 .btn--block { width: 100%; }
+
+/* Press feedback: a 1px settle while the button is held. */
+.btn:active:not([disabled]) { transform: translateY(1px); }
 
 .btn[disabled] { opacity: 0.55; cursor: not-allowed; }
 
 .btn.is-added { background: var(--color-primary-dark); }
 
+/* ==== SDK COMPONENT CLASSES — generated, do not edit (see sync-theme-css.mjs) ==== */
+/*
+    Every class the SDK components render, copied from the SDK source so it is
+    searchable here. The SDK ships the same rules inside @layer falak; this
+    unlayered copy takes precedence but is identical, so nothing changes until
+    you override a rule in the "platform components" section that follows.
+    Because this copy is unlayered, an override must match the copied rule's
+    specificity (e.g. two classes beat one) — unlike the SDK's layered sheet.
+    Regenerate after an SDK update:
+      node packages/falak-components/scripts/sync-theme-css.mjs <this file>
+*/
+
+/* ---- from packages/falak-components/src/components.css ---- */
+
+/*
+    FalakCart storefront components — default stylesheet.
+
+    Linked at head:start for every storefront render — before the theme's own
+    stylesheet and inside `@layer falak` (see styles.css) — so components are
+    styled in any theme without the theme author doing anything, and any rule
+    the theme writes wins over these.
+
+    Everything here derives from the brand tokens master.twig already emits
+    (--color-primary, --color-text, --font-main, ...), with fallbacks for each,
+    so a merchant's colour choice restyles the components exactly as it
+    restyles the theme's own markup. Themes override any rule by writing a
+    plain selector in their own app.css — these are light-DOM elements with no
+    shadow root, so nothing needs piercing and nothing needs !important.
+
+    Tailwind-based themes need nothing extra: every value here derives from
+    CSS custom properties, so a merchant palette reaches these components the
+    same way it reaches the theme own markup.
+
+    RTL-first, like the reference theme: logical properties throughout.
+*/
+
+/* ------------------------------------------------------------------ tokens */
+
+:root {
+    --f-radius: var(--radius-sm, 0.5rem);
+    --f-border: var(--color-border, #e8eaef);
+    --f-surface: var(--color-surface, #ffffff);
+    --f-text: var(--color-text, #1f2430);
+    --f-text-soft: var(--color-text-soft, #6b7280);
+    --f-text-faint: var(--color-text-faint, #9aa1ad);
+    --f-danger: var(--color-danger, #c0392b);
+    --f-star: #facc15;
+    --f-star-empty: #e2e5ea;
+}
+
+/*
+    Components stay invisible until the SDK upgrades them (base.js sets
+    data-falak on connect), so a slow bundle shows nothing rather than a flash
+    of raw content and unstyled attributes.
+
+    The list is deliberate rather than every falak-* element. It names only the
+    components whose pre-upgrade DOM is *wrong*:
+
+      - the first four render their own markup, so before upgrade they are
+        either empty or showing unformatted attributes;
+      - an accordion body holds author content that has no collapsed state yet,
+        so it would appear expanded and then snap shut;
+      - a modal holds author content with no dialog around it yet, so it would
+        render inline at the foot of the page.
+
+    Anything not listed is correct before upgrade and must stay visible —
+    <falak-menu> in particular wraps server-rendered navigation, and hiding it
+    would undo the very reason that markup is server-rendered.
+*/
+falak-quantity-input:not([data-falak]),
+falak-rating-stars:not([data-falak]),
+falak-product-card:not([data-falak]),
+falak-products-list:not([data-falak]),
+falak-accordion-body:not([data-falak]),
+falak-modal:not([data-falak]) {
+    visibility: hidden;
+}
+
+/* A modal must not occupy layout before it becomes a dialog. */
+falak-modal:not([data-falak]) { display: none; }
+
+falak-accordion,
+falak-accordion-head,
+falak-accordion-body,
+falak-product-card,
+falak-products-list {
+    display: block;
+}
+
+/* --------------------------------------------------------- quantity input */
+
+.f-qty {
+    display: inline-flex;
+    align-items: center;
+    background: var(--f-surface);
+    border: 1px solid var(--f-border);
+    border-radius: var(--f-radius);
+    overflow: hidden;
+}
+
+.f-qty__step {
+    inline-size: 2.25rem;
+    block-size: 2.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: 1.05rem;
+    line-height: 1;
+    color: var(--f-text-soft);
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.f-qty__step:hover:not(:disabled) { background: rgba(0, 0, 0, 0.04); }
+.f-qty__step:disabled { opacity: 0.35; cursor: default; }
+
+.f-qty__input {
+    inline-size: 3rem;
+    block-size: 2.25rem;
+    padding: 0;
+    text-align: center;
+    font: inherit;
+    font-size: 0.85rem;
+    color: var(--f-text);
+    background: transparent;
+    border: 0;
+    border-inline: 1px solid var(--f-border);
+}
+
+.f-qty__input:focus { outline: none; }
+
+/* --------------------------------------------------------------- accordion */
+
+.f-accordion {
+    display: flex;
+    flex-direction: column;
+    inline-size: 100%;
+    background: var(--f-surface);
+    border-radius: var(--f-radius);
+}
+
+.f-accordion--bordered { border: 1px solid var(--f-border); }
+
+.f-accordion__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    color: var(--f-text);
+    cursor: pointer;
+    user-select: none;
+}
+
+.f-accordion--sm .f-accordion__head { padding: 0.5rem 0.75rem; font-size: 0.85rem; }
+.f-accordion--lg .f-accordion__head { padding: 1.25rem 1.5rem; font-size: 1.05rem; }
+
+.f-accordion__head[role='button']:focus-visible {
+    outline: 2px solid var(--color-primary, #1d9e75);
+    outline-offset: -2px;
+    border-radius: var(--f-radius);
+}
+
+.f-accordion__icon {
+    flex: none;
+    inline-size: 1.5rem;
+    block-size: 1.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--f-text-soft);
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.f-accordion__body {
+    padding: 0 1rem 1rem;
+    font-size: 0.875rem;
+    line-height: 1.7;
+    color: var(--f-text-soft);
+}
+
+/* The one rule that makes the accordion an accordion. */
+.f-accordion__body[data-collapsed='true'] { display: none; }
+
+/* ------------------------------------------------------------------- stars */
+
+.f-stars {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.f-stars__set {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.0625rem;
+}
+
+/*
+    Two stacked glyphs with the top one clipped to a width percentage, so a 4.2
+    rating renders a genuinely 20%-filled fifth star instead of being rounded
+    to the nearest half-star image.
+*/
+.f-stars__star {
+    position: relative;
+    display: inline-block;
+    inline-size: 1rem;
+    block-size: 1rem;
+    line-height: 1;
+    cursor: default;
+}
+
+.f-stars__star::before {
+    content: '\2605';
+    position: absolute;
+    inset: 0;
+    color: var(--f-star-empty);
+}
+
+.f-stars__fill {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    inline-size: var(--f-star-fill, 0%);
+    overflow: hidden;
+    color: var(--f-star);
+    font-style: normal;
+    line-height: 1;
+}
+
+.f-stars__fill::before { content: '\2605'; }
+
+.f-stars[role='radiogroup'] .f-stars__star { cursor: pointer; }
+.f-stars[role='radiogroup'] .f-stars__star:focus-visible {
+    outline: 2px solid var(--color-primary, #1d9e75);
+    outline-offset: 2px;
+}
+
+.f-stars__value { font-size: 0.85rem; font-weight: 700; color: var(--f-text); }
+.f-stars__count { font-size: 0.75rem; color: var(--f-text-faint); }
+
+falak-rating-stars[data-busy] { opacity: 0.5; }
+
+/* -------------------------------------------------------------- product card */
+
+.f-card { block-size: 100%; }
+
+.f-card__inner {
+    display: flex;
+    flex-direction: column;
+    block-size: 100%;
+    background: var(--f-surface);
+    border: 1px solid var(--f-border);
+    border-radius: var(--f-radius);
+    overflow: hidden;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.f-card__inner:hover {
+    box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
+    transform: translateY(-2px);
+}
+
+.f-card__media {
+    position: relative;
+    display: block;
+    aspect-ratio: 1;
+    background: rgba(0, 0, 0, 0.03);
+    overflow: hidden;
+}
+
+.f-card__media img {
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+}
+
+.f-card__placeholder { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.05); }
+
+.f-card__badge {
+    position: absolute;
+    inset-block-start: 0.5rem;
+    inset-inline-start: 0.5rem;
+    padding: 0.125rem 0.5rem;
+    border-radius: 0.25rem;
+    background: var(--color-primary, #1d9e75);
+    color: var(--color-on-primary, #fff);
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.f-card__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    padding: 0.75rem;
+    flex-grow: 1;
+}
+
+.f-card__title {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.f-card__link {
+    color: var(--f-text);
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+
+.f-card__link:hover { color: var(--color-primary, #1d9e75); }
+
+.f-card__price {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin: auto 0 0;
+    padding-block-start: 0.25rem;
+}
+
+.f-card__price-now { font-size: 1rem; font-weight: 700; color: var(--f-text); }
+.f-card__price-was { font-size: 0.75rem; color: var(--f-text-faint); }
+.f-card__stock { margin: 0; font-size: 0.75rem; font-weight: 600; color: var(--f-danger); }
+
+.f-card__actions { display: flex; align-items: stretch; gap: 0.5rem; padding: 0 0.75rem 0.75rem; }
+.f-card__actions:empty { display: none; }
+
+/*
+    The card's buy button. An outline that fills on hover, so a grid of
+    cards reads as products first and buttons second; the theme restyles it
+    through .f-card__add. The host is display:contents (see .f-add-product),
+    so the button itself is the flex item and takes the remaining width.
+*/
+.f-card__add {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    min-block-size: 2.4rem;
+    padding: 0.45rem 0.75rem;
+    border: 1px solid var(--f-border);
+    border-radius: var(--f-radius);
+    background: transparent;
+    color: var(--f-text);
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: 1.2;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+}
+.f-card__add > span { overflow: hidden; text-overflow: ellipsis; }
+.f-card__add > svg { flex: none; }
+.f-card__add:hover:not(:disabled) {
+    background: var(--color-primary, #1d9e75);
+    border-color: var(--color-primary, #1d9e75);
+    color: var(--color-on-primary, #fff);
+}
+.f-card__add:focus-visible { outline: 2px solid var(--color-primary, #1d9e75); outline-offset: 2px; }
+.f-card__add:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.f-card__wishlist {
+    flex: none;
+    inline-size: 2.4rem;
+    min-block-size: 2.4rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--f-border);
+    border-radius: var(--f-radius);
+    background: transparent;
+    color: var(--f-text-soft);
+    cursor: pointer;
+    transition: border-color 0.16s ease, color 0.16s ease;
+}
+.f-card__wishlist:hover { border-color: var(--color-primary, #1d9e75); color: var(--color-primary, #1d9e75); }
+.f-card__wishlist.is-active { color: var(--f-danger); border-color: var(--f-danger); }
+
+.f-card--out-of-stock .f-card__media { opacity: 0.6; }
+.f-card--empty { display: none; }
+
+.f-card--skeleton {
+    border-radius: var(--f-radius);
+    background: rgba(0, 0, 0, 0.05);
+    aspect-ratio: 3 / 4;
+    animation: f-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes f-pulse { 50% { opacity: 0.45; } }
+
+/* ------------------------------------------------------------- products list */
+
+.f-list { display: block; inline-size: 100%; }
+
+.f-list__grid {
+    display: grid;
+    gap: 1rem;
+    /* Column count is an element attribute, so density is a theme decision. */
+    grid-template-columns: repeat(var(--f-list-columns, 4), minmax(0, 1fr));
+}
+
+@media (max-width: 1023px) {
+    .f-list__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 639px) {
+    .f-list__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.f-list__count { margin: 0 0 0.75rem; font-size: 0.8rem; color: var(--f-text-faint); }
+
+.f-list__message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 2.5rem 1rem;
+    text-align: center;
+    font-size: 0.875rem;
+    color: var(--f-text-soft);
+}
+
+.f-list__retry {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--f-border);
+    border-radius: var(--f-radius);
+    background: var(--f-surface);
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--f-text);
+    cursor: pointer;
+}
+
+.f-list__retry:hover { background: rgba(0, 0, 0, 0.04); }
+
+.f-list[data-busy] .f-list__grid { opacity: 0.7; }
+
+@media (prefers-reduced-motion: reduce) {
+    .f-card__inner,
+    .f-qty__step { transition: none; }
+    .f-card__inner:hover { transform: none; }
+    .f-card--skeleton { animation: none; }
+}
+
+/* ------------------------------------------------- product card variants */
+/*
+    Theme-raed's custom-salla-product-card vocabulary, as attributes:
+    minimal · full-image · special · horizontal. Same data, four treatments.
+*/
+
+/* minimal: dense grids — image, title, price, nothing else */
+.f-card--minimal .f-card__body { padding: 0.5rem 0.25rem 0.25rem; gap: 0.2rem; }
+.f-card--minimal .f-card__inner { border: 0; background: transparent; }
+.f-card--minimal .f-card__inner:hover { box-shadow: none; transform: none; }
+.f-card--minimal .f-card__media { border-radius: var(--f-radius); }
+
+/* full-image: the image is the card; title and price sit over its foot */
+.f-card--full-image .f-card__inner { position: relative; border: 0; }
+.f-card--full-image .f-card__media { aspect-ratio: 3 / 4; }
+
+.f-card--full-image .f-card__body {
+    position: absolute;
+    inset-block-end: 0;
+    inset-inline: 0;
+    padding: 2rem 0.9rem 0.9rem;
+    gap: 0.15rem;
+    background: linear-gradient(to top, rgba(10, 14, 12, 0.78), transparent);
+}
+
+.f-card--full-image .f-card__link,
+.f-card--full-image .f-card__price-now { color: #fff; }
+.f-card--full-image .f-card__price-was { color: rgba(255, 255, 255, 0.72); }
+
+/* special: the featured slot — stronger frame + remaining-stock urgency */
+.f-card--special .f-card__inner {
+    border: 2px solid var(--color-primary, #1d9e75);
+}
+
+.f-card__remaining {
+    margin: 0;
+    align-self: flex-start;
+    padding: 0.15rem 0.6rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-primary, #1d9e75) 12%, transparent);
+    color: var(--color-primary, #1d9e75);
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+/* horizontal: image beside content — search results, compact lists */
+.f-card--horizontal .f-card__inner { flex-direction: row; align-items: stretch; }
+.f-card--horizontal .f-card__media { flex: none; inline-size: 7.5rem; aspect-ratio: 1; }
+.f-card--horizontal .f-card__body { justify-content: center; }
+
+/* ========================================================================
+   Add-product button
+   The host is display:contents so the inner <button> takes the host's place
+   in whatever flex/grid row the theme laid out (a card's action row, the
+   product page's CTA row); the theme skins the button via `button-class`.
+   ======================================================================== */
+
+.f-add-product { display: contents; }
+.f-add-product[hidden] { display: none; }
+.f-add-product[aria-busy="true"] .f-add-product__button { opacity: 0.7; cursor: progress; }
+.f-add-product__button:disabled { cursor: not-allowed; }
+
+/* ========================================================================
+   Cart summary — the header's cart entry: icon, count, total
+   ======================================================================== */
+
+.f-cart-summary { display: inline-block; }
+.f-cart-summary[hidden] { display: none; }
+
+.f-cart-summary__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: inherit;
+    text-decoration: none;
+}
+
+.f-cart-summary__icon {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 2.4rem;
+    block-size: 2.4rem;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.05);
+    color: inherit;
+}
+
+.f-cart-summary__icon.is-bumped { animation: f-cart-bump 0.5s ease; }
+
+.f-cart-summary__count {
+    position: absolute;
+    inset-block-start: -0.25rem;
+    inset-inline-end: -0.25rem;
+    min-inline-size: 1.2rem;
+    block-size: 1.2rem;
+    padding-inline: 0.3rem;
+    border-radius: 999px;
+    background: var(--color-primary, #1d9e75);
+    color: var(--color-on-primary, #fff);
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1.2rem;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+.f-cart-summary__count[hidden] { display: none; }
+
+.f-cart-summary__content { display: flex; flex-direction: column; line-height: 1.15; }
+.f-cart-summary__label { font-size: 0.7rem; color: var(--f-text-soft); }
+.f-cart-summary__total { font-size: 0.85rem; font-weight: 700; color: var(--f-text); font-variant-numeric: tabular-nums; }
+
+/* The product picture in flight (see animateToCart). */
+.f-cart-thumb { position: fixed; pointer-events: none; z-index: 99999; }
+
+@keyframes f-cart-bump {
+    0% { transform: scale(1); }
+    30% { transform: scale(1.25, 0.8); }
+    50% { transform: scale(0.85, 1.15); }
+    70% { transform: scale(1.1, 0.95); }
+    100% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .f-cart-summary__icon.is-bumped { animation: none; }
+}
+
+/* ========================================================================
+   Cart coupons — input + apply/remove, applied chip, coupon cards
+   ======================================================================== */
+
+.f-cart-coupons { display: block; }
+.f-cart-coupons[hidden] { display: none; }
+.f-cart-coupons__label { display: block; margin-block-end: 0.4rem; font-size: 0.85rem; font-weight: 600; color: var(--f-text); }
+.f-cart-coupons__row { display: flex; gap: 0.5rem; }
+
+.f-cart-coupons__input {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+    padding: 0.55rem 0.75rem;
+    border: 1px solid var(--f-border);
+    border-radius: var(--f-radius);
+    background: var(--f-surface);
+    color: var(--f-text);
+    font: inherit;
+    letter-spacing: 0.03em;
+}
+.f-cart-coupons__input:focus-visible { outline: 2px solid var(--color-primary, #1d9e75); outline-offset: 1px; }
+.f-cart-coupons__input:disabled { opacity: 0.75; }
+.f-cart-coupons__input.is-invalid { border-color: var(--f-danger); }
+.f-cart-coupons__button { flex: none; min-inline-size: 5.5rem; }
+.f-cart-coupons__button[data-coupon-remove] { min-inline-size: 2.75rem; padding-inline: 0.75rem; }
+
+.f-cart-coupons__error { margin: 0.45rem 0 0; font-size: 0.82rem; color: var(--f-danger); }
+.f-cart-coupons__error[hidden] { display: none; }
+
+.f-cart-coupons__applied {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-block-start: 0.6rem;
+    padding: 0.55rem 0.75rem;
+    border: 1px solid var(--f-border);
+    border-inline-start: 3px solid var(--color-primary, #1d9e75);
+    border-radius: var(--f-radius);
+    background: var(--f-surface);
+    font-size: 0.85rem;
+}
+.f-cart-coupons__code { font-weight: 700; letter-spacing: 0.04em; color: var(--f-text); }
+.f-cart-coupons__code::before {
+    content: "";
+    display: inline-block;
+    inline-size: 0.45rem;
+    block-size: 0.45rem;
+    margin-inline-end: 0.4rem;
+    border-radius: 50%;
+    background: var(--color-primary, #1d9e75);
+    vertical-align: middle;
+}
+.f-cart-coupons__applied-note { color: var(--f-text-soft); }
+
+.f-cart-coupons__slider { display: block; margin-block-start: 1rem; }
+
+/* Ticket-style card; the notches are the card background on purpose. */
+.f-coupon-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--f-border);
+    border-radius: calc(var(--f-radius) * 1.2);
+    background: var(--f-surface);
+    cursor: pointer;
+    transition: border-color 0.16s ease, transform 0.16s ease;
+}
+.f-coupon-card:hover { border-color: var(--color-primary, #1d9e75); transform: translateY(-1px); }
+.f-coupon-card:focus-visible { outline: 2px solid var(--color-primary, #1d9e75); outline-offset: 2px; }
+.f-coupon-card--disabled { cursor: not-allowed; opacity: 0.55; }
+.f-coupon-card--disabled:hover { border-color: var(--f-border); transform: none; }
+.f-coupon-card--current { border-color: var(--color-primary, #1d9e75); }
+
+.f-coupon-card__top { padding: 0.85rem 0.9rem 0.6rem; }
+.f-coupon-card__amount { font-size: 1.2rem; font-weight: 800; color: var(--color-primary, #1d9e75); line-height: 1.1; }
+.f-coupon-card__secondary { font-size: 0.75rem; color: var(--f-text-soft); margin-block-start: 0.15rem; }
+.f-coupon-card__code {
+    display: inline-block;
+    margin-block-start: 0.5rem;
+    padding: 0.2rem 0.5rem;
+    border: 1px dashed var(--color-primary, #1d9e75);
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--f-text);
+}
+.f-coupon-card__divider {
+    position: relative;
+    block-size: 0;
+    border-block-start: 1px dashed var(--f-border);
+    margin-inline: 0.6rem;
+}
+.f-coupon-card__divider::before,
+.f-coupon-card__divider::after {
+    content: "";
+    position: absolute;
+    inset-block-start: -0.5rem;
+    inline-size: 1rem;
+    block-size: 1rem;
+    border-radius: 50%;
+    background: var(--color-bg, #f0f0f0);
+    border: 1px solid var(--f-border);
+}
+.f-coupon-card__divider::before { inset-inline-start: -1.1rem; }
+.f-coupon-card__divider::after { inset-inline-end: -1.1rem; }
+
+.f-coupon-card__bottom { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 0.35rem 0.5rem; padding: 0.6rem 0.9rem 0.8rem; }
+.f-coupon-card__terms { font-size: 0.72rem; color: var(--f-text-soft); line-height: 1.4; }
+.f-coupon-card__expiry.is-soon { color: var(--f-danger); font-weight: 600; }
+.f-coupon-card__action { flex: none; margin-inline-start: auto; font-size: 0.78rem; font-weight: 700; white-space: nowrap; color: var(--color-primary, #1d9e75); }
+.f-coupon-card--disabled .f-coupon-card__action { color: var(--f-text-soft); }
+
+@media (prefers-reduced-motion: reduce) {
+    .f-coupon-card:hover { transform: none; }
+}
+
+/* ========================================================================
+   Product options — variant pills
+   ======================================================================== */
+
+.f-options { display: flex; flex-direction: column; gap: 0.9rem; }
+.f-options[hidden] { display: none; }
+.f-options__group { display: flex; flex-direction: column; gap: 0.45rem; }
+.f-options__label { display: flex; align-items: baseline; gap: 0.4rem; font-size: 0.85rem; color: var(--f-text-soft); }
+.f-options__name { font-weight: 600; color: var(--f-text); }
+.f-options__name::after { content: ":"; }
+.f-options__chosen { color: var(--f-text); }
+.f-options__hint { font-size: 0.8rem; }
+.f-options__group--invalid .f-options__hint { color: var(--f-danger); font-weight: 600; }
+.f-options__pills { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+.f-options__pill {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: 2.75rem;
+    min-block-size: 2.25rem;
+    padding: 0.35rem 0.85rem;
+    border: 1px solid var(--f-border);
+    border-radius: var(--f-radius);
+    background: var(--f-surface);
+    color: var(--f-text);
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+.f-options__pill:hover:not(:disabled) { border-color: var(--color-primary, #1d9e75); }
+.f-options__pill:focus-visible { outline: 2px solid var(--color-primary, #1d9e75); outline-offset: 2px; }
+.f-options__pill.is-selected {
+    border-color: var(--color-primary, #1d9e75);
+    background: var(--color-primary, #1d9e75);
+    color: var(--color-on-primary, #fff);
+}
+.f-options__pill:disabled { cursor: not-allowed; color: var(--f-text-faint); background: transparent; }
+.f-options__pill--out_of_stock::after,
+.f-options__pill--impossible::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0.4rem;
+    inset-block-start: 50%;
+    border-block-start: 1px solid currentColor;
+    transform: rotate(-12deg);
+    opacity: 0.7;
+}
+.f-options__group--invalid .f-options__pill:not(.is-selected) { border-color: var(--f-danger); }
+.f-options__error { margin: 0; font-size: 0.82rem; color: var(--f-danger); }
+.f-options__error[hidden] { display: none; }
+
+/* ========================================================================
+   Quick add — variant chooser dialog for cards
+   ======================================================================== */
+
+.f-quick-add__product { display: flex; align-items: center; gap: 0.9rem; margin-block-end: 1rem; }
+.f-quick-add__image {
+    flex: none;
+    inline-size: 4.5rem;
+    block-size: 4.5rem;
+    border-radius: var(--f-radius);
+    object-fit: cover;
+    background: rgba(0, 0, 0, 0.05);
+}
+.f-quick-add__meta { display: flex; flex-direction: column; gap: 0.25rem; min-inline-size: 0; }
+.f-quick-add__name { font-weight: 600; color: var(--f-text); text-decoration: none; }
+.f-quick-add__name:hover { color: var(--color-primary, #1d9e75); }
+.f-quick-add__price { font-size: 1rem; color: var(--f-text); }
+.f-quick-add__form { display: flex; flex-direction: column; gap: 1rem; }
+.f-quick-add__actions { display: flex; align-items: stretch; gap: 0.75rem; }
+.f-quick-add__actions .f-add-product__button { flex: 1 1 auto; }
+
+/* ========================================================================
+   Wishlist button — the heart
+   ======================================================================== */
+
+.f-wishlist { display: contents; }
+.f-wishlist[hidden] { display: none; }
+
+.f-wishlist__button { color: var(--f-text-soft); }
+.f-wishlist__button:hover:not(:disabled) { color: var(--f-danger); border-color: var(--f-danger); }
+.f-wishlist__button.is-added { color: var(--f-danger); border-color: var(--f-danger); }
+.f-wishlist__button.is-added .f-wishlist__icon { fill: currentColor; }
+.f-wishlist__button.is-pulsing .f-wishlist__icon { animation: f-heart 0.45s ease; }
+.f-wishlist__label { margin-inline-start: 0.4rem; font-size: 0.85rem; font-weight: 600; }
+
+/* The card's square, matching .f-card__add's height. */
+.f-card__wishlist.is-added { color: var(--f-danger); border-color: var(--f-danger); }
+.f-card__wishlist.is-added .f-wishlist__icon { fill: currentColor; }
+
+@keyframes f-heart {
+    0% { transform: scale(1); }
+    35% { transform: scale(1.35); }
+    70% { transform: scale(0.9); }
+    100% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .f-wishlist__button.is-pulsing .f-wishlist__icon { animation: none; }
+}
+
+/* ========================================================================
+   Drawer — the off-canvas panel (wishlist drawer uses it)
+   ======================================================================== */
+
+.f-wishlist-drawer { display: inline-block; }
+.f-wishlist-drawer[hidden] { display: none; }
+body.f-drawer-open { overflow: hidden; }
+
+.f-wishlist-drawer__trigger {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 2.4rem;
+    block-size: 2.4rem;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.05);
+    color: inherit;
+    cursor: pointer;
+}
+.f-wishlist-drawer__trigger:hover { color: var(--f-danger); }
+.f-wishlist-drawer__trigger:focus-visible { outline: 2px solid var(--color-primary, #1d9e75); outline-offset: 2px; }
+
+.f-search { display: inline-flex; }
+
+.f-search__trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 2.4rem;
+    block-size: 2.4rem;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.05);
+    color: inherit;
+    cursor: pointer;
+}
+.f-search__trigger:hover { color: var(--color-primary, #1d9e75); }
+.f-search__trigger:focus-visible { outline: 2px solid var(--color-primary, #1d9e75); outline-offset: 2px; }
+
+.f-wishlist-drawer__count {
+    position: absolute;
+    inset-block-start: -0.25rem;
+    inset-inline-end: -0.25rem;
+    min-inline-size: 1.2rem;
+    block-size: 1.2rem;
+    padding-inline: 0.3rem;
+    border-radius: 999px;
+    background: var(--f-danger);
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1.2rem;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+.f-wishlist-drawer__count[hidden] { display: none; }
+
+.f-drawer__backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1090;
+    background: rgba(8, 14, 12, 0.5);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.f-drawer {
+    position: fixed;
+    inset-block: 0;
+    inset-inline-end: 0;
+    z-index: 1100;
+    inline-size: min(26rem, 100vw);
+    display: flex;
+    flex-direction: column;
+    background: var(--f-surface);
+    color: var(--f-text);
+    box-shadow: -12px 0 40px rgba(8, 14, 12, 0.18);
+    transform: translateX(100%);
+    visibility: hidden;
+    transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.28s;
+}
+[dir="rtl"] .f-drawer { transform: translateX(-100%); }
+.f-wishlist-drawer--start .f-drawer { inset-inline-end: auto; inset-inline-start: 0; transform: translateX(-100%); }
+[dir="rtl"] .f-wishlist-drawer--start .f-drawer { transform: translateX(100%); }
+
+.f-wishlist-drawer[open] .f-drawer { transform: translateX(0); visibility: visible; }
+.f-wishlist-drawer[open] .f-drawer__backdrop { opacity: 1; visibility: visible; }
+
+.f-drawer__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    border-block-end: 1px solid var(--f-border);
+}
+.f-drawer__title { margin: 0; font-size: 1.05rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; }
+.f-drawer__badge {
+    min-inline-size: 1.4rem;
+    padding: 0 0.4rem;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.06);
+    font-size: 0.75rem;
+    text-align: center;
+    line-height: 1.4rem;
+}
+.f-drawer__close {
+    inline-size: 2rem;
+    block-size: 2rem;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--f-text-soft);
+    font-size: 1.35rem;
+    line-height: 1;
+    cursor: pointer;
+}
+.f-drawer__close:hover { background: rgba(0, 0, 0, 0.1); }
+.f-drawer__body { flex: 1 1 auto; overflow-y: auto; padding: 0.5rem 1.25rem; }
+.f-drawer__foot { padding: 1rem 1.25rem; border-block-start: 1px solid var(--f-border); }
+.f-drawer__loading { display: flex; justify-content: center; padding: 2rem; }
+.f-drawer__empty { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 3rem 1rem; color: var(--f-text-soft); text-align: center; }
+.f-drawer__empty-icon { color: var(--f-text-faint); }
+.f-drawer__empty-icon svg { inline-size: 2.5rem; block-size: 2.5rem; }
+
+.f-wishlist-drawer__list { list-style: none; margin: 0; padding: 0; }
+.f-wishlist-drawer__item {
+    display: flex;
+    gap: 0.9rem;
+    padding: 0.9rem 0;
+    border-block-end: 1px solid var(--f-border);
+}
+.f-wishlist-drawer__item:last-child { border-block-end: 0; }
+.f-wishlist-drawer__media { flex: none; inline-size: 4.5rem; block-size: 4.5rem; border-radius: var(--f-radius); overflow: hidden; background: rgba(0, 0, 0, 0.05); }
+.f-wishlist-drawer__media img { inline-size: 100%; block-size: 100%; object-fit: cover; }
+.f-wishlist-drawer__info { flex: 1 1 auto; min-inline-size: 0; display: flex; flex-direction: column; gap: 0.3rem; }
+.f-wishlist-drawer__name {
+    font-weight: 600;
+    color: var(--f-text);
+    text-decoration: none;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.f-wishlist-drawer__name:hover { color: var(--color-primary, #1d9e75); }
+.f-wishlist-drawer__price { margin: 0; font-size: 0.9rem; font-weight: 700; }
+.f-wishlist-drawer__price del { margin-inline-start: 0.35rem; font-weight: 400; color: var(--f-text-faint); }
+.f-wishlist-drawer__actions { display: flex; align-items: center; gap: 0.5rem; margin-block-start: 0.2rem; }
+.f-wishlist-drawer__actions .f-add-product__button { flex: 1 1 auto; }
+
+@media (prefers-reduced-motion: reduce) {
+    .f-drawer, .f-drawer__backdrop { transition: none; }
+}
+
+/* ========================================================================
+   Checkout — steps + summary column; payment status
+   ======================================================================== */
+
+.f-checkout { display: block; }
+.f-checkout__layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(18rem, 24rem); gap: 2rem; align-items: start; }
+@media (max-width: 899px) { .f-checkout__layout { grid-template-columns: minmax(0, 1fr); } .f-checkout__aside { order: -1; } }
+
+.f-checkout__step { padding: 1.1rem 0; border-block-end: 1px solid var(--f-border); }
+.f-checkout__step-head { display: flex; align-items: center; gap: 0.85rem; }
+.f-checkout__step-icon {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 2.5rem;
+    block-size: 2.5rem;
+    border-radius: 50%;
+    border: 1px solid var(--f-border);
+    color: var(--f-text-soft);
+    background: var(--f-surface);
+}
+.f-checkout__step-icon.is-active { color: var(--color-on-primary, #fff); background: var(--color-primary, #1d9e75); border-color: transparent; }
+.f-checkout__step--done .f-checkout__step-icon { color: var(--color-primary, #1d9e75); border-color: var(--color-primary, #1d9e75); }
+.f-checkout__step--todo { opacity: 0.55; }
+.f-checkout__step-text { flex: 1 1 auto; min-inline-size: 0; }
+.f-checkout__step-title { margin: 0; font-size: 1.05rem; font-weight: 700; }
+.f-checkout__step-sub { color: var(--f-text-soft); }
+.f-checkout__edit { flex: none; }
+.f-checkout__done-line { margin: 0.5rem 0 0 3.35rem; font-size: 0.9rem; color: var(--f-text-soft); }
+.f-checkout__body { display: flex; flex-direction: column; gap: 1rem; margin-block-start: 1rem; }
+.f-checkout__hint { margin: 0; font-size: 0.85rem; color: var(--f-text-soft); }
+.f-checkout__error { margin: 0; padding: 0.6rem 0.8rem; border-radius: var(--f-radius); background: color-mix(in srgb, var(--f-danger) 10%, transparent); color: var(--f-danger); font-size: 0.88rem; }
+.f-checkout__loading { display: flex; justify-content: center; padding: 2rem; }
+
+.f-checkout__methods { display: grid; gap: 0.6rem; }
+.f-checkout__method {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.8rem 0.9rem;
+    border: 1px solid var(--f-border);
+    border-radius: var(--f-radius);
+    background: var(--f-surface);
+    cursor: pointer;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.f-checkout__method:hover { border-color: var(--color-primary, #1d9e75); }
+.f-checkout__method.is-selected { border-color: var(--color-primary, #1d9e75); box-shadow: 0 0 0 1px var(--color-primary, #1d9e75) inset; }
+.f-checkout__method input { accent-color: var(--color-primary, #1d9e75); }
+.f-checkout__method-logo { flex: none; inline-size: 3rem; block-size: 2rem; object-fit: contain; }
+.f-checkout__method-logo--empty { display: inline-flex; align-items: center; justify-content: center; color: var(--f-text-faint); }
+.f-checkout__method-text { display: flex; flex-direction: column; gap: 0.1rem; min-inline-size: 0; }
+.f-checkout__method-text small { color: var(--f-text-soft); }
+.f-checkout__tag { color: var(--color-primary, #1d9e75) !important; font-weight: 600; }
+
+.f-checkout__form { display: flex; flex-direction: column; gap: 0.9rem; }
+.f-checkout__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.9rem; }
+@media (max-width: 599px) { .f-checkout__grid { grid-template-columns: minmax(0, 1fr); } }
+.f-field { display: flex; flex-direction: column; gap: 0.35rem; min-inline-size: 0; }
+.f-field--wide { grid-column: 1 / -1; }
+.f-field__label { font-size: 0.85rem; font-weight: 600; color: var(--f-text); }
+.f-input {
+    inline-size: 100%;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid var(--f-border);
+    border-radius: var(--f-radius);
+    background: var(--f-surface);
+    color: var(--f-text);
+    font: inherit;
+}
+.f-input:focus-visible { outline: 2px solid var(--color-primary, #1d9e75); outline-offset: 1px; }
+.f-input:disabled { opacity: 0.6; }
+
+.f-checkout__review { display: grid; gap: 0.6rem; margin: 0; }
+.f-checkout__review div { display: grid; grid-template-columns: 9rem minmax(0, 1fr); gap: 0.5rem; font-size: 0.9rem; }
+.f-checkout__review dt { color: var(--f-text-soft); }
+.f-checkout__review dd { margin: 0; }
+.f-checkout__total-line { margin: 0; font-size: 1rem; display: flex; justify-content: space-between; }
+
+.f-checkout__signin { display: flex; flex-direction: column; align-items: flex-start; gap: 0.75rem; padding: 1.5rem; border: 1px solid var(--f-border); border-radius: var(--f-radius); background: var(--f-surface); }
+.f-checkout__title { margin: 0; font-size: 1.2rem; }
+.f-checkout__back { font-size: 0.85rem; color: var(--f-text-soft); }
+
+.f-checkout__summary { position: sticky; inset-block-start: 1rem; padding: 1.1rem; border: 1px solid var(--f-border); border-radius: calc(var(--f-radius) * 1.4); background: var(--f-surface); display: flex; flex-direction: column; gap: 1rem; }
+.f-checkout__summary-title { margin: 0; font-size: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+.f-checkout__count { min-inline-size: 1.4rem; padding: 0 0.4rem; border-radius: 999px; background: rgba(0, 0, 0, 0.06); font-size: 0.75rem; text-align: center; line-height: 1.4rem; }
+.f-checkout__lines { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.7rem; max-block-size: 18rem; overflow-y: auto; }
+.f-checkout__line { display: flex; align-items: center; gap: 0.7rem; }
+.f-checkout__line-media { position: relative; flex: none; inline-size: 3.25rem; block-size: 3.25rem; border-radius: var(--f-radius); overflow: visible; background: rgba(0, 0, 0, 0.05); }
+.f-checkout__line-media img { inline-size: 100%; block-size: 100%; object-fit: cover; border-radius: var(--f-radius); }
+.f-checkout__line-qty { position: absolute; inset-block-start: -0.35rem; inset-inline-end: -0.35rem; min-inline-size: 1.2rem; block-size: 1.2rem; padding-inline: 0.3rem; border-radius: 999px; background: var(--f-text); color: var(--f-surface); font-size: 0.68rem; line-height: 1.2rem; text-align: center; }
+.f-checkout__line-text { flex: 1 1 auto; min-inline-size: 0; display: flex; flex-direction: column; font-size: 0.85rem; }
+.f-checkout__line-name { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.f-checkout__line-text small { color: var(--f-text-soft); }
+.f-checkout__line-total { flex: none; font-weight: 700; font-size: 0.85rem; }
+.f-checkout__totals { display: flex; flex-direction: column; gap: 0.45rem; padding-block-start: 0.75rem; border-block-start: 1px solid var(--f-border); }
+.f-checkout__row { display: flex; justify-content: space-between; font-size: 0.9rem; color: var(--f-text-soft); }
+.f-checkout__row--discount { color: var(--color-primary, #1d9e75); }
+.f-checkout__row--total { margin-block-start: 0.35rem; padding-block-start: 0.6rem; border-block-start: 1px solid var(--f-border); color: var(--f-text); font-size: 1.05rem; font-weight: 700; }
+.f-checkout__row > span:first-child { display: inline-flex; align-items: center; gap: 0.3rem; }
+
+.f-checkout__info-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 1.05rem;
+    block-size: 1.05rem;
+    border: 0;
+    border-radius: 50%;
+    background: var(--f-border);
+    color: var(--f-text-soft);
+    cursor: pointer;
+    flex: none;
+}
+.f-checkout__info-btn:hover { background: var(--color-primary, #1d9e75); color: var(--color-on-primary, #fff); }
+
+.f-checkout__progress { display: block; margin-block-end: 1.25rem; }
+
+.f-payment-status { display: block; }
+.f-payment-status__box { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; padding: 3rem 1rem; text-align: center; }
+.f-payment-status__title { margin: 0; font-size: 1.4rem; }
+.f-payment-status__icon { display: inline-flex; align-items: center; justify-content: center; inline-size: 4rem; block-size: 4rem; border-radius: 50%; font-size: 1.8rem; font-weight: 700; }
+.is-success .f-payment-status__icon { background: var(--color-primary, #1d9e75); color: var(--color-on-primary, #fff); }
+.is-failed .f-payment-status__icon { background: var(--f-danger); color: #fff; }
+.f-payment-status__actions { display: flex; flex-wrap: wrap; gap: 0.6rem; justify-content: center; }
+
+/* ========================================================================
+   Product availability ("notify me"), size guide, reviews summary
+   ======================================================================== */
+
+.f-availability { display: block; }
+.f-availability[hidden] { display: none; }
+.f-availability__button { display: inline-flex; align-items: center; gap: 0.45rem; }
+.f-availability__done { display: inline-flex; align-items: center; gap: 0.45rem; margin: 0; color: var(--color-primary, #1d9e75); font-weight: 600; }
+.f-availability__form { display: flex; flex-direction: column; gap: 0.9rem; }
+.f-availability__error { margin: 0; font-size: 0.85rem; color: var(--f-danger); }
+.f-availability__error[hidden] { display: none; }
+
+.f-size-guide { display: inline-block; }
+.f-size-guide[hidden] { display: none; }
+.f-size-guide__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-primary, #1d9e75);
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+}
+.f-size-guide__body { display: flex; flex-direction: column; gap: 1rem; }
+.f-size-guide__image { max-inline-size: 100%; block-size: auto; border-radius: var(--f-radius); }
+.f-size-guide__content table { inline-size: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.f-size-guide__content th, .f-size-guide__content td { padding: 0.5rem 0.6rem; border: 1px solid var(--f-border); text-align: start; }
+.f-size-guide__content th { background: rgba(0, 0, 0, 0.04); font-weight: 700; }
+
+.f-reviews-summary { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 1.5rem; align-items: center; }
+.f-reviews-summary[hidden] { display: none; }
+@media (max-width: 599px) { .f-reviews-summary { grid-template-columns: minmax(0, 1fr); } }
+.f-reviews-summary__loading { display: flex; justify-content: center; padding: 1rem; }
+.f-reviews-summary__empty { margin: 0; color: var(--f-text-soft); }
+.f-reviews-summary__score { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; min-inline-size: 8rem; }
+.f-reviews-summary__average { font-size: 2.6rem; font-weight: 800; line-height: 1; color: var(--f-text); }
+.f-reviews-summary__total { font-size: 0.85rem; color: var(--f-text-soft); }
+.f-reviews-summary__bars { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.4rem; }
+.f-reviews-summary__row { display: grid; grid-template-columns: 2.6rem minmax(0, 1fr) 2.5rem; align-items: center; gap: 0.6rem; font-size: 0.85rem; }
+.f-reviews-summary__row-label { color: var(--f-text-soft); white-space: nowrap; }
+.f-reviews-summary__star { color: #f5a623; }
+.f-reviews-summary__bar { display: block; block-size: 0.55rem; border-radius: 999px; background: rgba(0, 0, 0, 0.07); overflow: hidden; }
+.f-reviews-summary__fill { display: block; block-size: 100%; border-radius: 999px; background: #f5a623; transition: inline-size 0.4s ease; }
+.f-reviews-summary__count { text-align: end; color: var(--f-text-soft); font-variant-numeric: tabular-nums; }
+.f-availability__note { margin: 0 0 0.5rem; font-size: 0.85rem; color: var(--f-text-soft); }
+
+/* ========================================================================
+   Add-product toast — the "added to your cart" card
+   ======================================================================== */
+.f-add-toast {
+    position: fixed;
+    z-index: 1100;
+    inline-size: min(22rem, calc(100vw - 2rem));
+    opacity: 0;
+    transform: translateY(0.75rem);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    pointer-events: none;
+}
+.f-add-toast[hidden] { display: none; }
+.f-add-toast.is-in { opacity: 1; transform: none; pointer-events: auto; }
+.f-add-toast--bottom-end { inset-block-end: 1.25rem; inset-inline-end: 1.25rem; }
+.f-add-toast--bottom-start { inset-block-end: 1.25rem; inset-inline-start: 1.25rem; }
+.f-add-toast--bottom-center { inset-block-end: 1.25rem; inset-inline-start: 50%; transform: translate(-50%, 0.75rem); }
+.f-add-toast--bottom-center.is-in { transform: translate(-50%, 0); }
+.f-add-toast--top-end { inset-block-start: 1.25rem; inset-inline-end: 1.25rem; transform: translateY(-0.75rem); }
+.f-add-toast--top-start { inset-block-start: 1.25rem; inset-inline-start: 1.25rem; transform: translateY(-0.75rem); }
+.f-add-toast--top-center { inset-block-start: 1.25rem; inset-inline-start: 50%; transform: translate(-50%, -0.75rem); }
+.f-add-toast--top-center.is-in { transform: translate(-50%, 0); }
+.f-add-toast__card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    background: var(--f-surface, #fff);
+    color: var(--f-text, #1f2937);
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.22);
+}
+.f-add-toast__close {
+    position: absolute;
+    inset-block-start: 0.5rem;
+    inset-inline-end: 0.5rem;
+    inline-size: 1.75rem;
+    block-size: 1.75rem;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: inherit;
+    font-size: 1.25rem;
+    line-height: 1;
+    cursor: pointer;
+}
+.f-add-toast__close:hover { background: rgba(0, 0, 0, 0.06); }
+.f-add-toast__head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-inline-end: 2rem;
+    font-weight: 700;
+    color: var(--f-success, #15803d);
+}
+.f-add-toast__icon { flex: none; }
+.f-add-toast__product { display: flex; align-items: center; gap: 0.75rem; }
+.f-add-toast__image {
+    flex: none;
+    inline-size: 3.5rem;
+    block-size: 3.5rem;
+    object-fit: cover;
+    border-radius: 0.5rem;
+    background: rgba(0, 0, 0, 0.05);
+}
+.f-add-toast__info { display: flex; flex-direction: column; gap: 0.15rem; min-inline-size: 0; }
+.f-add-toast__name {
+    font-weight: 600;
+    color: inherit;
+    text-decoration: none;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+.f-add-toast__variant, .f-add-toast__price { font-size: 0.85rem; opacity: 0.75; }
+.f-add-toast__summary {
+    margin: 0;
+    padding-block-start: 0.75rem;
+    border-block-start: 1px solid rgba(0, 0, 0, 0.08);
+    font-size: 0.85rem;
+    opacity: 0.85;
+}
+.f-add-toast__actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+.f-add-toast__actions .f-btn { justify-content: center; text-align: center; }
+@media (prefers-reduced-motion: reduce) { .f-add-toast { transition: none; } }
+
+/* ---- from packages/falak-components/src/components.chrome.css ---- */
+
+/*
+    Storefront chrome — button, modal, slider, menu, breadcrumb and the footer
+    trust row.
+
+    Split from components.css only for file size; both are imported by the entry
+    and Vite's library mode concatenates them into one extracted
+    falak-components.css. Same rules apply: derive from the theme's brand
+    tokens, logical properties throughout so RTL needs no second stylesheet.
+*/
+
+/* ========================================================================
+   Button
+   ======================================================================== */
+
+.f-btn-wrap { display: inline-block; }
+falak-button[width="wide"],
+falak-button[width="wide"] .f-btn-wrap { display: block; inline-size: 100%; }
+.f-btn__link { display: block; text-decoration: none; }
+
+.f-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding-inline: 1.25rem;
+    min-block-size: 2.75rem;
+    border: 1px solid transparent;
+    border-radius: var(--f-radius);
+    font: inherit;
+    font-weight: 600;
+    font-size: 0.9rem;
+    line-height: 1;
+    white-space: nowrap;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.16s ease, color 0.16s ease, border-color 0.16s ease, opacity 0.16s ease;
+}
+
+.f-btn:focus-visible { outline: 2px solid var(--color-primary, #1d9e75); outline-offset: 2px; }
+.f-btn:hover:not(:disabled) { opacity: 0.88; }
+.f-btn:disabled,
+.f-btn--disabled { opacity: 0.5; cursor: not-allowed; }
+
+.f-btn--primary { background: var(--color-primary, #1d9e75); color: var(--color-on-primary, #fff); }
+.f-btn--light { background: rgba(0, 0, 0, 0.05); color: var(--f-text); }
+.f-btn--danger { background: var(--f-danger); color: #fff; }
+
+.f-btn--primary-outline { background: transparent; border-color: var(--color-primary, #1d9e75); color: var(--color-primary, #1d9e75); }
+.f-btn--light-outline { background: transparent; border-color: var(--f-border); color: var(--f-text); }
+.f-btn--danger-outline { background: transparent; border-color: var(--f-danger); color: var(--f-danger); }
+.f-btn--fill-none { background: transparent; color: var(--f-text); }
+
+.f-btn--primary-link,
+.f-btn--light-link {
+    background: none;
+    border: 0;
+    padding-inline: 0;
+    min-block-size: auto;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.f-btn--primary-link { color: var(--color-primary, #1d9e75); }
+
+.f-btn--icon { inline-size: 2.5rem; min-block-size: 2.5rem; padding: 0; border-radius: 50%; }
+.f-btn--small { min-block-size: 2.15rem; padding-inline: 0.85rem; font-size: 0.8rem; }
+.f-btn--large { min-block-size: 3.15rem; padding-inline: 1.75rem; font-size: 1rem; }
+.f-btn--wide { inline-size: 100%; }
+
+.f-btn__text { display: inline-flex; align-items: center; gap: 0.4rem; }
+.f-btn__text--hidden { visibility: hidden; }
+
+.f-btn__loader {
+    inline-size: 1rem;
+    block-size: 1rem;
+    border: 2px solid currentColor;
+    border-block-start-color: transparent;
+    border-radius: 50%;
+    animation: f-spin 0.7s linear infinite;
+}
+
+.f-btn--loader-center .f-btn__loader {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-start: 50%;
+    margin-block-start: -0.5rem;
+    margin-inline-start: -0.5rem;
+}
+
+.f-btn--loader-before { flex-direction: row-reverse; }
+
+@keyframes f-spin { to { transform: rotate(360deg); } }
+
+/* ========================================================================
+   Modal
+   ======================================================================== */
+
+.f-modal { position: fixed; inset: 0; z-index: 1000; display: none; }
+.f-modal[data-visible="true"] { display: block; }
+body.f-modal-open { overflow: hidden; }
+
+.f-modal__overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(8, 14, 12, 0.55);
+    animation: f-fade 0.18s ease;
+}
+
+.f-modal__wrapper {
+    position: relative;
+    block-size: 100%;
+    display: flex;
+    justify-content: center;
+    padding: 1rem;
+    overflow-y: auto;
+}
+
+.f-modal__wrapper--middle { align-items: center; }
+.f-modal__wrapper--top { align-items: flex-start; }
+.f-modal__wrapper--bottom { align-items: flex-end; }
+
+.f-modal__body {
+    position: relative;
+    inline-size: 100%;
+    background: var(--f-surface);
+    border-radius: calc(var(--f-radius) * 1.6);
+    box-shadow: 0 20px 60px rgba(8, 14, 12, 0.28);
+    animation: f-rise 0.2s ease;
+}
+
+.f-modal__body:not(.f-modal__body--flush) { padding: 1.5rem; }
+.f-modal__body--flush { padding: 0; }
+.f-modal__body--xs { max-inline-size: 20rem; }
+.f-modal__body--sm { max-inline-size: 26rem; }
+.f-modal__body--md { max-inline-size: 34rem; }
+.f-modal__body--lg { max-inline-size: 46rem; }
+.f-modal__body--xl { max-inline-size: 60rem; }
+
+.f-modal__header { display: flex; align-items: flex-start; gap: 1rem; }
+.f-modal__header--center { justify-content: center; text-align: center; }
+.f-modal__heading { flex: 1; display: flex; flex-direction: column; gap: 0.25rem; }
+.f-modal__heading--reverse { flex-direction: column-reverse; }
+.f-modal__title { margin: 0; font-size: 1.05rem; font-weight: 700; color: var(--f-text); }
+.f-modal__subtitle { margin: 0; font-size: 0.85rem; color: var(--f-text-soft); }
+
+.f-modal__close {
+    order: 2;
+    flex: none;
+    inline-size: 2rem;
+    block-size: 2rem;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--f-text-soft);
+    font-size: 1.35rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.f-modal__close:hover { background: rgba(0, 0, 0, 0.1); }
+.f-modal__loading { display: flex; justify-content: center; padding: 2rem; }
+
+.f-modal__spinner {
+    inline-size: 1.75rem;
+    block-size: 1.75rem;
+    border: 2px solid var(--f-border);
+    border-block-start-color: var(--color-primary, #1d9e75);
+    border-radius: 50%;
+    animation: f-spin 0.7s linear infinite;
+}
+
+.f-hidden { display: none !important; }
+
+@keyframes f-fade { from { opacity: 0; } }
+@keyframes f-rise { from { opacity: 0; transform: translateY(12px); } }
+
+/* ========================================================================
+   Slider
+   ======================================================================== */
+
+.f-slider { position: relative; display: block; }
+.f-slider--static .f-slider__controls,
+.f-slider--static .f-slider__dots { display: none; }
+
+.f-slider__head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-block-end: 1.15rem;
+}
+
+.f-slider__title { margin: 0; font-size: 1.25rem; font-weight: 700; }
+.f-slider__subtitle { margin: 0.2rem 0 0; font-size: 0.85rem; color: var(--f-text-soft); }
+.f-slider__head-actions { flex: none; display: flex; align-items: center; gap: 0.75rem; }
+.f-slider__all { font-size: 0.85rem; font-weight: 600; color: var(--color-primary, #1d9e75); text-decoration: none; }
+.f-slider__all:hover { text-decoration: underline; }
+
+.f-slider__viewport { position: relative; }
+
+/*
+    Native scroll-snap does the work. grid-auto-columns derives each slide's
+    width from the requested slides-per-view, so a fractional value (peeking
+    the next card) is a legitimate setting rather than a special case.
+*/
+.f-slider__track {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: calc((100% - (var(--f-slider-per-view, 4) - 1) * 1rem) / var(--f-slider-per-view, 4));
+    gap: 1rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    padding-block-end: 0.25rem;
+}
+
+.f-slider__track::-webkit-scrollbar { display: none; }
+
+.f-slider__track:focus-visible {
+    outline: 2px solid var(--color-primary, #1d9e75);
+    outline-offset: 3px;
+    border-radius: var(--f-radius);
+}
+
+.f-slider__slide { scroll-snap-align: start; min-inline-size: 0; }
+
+@media (max-width: 1023px) { .f-slider__track { grid-auto-columns: calc((100% - 2rem) / 3); } }
+@media (max-width: 767px) { .f-slider__track { grid-auto-columns: calc((100% - 1rem) / 2); } }
+@media (max-width: 479px) { .f-slider__track { grid-auto-columns: 78%; } }
+
+.f-slider__controls { display: flex; gap: 0.5rem; }
+
+.f-slider__arrow {
+    inline-size: 2.25rem;
+    block-size: 2.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--f-border);
+    border-radius: 50%;
+    background: var(--f-surface);
+    color: var(--f-text);
+    cursor: pointer;
+    transition: opacity 0.15s ease, background-color 0.15s ease;
+}
+
+.f-slider__arrow:hover:not(:disabled) { background: rgba(0, 0, 0, 0.04); }
+.f-slider__arrow:disabled { opacity: 0.35; cursor: default; }
+
+/* Chevron drawn from two borders — no icon asset, and it mirrors with the
+   writing mode because the sides are logical. */
+.f-slider__arrow::before {
+    content: "";
+    inline-size: 0.5rem;
+    block-size: 0.5rem;
+    border-inline-start: 2px solid currentColor;
+    border-block-start: 2px solid currentColor;
+}
+
+.f-slider__arrow--prev::before { transform: rotate(-45deg); margin-inline-start: 0.2rem; }
+.f-slider__arrow--next::before { transform: rotate(135deg); margin-inline-end: 0.2rem; }
+
+.f-slider:not(.f-slider--controls-outer) .f-slider__controls {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline: 0;
+    transform: translateY(-50%);
+    justify-content: space-between;
+    pointer-events: none;
+}
+
+.f-slider:not(.f-slider--controls-outer) .f-slider__arrow {
+    pointer-events: auto;
+    margin-inline: -0.75rem;
+    box-shadow: 0 2px 10px rgba(8, 14, 12, 0.12);
+}
+
+.f-slider--arrows-centered .f-slider__controls { inset-block-start: 38%; }
+
+.f-slider__dots { display: flex; justify-content: center; gap: 0.4rem; margin-block-start: 1rem; }
+
+.f-slider__dot {
+    inline-size: 0.5rem;
+    block-size: 0.5rem;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: var(--f-border);
+    cursor: pointer;
+    transition: inline-size 0.2s ease, background-color 0.2s ease;
+}
+
+.f-slider__dot.is-active {
+    inline-size: 1.35rem;
+    border-radius: 999px;
+    background: var(--color-primary, #1d9e75);
+}
+
+.f-products-slider { display: block; }
+.f-products-slider[hidden] { display: none; }
+
+.f-products-slider__skeleton {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: calc((100% - 3rem) / 4);
+    gap: 1rem;
+    overflow: hidden;
+}
+
+/* ========================================================================
+   Menu
+   ======================================================================== */
+
+/*
+    The host is transparent to layout.
+
+    In its default mode this component wraps markup the theme already rendered,
+    and the theme's own rules position that markup — a header's flex row expects
+    the <nav> as its child, not a wrapper around it. `display: contents` lets the
+    element carry behaviour and state without introducing a box that would break
+    whatever layout it was dropped into.
+*/
+.f-menu { display: contents; }
+.f-menu[hidden] { display: none; }
+
+/* Rendered mode supplies its own box, since there is no theme markup to defer to. */
+.f-menu__nav { display: block; }
+.f-menu__list { list-style: none; margin: 0; padding: 0; }
+.f-menu__list--root { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; }
+.f-menu__item { position: relative; }
+
+.f-menu__link {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.55rem 0.7rem;
+    border-radius: var(--f-radius);
+    color: var(--f-text);
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.f-menu__link:hover { color: var(--color-primary, #1d9e75); }
+.f-menu__link:focus-visible { outline: 2px solid var(--color-primary, #1d9e75); outline-offset: -2px; }
+.f-menu__image { inline-size: 1.5rem; block-size: 1.5rem; border-radius: 4px; object-fit: cover; }
+
+.f-menu__caret {
+    inline-size: 0.4rem;
+    block-size: 0.4rem;
+    border-inline-end: 1.5px solid currentColor;
+    border-block-end: 1.5px solid currentColor;
+    transform: rotate(45deg);
+    margin-block-start: -0.2rem;
+    transition: transform 0.18s ease;
+}
+
+.f-menu__item.is-open > .f-menu__link .f-menu__caret {
+    transform: rotate(-135deg);
+    margin-block-start: 0.15rem;
+}
+
+.f-menu__list--sub {
+    position: absolute;
+    inset-block-start: 100%;
+    inset-inline-start: 0;
+    z-index: 60;
+    min-inline-size: 12rem;
+    padding: 0.4rem;
+    background: var(--f-surface);
+    border: 1px solid var(--f-border);
+    border-radius: var(--f-radius);
+    box-shadow: 0 12px 32px rgba(8, 14, 12, 0.14);
+    display: none;
+}
+
+/*
+    State rules carry an extra class on purpose.
+
+    A theme may put its own class on the host — the reference theme uses
+    class="main-menu" so the component inherits its drawer transform and
+    colours — and a descendant rule like `.main-menu ul { display: flex }`
+    (0,0,1,1) outranks a single-class `.f-menu__list--sub` (0,0,1,0). That
+    would leave every submenu permanently open. Two classes (0,0,2,0) win
+    without reaching for !important.
+*/
+.f-menu .f-menu__list--sub { display: none; }
+.f-menu .f-menu__item.is-open > .f-menu__list--sub { display: block; }
+
+.f-menu__list--sub .f-menu__list--sub { inset-block-start: -0.4rem; inset-inline-start: 100%; }
+.f-menu__list--flip { inset-inline-start: auto; inset-inline-end: 0; }
+.f-menu__list--sub .f-menu__list--flip { inset-inline-end: 100%; }
+
+/* The drawer is the same markup laid out as a stack that expands in place. */
+.f-menu--mobile .f-menu__list--root { flex-direction: column; align-items: stretch; gap: 0; }
+.f-menu--mobile .f-menu__link { padding: 0.85rem 0.25rem; border-block-end: 1px solid var(--f-border); }
+.f-menu--mobile .f-menu__caret { margin-inline-start: auto; }
+
+.f-menu--mobile .f-menu__list--sub {
+    position: static;
+    display: none;
+    min-inline-size: 0;
+    padding: 0;
+    padding-inline-start: 1rem;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+}
+
+.f-menu--mobile .f-menu__item.is-open > .f-menu__list--sub { display: block; }
+
+/* ========================================================================
+   Breadcrumb
+   ======================================================================== */
+
+.f-breadcrumb { display: block; }
+.f-breadcrumb[hidden] { display: none; }
+
+.f-breadcrumb__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    color: var(--f-text-soft);
+}
+
+.f-breadcrumb__item { display: flex; align-items: center; gap: 0.4rem; }
+.f-breadcrumb__item + .f-breadcrumb__item::before { content: "/"; color: var(--f-text-faint); }
+.f-breadcrumb__item a { color: inherit; text-decoration: none; }
+.f-breadcrumb__item a:hover { color: var(--color-primary, #1d9e75); }
+.f-breadcrumb__item.is-current { color: var(--f-text); font-weight: 600; }
+
+/* ========================================================================
+   Footer: social, payments, apps, trust badges
+   ======================================================================== */
+
+.f-social[hidden],
+.f-payments[hidden],
+.f-apps[hidden],
+.f-trust[hidden] { display: none; }
+
+.f-social__title,
+.f-payments__title,
+.f-apps__title {
+    margin: 0 0 0.75rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: inherit;
+}
+
+.f-social__list,
+.f-payments__list,
+.f-trust__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.f-social__link {
+    inline-size: 2.25rem;
+    block-size: 2.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--f-border);
+    border-radius: 50%;
+    color: inherit;
+    transition: background-color 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
+}
+
+.f-social__link:hover {
+    background: var(--color-primary, #1d9e75);
+    border-color: transparent;
+    color: var(--color-on-primary, #fff);
+    transform: translateY(-1px);
+}
+
+.f-social__link:focus-visible { outline: 2px solid var(--color-primary, #1d9e75); outline-offset: 2px; }
+.f-social--share .f-social__list { gap: 0.4rem; }
+
+.f-payments__item {
+    inline-size: 2.9rem;
+    block-size: 1.9rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 1px solid var(--f-border);
+    border-radius: 5px;
+    background: var(--f-surface);
+    color: var(--f-text-soft);
+}
+
+.f-payments__logo {
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: contain;
+    padding: 0.15rem 0.3rem;
+}
+
+.f-payments__label {
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.f-apps__list { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+.f-apps--vertical .f-apps__list { flex-direction: column; align-items: flex-start; }
+
+.f-apps__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.45rem 0.9rem;
+    border: 1px solid var(--f-border);
+    border-radius: var(--f-radius);
+    color: inherit;
+    text-decoration: none;
+    transition: border-color 0.16s ease, transform 0.16s ease;
+}
+
+.f-apps__item:hover { border-color: var(--color-primary, #1d9e75); transform: translateY(-1px); }
+.f-apps__text { display: flex; flex-direction: column; line-height: 1.15; }
+.f-apps__sub { font-size: 0.6rem; opacity: 0.72; }
+.f-apps__store { font-size: 0.85rem; font-weight: 700; }
+
+.f-trust__list { gap: 0.75rem; }
+
+.f-trust__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem 0.75rem;
+    border: 1px solid var(--f-border);
+    border-radius: var(--f-radius);
+    font-size: 0.75rem;
+}
+
+.f-trust__text { display: flex; flex-direction: column; line-height: 1.25; }
+.f-trust__label { font-size: 0.68rem; opacity: 0.7; }
+.f-trust__value { font-weight: 700; font-variant-numeric: tabular-nums; }
+.f-trust__glyph { flex: none; color: var(--color-primary, #1d9e75); }
+.f-trust--dark .f-trust__item { border-color: rgba(255, 255, 255, 0.22); }
+.f-trust--dark .f-trust__glyph { color: currentColor; }
+
+@media (prefers-reduced-motion: reduce) {
+    .f-slider__track { scroll-behavior: auto; }
+    .f-btn__loader,
+    .f-modal__spinner,
+    .f-modal__overlay,
+    .f-modal__body { animation: none; }
+    .f-social__link:hover,
+    .f-apps__item:hover { transform: none; }
+}
+
+/*
+    `mobile` has to mean mobile. Without this the drawer variant renders as a
+    plain vertical list in the desktop flow, on top of whatever the theme put
+    in its header — which is exactly what it did.
+
+    A theme that wants an always-visible menu omits the attribute.
+*/
+@media (min-width: 1024px) {
+    .f-menu--mobile { display: none; }
+}
+
+/*
+    Share row: a labelled strip, not a continuation of the buy box and not a
+    bare cluster of circles. Laid out inline so the label and the icons read as
+    one control, and aligned to the content start so it lines up with the
+    buy box above it in either direction.
+*/
+.f-social--share {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-block-start: 1rem;
+    padding-block-start: 1rem;
+    border-block-start: 1px solid var(--f-border);
+}
+
+.f-social--share .f-social__list { justify-content: flex-start; }
+
+.f-social__label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--f-text-soft);
+}
+
+/* Slightly smaller than the footer set — this is a secondary action. */
+.f-social--share .f-social__link { inline-size: 2rem; block-size: 2rem; }
+
+/* ========================================================================
+   Announcement bar
+   A full-width strip above the header. Short text sits centred; text
+   wider than the viewport becomes a marquee that follows the page
+   direction and pauses on hover. Colours default to the primary but are
+   plain custom properties for a theme to override.
+   ======================================================================== */
+
+.f-announce {
+    display: block;
+    background: var(--f-announce-bg, var(--color-primary, #1d9e75));
+    color: var(--f-announce-fg, var(--color-on-primary, #fff));
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+.f-announce[hidden] { display: none; }
+
+.f-announce__inner {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.4rem;
+    padding: 0.35rem 2.5rem;
+    overflow: hidden;
+    text-align: center;
+}
+
+.f-announce__text,
+.f-announce__link {
+    color: inherit;
+    text-decoration: none;
+    white-space: nowrap;
+}
+.f-announce__link:hover { text-decoration: underline; }
+
+/* Marquee: the track holds the message twice so the loop is seamless. */
+.f-announce--scroll .f-announce__inner { justify-content: flex-start; padding-inline: 0; }
+.f-announce__track {
+    display: inline-flex;
+    white-space: nowrap;
+    will-change: transform;
+    animation: f-announce-ltr var(--f-announce-duration, 18s) linear infinite;
+}
+.f-announce__track > * { padding-inline-end: 4rem; }
+.f-announce[dir="rtl"] .f-announce__track,
+[dir="rtl"] .f-announce__track { animation-name: f-announce-rtl; }
+.f-announce__track:hover { animation-play-state: paused; }
+
+@keyframes f-announce-ltr { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@keyframes f-announce-rtl { from { transform: translateX(0); } to { transform: translateX(50%); } }
+
+.f-announce__close {
+    position: absolute;
+    inset-inline-end: 1rem;
+    top: 50%;
+    translate: 0 -50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: inherit;
+    font-size: 1.15rem;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0.75;
+}
+.f-announce__close:hover { opacity: 1; background: rgba(255, 255, 255, 0.15); }
+.f-announce--scroll .f-announce__close { inset-inline-end: 0.5rem; }
+
+@media (prefers-reduced-motion: reduce) {
+    .f-announce__track { animation: none; }
+    .f-announce--scroll .f-announce__inner { justify-content: center; overflow-x: auto; }
+}
+
+/* ========================================================================
+   Loading — the shared spinner, standalone / overlay / full page
+   ======================================================================== */
+
+.f-loading {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--f-text-soft, currentColor);
+}
+
+.f-loading__spinner {
+    flex: none;
+    inline-size: 1.35rem;
+    block-size: 1.35rem;
+    border: 2px solid var(--f-border);
+    border-block-start-color: var(--color-primary, #1d9e75);
+    border-radius: 50%;
+    animation: f-spin 0.7s linear infinite;
+}
+
+.f-loading--sm .f-loading__spinner { inline-size: 1rem; block-size: 1rem; border-width: 2px; }
+.f-loading--lg .f-loading__spinner { inline-size: 2.25rem; block-size: 2.25rem; border-width: 3px; }
+
+/* A caption only makes sense on the full-page overlay; elsewhere it is
+   screen-reader text so the spinner alone stays the visible affordance. */
+.f-loading:not(.f-loading--page) .f-loading__label {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+.f-loading--overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    justify-content: center;
+    background: color-mix(in srgb, var(--f-surface, #fff) 80%, transparent);
+}
+
+.f-loading--page {
+    position: fixed;
+    inset: 0;
+    z-index: 1300;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.85rem;
+    background: rgba(0, 0, 0, 0.45);
+    color: #fff;
+}
+
+.f-loading--page .f-loading__spinner {
+    inline-size: 2.25rem;
+    block-size: 2.25rem;
+    border-width: 3px;
+    border-color: rgba(255, 255, 255, 0.3);
+    border-block-start-color: #fff;
+}
+
+.f-loading--page .f-loading__label { font-size: 0.95rem; font-weight: 600; }
+
+@media (prefers-reduced-motion: reduce) {
+    .f-loading__spinner { animation-duration: 1.4s; }
+}
+
+/* ========================================================================
+   Notifications — the global toast stack
+   ======================================================================== */
+
+.f-notifications {
+    position: fixed;
+    z-index: 1150;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    inline-size: min(22rem, calc(100vw - 2rem));
+    pointer-events: none;
+}
+
+.f-notifications--top-end { inset-block-start: 1.25rem; inset-inline-end: 1.25rem; }
+.f-notifications--top-start { inset-block-start: 1.25rem; inset-inline-start: 1.25rem; }
+.f-notifications--top-center { inset-block-start: 1.25rem; inset-inline-start: 50%; transform: translateX(-50%); }
+.f-notifications--bottom-end { inset-block-end: 1.25rem; inset-inline-end: 1.25rem; }
+.f-notifications--bottom-start { inset-block-end: 1.25rem; inset-inline-start: 1.25rem; }
+.f-notifications--bottom-center { inset-block-end: 1.25rem; inset-inline-start: 50%; transform: translateX(-50%); }
+
+.f-toast {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    padding: 0.75rem 0.9rem;
+    border-radius: 0.65rem;
+    background: var(--f-surface, #fff);
+    color: var(--f-text, #1f2937);
+    box-shadow: 0 12px 34px rgba(0, 0, 0, 0.18);
+    pointer-events: auto;
+    opacity: 0;
+    transform: translateY(-0.5rem);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.f-notifications--bottom-end .f-toast,
+.f-notifications--bottom-start .f-toast,
+.f-notifications--bottom-center .f-toast { transform: translateY(0.5rem); }
+
+.f-toast.is-in { opacity: 1; transform: none; }
+.f-toast.is-out { opacity: 0; }
+
+.f-toast__icon { flex: none; margin-block-start: 0.1rem; }
+.f-toast--success .f-toast__icon { color: var(--f-success, #15803d); }
+.f-toast--error .f-toast__icon { color: var(--f-danger, #b91c1c); }
+.f-toast--warning .f-toast__icon { color: #b45309; }
+.f-toast--info .f-toast__icon { color: var(--color-primary, #1d9e75); }
+
+.f-toast__message { flex: 1; margin: 0; font-size: 0.88rem; line-height: 1.4; }
+
+.f-toast__close {
+    flex: none;
+    inline-size: 1.4rem;
+    block-size: 1.4rem;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: inherit;
+    opacity: 0.6;
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
+}
+.f-toast__close:hover { opacity: 1; background: rgba(0, 0, 0, 0.06); }
+
+@media (prefers-reduced-motion: reduce) {
+    .f-toast { transition: none; }
+}
+
+/* ========================================================================
+   Progress bar — a filled bar for a value against a whole
+   ======================================================================== */
+
+.f-progress { display: block; }
+
+.f-progress__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-block-end: 0.4rem;
+    font-size: 0.85rem;
+}
+
+.f-progress__label { color: var(--f-text, currentColor); }
+.f-progress__value { color: var(--f-text-soft, currentColor); font-variant-numeric: tabular-nums; }
+
+.f-progress__track {
+    inline-size: 100%;
+    block-size: 0.5rem;
+    border-radius: 999px;
+    background: var(--f-border, rgba(0, 0, 0, 0.08));
+    overflow: hidden;
+}
+
+.f-progress__fill {
+    block-size: 100%;
+    border-radius: inherit;
+    background: var(--color-primary, #1d9e75);
+    transition: inline-size 0.3s ease;
+}
+
+.f-progress--success .f-progress__fill { background: var(--f-success, #15803d); }
+.f-progress--warning .f-progress__fill { background: #b45309; }
+.f-progress--danger .f-progress__fill { background: var(--f-danger, #b91c1c); }
+
+.f-progress--sm .f-progress__track { block-size: 0.3rem; }
+.f-progress--lg .f-progress__track { block-size: 0.75rem; }
+
+@media (prefers-reduced-motion: reduce) {
+    .f-progress__fill { transition: none; }
+}
+
+/* ========================================================================
+   Tooltip — a small hover/focus hint
+   ======================================================================== */
+
+.f-tooltip {
+    position: relative;
+    display: inline-block;
+}
+
+.f-tooltip__trigger { display: inline-flex; }
+
+.f-tooltip__bubble {
+    position: absolute;
+    z-index: 50;
+    inline-size: max-content;
+    max-inline-size: 16rem;
+    padding: 0.4rem 0.65rem;
+    border-radius: 0.4rem;
+    background: var(--f-text, #1f2430);
+    color: var(--f-surface, #fff);
+    font-size: 0.78rem;
+    line-height: 1.4;
+    text-align: center;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(2px);
+    transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
+}
+
+.f-tooltip.is-open .f-tooltip__bubble { opacity: 1; visibility: visible; transform: none; }
+
+.f-tooltip[data-tooltip-position="top"] .f-tooltip__bubble {
+    inset-block-end: calc(100% + 0.4rem);
+    inset-inline-start: 50%;
+    translate: -50% 0;
+}
+.f-tooltip[data-tooltip-position="top"].is-open .f-tooltip__bubble { transform: translate(-50%, 0); }
+.f-tooltip[data-tooltip-position="top"]:not(.is-open) .f-tooltip__bubble { transform: translate(-50%, 2px); }
+
+.f-tooltip[data-tooltip-position="bottom"] .f-tooltip__bubble {
+    inset-block-start: calc(100% + 0.4rem);
+    inset-inline-start: 50%;
+}
+.f-tooltip[data-tooltip-position="bottom"].is-open .f-tooltip__bubble { transform: translate(-50%, 0); }
+.f-tooltip[data-tooltip-position="bottom"]:not(.is-open) .f-tooltip__bubble { transform: translate(-50%, -2px); }
+
+.f-tooltip[data-tooltip-position="start"] .f-tooltip__bubble {
+    inset-inline-end: calc(100% + 0.4rem);
+    inset-block-start: 50%;
+    transform: translateY(-50%);
+}
+.f-tooltip[data-tooltip-position="end"] .f-tooltip__bubble {
+    inset-inline-start: calc(100% + 0.4rem);
+    inset-block-start: 50%;
+    transform: translateY(-50%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .f-tooltip__bubble { transition: none; }
+}
+
+/* ========================================================================
+   Skeleton — a content-shaped loading placeholder
+   ======================================================================== */
+
+.f-skeleton {
+    display: block;
+    border-radius: var(--f-radius, 0.5rem);
+    background: linear-gradient(90deg,
+        color-mix(in srgb, var(--f-text, #1f2430) 8%, transparent) 25%,
+        color-mix(in srgb, var(--f-text, #1f2430) 14%, transparent) 37%,
+        color-mix(in srgb, var(--f-text, #1f2430) 8%, transparent) 63%);
+    background-size: 400% 100%;
+    animation: f-shimmer 1.4s ease infinite;
+}
+
+.f-skeleton--circle { border-radius: 50%; }
+
+.f-skeleton--text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    background: none;
+    animation: none;
+}
+
+.f-skeleton__line {
+    display: block;
+    block-size: 0.85rem;
+    border-radius: 999px;
+    background: linear-gradient(90deg,
+        color-mix(in srgb, var(--f-text, #1f2430) 8%, transparent) 25%,
+        color-mix(in srgb, var(--f-text, #1f2430) 14%, transparent) 37%,
+        color-mix(in srgb, var(--f-text, #1f2430) 8%, transparent) 63%);
+    background-size: 400% 100%;
+    animation: f-shimmer 1.4s ease infinite;
+}
+
+@keyframes f-shimmer {
+    0% { background-position: 100% 50%; }
+    100% { background-position: 0 50%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .f-skeleton, .f-skeleton__line { animation: none; }
+}
+
+/* ========================================================================
+   Placeholder — the "nothing here" block
+   ======================================================================== */
+
+.f-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 3rem 1rem;
+    text-align: center;
+}
+
+.f-placeholder__icon { font-size: 2.5rem; line-height: 1; }
+.f-placeholder__text { margin: 0 0 0.4rem; color: var(--f-text-soft); }
+.f-placeholder__action { margin-block-start: 0.25rem; }
+
+/* ========================================================================
+   Maintenance alert — a prominent, store-wide notice
+   ======================================================================== */
+
+.f-maintenance {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.85rem 1.25rem;
+    background: #fef3c7;
+    color: #92400e;
+    font-size: 0.9rem;
+}
+
+.f-maintenance[hidden] { display: none; }
+.f-maintenance__icon { flex: none; margin-block-start: 0.1rem; }
+.f-maintenance__text { flex: 1; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.4rem; }
+.f-maintenance__title { font-weight: 700; }
+
+.f-maintenance__close {
+    flex: none;
+    inline-size: 1.6rem;
+    block-size: 1.6rem;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: inherit;
+    font-size: 1.2rem;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0.7;
+}
+.f-maintenance__close:hover { opacity: 1; background: rgba(0, 0, 0, 0.08); }
+
+/* ========================================================================
+   File upload — a drag-and-drop picker with previews
+   ======================================================================== */
+
+.f-upload__zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1.75rem 1rem;
+    border: 1.5px dashed var(--f-border);
+    border-radius: var(--f-radius);
+    color: var(--f-text-soft);
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.f-upload__zone:hover,
+.f-upload__zone:focus-visible { border-color: var(--color-primary, #1d9e75); }
+.f-upload__zone.is-dragover { border-color: var(--color-primary, #1d9e75); background: color-mix(in srgb, var(--color-primary, #1d9e75) 6%, transparent); }
+.f-upload__icon { color: var(--color-primary, #1d9e75); }
+.f-upload__label { font-size: 0.88rem; text-align: center; }
+
+.f-upload__error { margin: 0.5rem 0 0; font-size: 0.82rem; color: var(--f-danger, #b91c1c); }
+
+.f-upload__list { list-style: none; margin: 0.75rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.f-upload__item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.4rem 0.6rem;
+    border: 1px solid var(--f-border);
+    border-radius: var(--f-radius);
+}
+.f-upload__thumb { flex: none; inline-size: 2.5rem; block-size: 2.5rem; border-radius: calc(var(--f-radius) * 0.6); object-fit: cover; background: rgba(0, 0, 0, 0.04); }
+.f-upload__thumb--file { display: flex; align-items: center; justify-content: center; color: var(--f-text-soft); }
+.f-upload__name { flex: 1; font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.f-upload__size { flex: none; font-size: 0.78rem; color: var(--f-text-soft); }
+.f-upload__remove {
+    flex: none;
+    inline-size: 1.4rem;
+    block-size: 1.4rem;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--f-text-soft);
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
+}
+.f-upload__remove:hover { background: rgba(0, 0, 0, 0.06); color: var(--f-danger, #b91c1c); }
+
+/* ========================================================================
+   Tabs — a horizontal switcher between panels
+   ======================================================================== */
+
+.f-tabs__header {
+    display: flex;
+    gap: 0.25rem;
+    overflow-x: auto;
+    border-block-end: 1px solid var(--f-border);
+    margin-block-end: 1.25rem;
+}
+
+.f-tabs__tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.75rem 1rem;
+    border: 0;
+    border-block-end: 2px solid transparent;
+    background: none;
+    color: var(--f-text-soft);
+    font: inherit;
+    font-weight: 600;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease;
+}
+.f-tabs__tab:hover { color: var(--f-text); }
+.f-tabs__tab.is-active { color: var(--color-primary, #1d9e75); border-block-end-color: var(--color-primary, #1d9e75); }
+
+.f-tabs__badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: 1.3rem;
+    padding: 0 0.35rem;
+    border-radius: 999px;
+    background: var(--f-border);
+    color: var(--f-text-soft);
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+.f-tabs__tab.is-active .f-tabs__badge { background: var(--color-primary, #1d9e75); color: var(--color-on-primary, #fff); }
+
+/* ========================================================================
+   Price range — a min/max filter, two handles over one track
+   ======================================================================== */
+
+.f-price-range { display: block; }
+
+.f-price-range__numbers {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-block-end: 1rem;
+}
+
+.f-price-range__number { inline-size: 100%; min-inline-size: 0; text-align: center; font-variant-numeric: tabular-nums; }
+.f-price-range__sep { flex: none; color: var(--f-text-soft); }
+
+.f-price-range__track {
+    position: relative;
+    block-size: 4px;
+    margin-block: 1.35rem;
+    border-radius: 999px;
+    background: var(--f-border);
+}
+
+.f-price-range__fill {
+    position: absolute;
+    inset-block: 0;
+    border-radius: inherit;
+    background: var(--color-primary, #1d9e75);
+}
+
+.f-price-range__slider {
+    position: absolute;
+    inset-inline: 0;
+    inset-block-start: 50%;
+    transform: translateY(-50%);
+    inline-size: 100%;
+    block-size: 4px;
+    margin: 0;
+    background: transparent;
+    pointer-events: none;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.f-price-range__slider::-webkit-slider-runnable-track { background: transparent; }
+.f-price-range__slider::-moz-range-track { background: transparent; }
+
+.f-price-range__slider::-webkit-slider-thumb {
+    appearance: none;
+    -webkit-appearance: none;
+    pointer-events: auto;
+    inline-size: 1.05rem;
+    block-size: 1.05rem;
+    border-radius: 50%;
+    background: var(--color-primary, #1d9e75);
+    border: 2px solid var(--f-surface, #fff);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+}
+
+.f-price-range__slider::-moz-range-thumb {
+    pointer-events: auto;
+    inline-size: 1.05rem;
+    block-size: 1.05rem;
+    border-radius: 50%;
+    background: var(--color-primary, #1d9e75);
+    border: 2px solid var(--f-surface, #fff);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+}
+
+/* ========================================================================
+   Datetime picker — a date, and (given slots) a time to go with it
+   ======================================================================== */
+
+.f-datetime { display: flex; flex-direction: column; gap: 0.85rem; }
+.f-datetime__date { inline-size: 100%; }
+
+.f-datetime__slots {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.f-datetime__slot {
+    padding: 0.5rem 0.9rem;
+    border: 1px solid var(--f-border);
+    border-radius: var(--f-radius);
+    background: var(--f-surface, #fff);
+    color: var(--f-text);
+    font: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.f-datetime__slot:hover { border-color: var(--color-primary, #1d9e75); }
+.f-datetime__slot.is-selected { border-color: var(--color-primary, #1d9e75); background: var(--color-primary, #1d9e75); color: var(--color-on-primary, #fff); }
+
+/* ========================================================================
+   Search — a header trigger opening a live product-result dropdown, hosted
+   in the shared <falak-modal> (position="top") rather than its own overlay
+   ======================================================================== */
+
+#falak-search .f-modal__body { max-inline-size: 640px; }
+
+.f-search__panel {
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+}
+
+.f-search__form {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.f-search__form .f-search__icon {
+    position: absolute;
+    inset-inline-start: 0.9rem;
+    display: inline-flex;
+    color: var(--f-muted, #8a8f98);
+    pointer-events: none;
+}
+
+.f-search__input {
+    inline-size: 100%;
+    padding-block: 0.75rem;
+    padding-inline: 2.6rem 0.9rem;
+    border: 1px solid var(--f-border);
+    border-radius: var(--f-radius);
+    background: var(--f-surface, #fff);
+    color: var(--f-text);
+    font: inherit;
+    font-size: 1rem;
+}
+.f-search__input:focus-visible { outline: 2px solid var(--color-primary, #1d9e75); outline-offset: 1px; }
+
+.f-search__results {
+    margin-block-start: 0.75rem;
+    max-block-size: min(60vh, 28rem);
+    overflow-y: auto;
+}
+
+.f-search[data-busy="true"] .f-search__results { opacity: 0.6; }
+
+.f-search__list { display: flex; flex-direction: column; gap: 0.25rem; }
+
+.f-search__link {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.6rem;
+    border-radius: var(--f-radius);
+    text-decoration: none;
+    color: inherit;
+    transition: background-color 0.15s ease;
+}
+.f-search__link:hover,
+.f-search__link:focus-visible { background: rgba(0, 0, 0, 0.04); }
+
+.f-search__thumb {
+    flex-shrink: 0;
+    display: block;
+    inline-size: 3rem;
+    block-size: 3rem;
+    border-radius: var(--f-radius);
+    overflow: hidden;
+    background: var(--f-surface-alt, #f2f3f5);
+}
+.f-search__thumb img { inline-size: 100%; block-size: 100%; object-fit: cover; }
+.f-search__thumb-placeholder { display: block; inline-size: 100%; block-size: 100%; }
+
+.f-search__info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    min-inline-size: 0;
+}
+
+.f-search__name {
+    font-size: 0.92rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.f-search__price { display: flex; align-items: baseline; gap: 0.5rem; font-size: 0.88rem; }
+.f-search__price-now { font-weight: 600; color: var(--color-primary, #1d9e75); }
+.f-search__price-was { color: var(--f-muted, #8a8f98); font-size: 0.8rem; }
+
+.f-search__view-all {
+    display: block;
+    margin-block-start: 0.5rem;
+    padding-block: 0.7rem;
+    text-align: center;
+    border-block-start: 1px solid var(--f-border);
+    color: var(--color-primary, #1d9e75);
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-decoration: none;
+}
+.f-search__view-all:hover { text-decoration: underline; }
+
+.f-search__empty {
+    padding-block: 1.5rem;
+    text-align: center;
+    color: var(--f-muted, #8a8f98);
+    font-size: 0.9rem;
+}
+
+@media (max-width: 639px) {
+    #falak-search .f-modal__wrapper--top { padding-block-start: 0; }
+    #falak-search .f-modal__body { max-inline-size: 100%; border-radius: 0; min-block-size: 100dvh; }
+}
+
+/* ========================================================================
+   Mini checkout — "buy now" for one product, hosted in the shared
+   <falak-modal>. Its steps, methods, form and totals all reuse the
+   .f-checkout__* classes above; only the product summary and footer are new.
+   ======================================================================== */
+
+.f-mini-checkout__item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding-block-end: 1rem;
+    margin-block-end: 1rem;
+    border-block-end: 1px solid var(--f-border);
+}
+
+.f-mini-checkout__image {
+    flex: none;
+    inline-size: 3.25rem;
+    block-size: 3.25rem;
+    border-radius: var(--f-radius);
+    object-fit: cover;
+    background: var(--f-surface-alt, #f2f3f5);
+}
+.f-mini-checkout__image--empty { display: block; }
+
+.f-mini-checkout__item-text { display: flex; flex-direction: column; gap: 0.15rem; min-inline-size: 0; }
+.f-mini-checkout__item-name { font-weight: 700; color: var(--f-text); }
+.f-mini-checkout__item-meta { font-size: 0.85rem; color: var(--f-text-soft); }
+
+.f-mini-checkout__footer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding-block-start: 1rem;
+    margin-block-start: 0.5rem;
+}
+.f-datetime__slot.is-selected { border-color: var(--color-primary, #1d9e75); background: var(--color-primary, #1d9e75); color: var(--color-on-primary, #fff); }
+
+/* ---- from packages/falak-components/src/components.account.css ---- */
+
+/*
+    Account surface — login sheet, user menu, localization sheet, offer modal
+    and the review list.
+
+    Third of the three stylesheets the entry imports; Vite's library mode
+    concatenates them into one falak-components.css. Same rules as the others:
+    brand tokens only, logical properties throughout.
+*/
+
+/* ========================================================================
+   Login sheet
+   ======================================================================== */
+
+.f-login { display: block; }
+
+.f-login__form { display: flex; flex-direction: column; gap: 0.65rem; margin-block-start: 0.5rem; }
+.f-login__label { font-size: 0.8rem; font-weight: 600; color: var(--f-text-soft); }
+
+.f-login__input {
+    inline-size: 100%;
+    padding: 0.7rem 0.85rem;
+    border: 1px solid var(--f-border);
+    border-radius: var(--f-radius);
+    background: var(--f-surface);
+    color: var(--f-text);
+    font: inherit;
+    font-size: 0.95rem;
+}
+
+.f-login__input:focus {
+    outline: none;
+    border-color: var(--color-primary, #1d9e75);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary, #1d9e75) 18%, transparent);
+}
+
+/* Dial-code select beside the number; the row is forced LTR so the code
+   always reads +966 5xxxxxxxx, whatever the page direction. */
+.f-login__phone-row { display: flex; gap: 0.5rem; }
+.f-login__phone-row .f-login__input { flex: 1 1 auto; min-inline-size: 0; }
+
+.f-login__dial {
+    flex: 0 0 auto;
+    padding: 0.7rem 0.6rem;
+    border: 1px solid var(--f-border);
+    border-radius: var(--f-radius);
+    background: var(--f-surface);
+    color: var(--f-text);
+    font: inherit;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.f-login__dial:focus {
+    outline: none;
+    border-color: var(--color-primary, #1d9e75);
+}
+
+/* The code field is read back digit by digit, so it gets room to breathe. */
+.f-login__input--code {
+    text-align: center;
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: 0.5em;
+    text-indent: 0.5em;
+    font-variant-numeric: tabular-nums;
+}
+
+.f-login__error {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--f-danger);
+}
+
+.f-login__hint {
+    margin: 0;
+    padding: 0.45rem 0.6rem;
+    border-radius: var(--f-radius);
+    background: color-mix(in srgb, var(--color-primary, #1d9e75) 10%, transparent);
+    font-size: 0.78rem;
+    color: var(--f-text-soft);
+}
+
+.f-login__actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-block-start: 0.15rem;
+}
+
+.f-login__link {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: 0.78rem;
+    color: var(--color-primary, #1d9e75);
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.f-login__link:disabled { color: var(--f-text-faint); cursor: default; text-decoration: none; }
+
+/* ========================================================================
+   User menu
+   ======================================================================== */
+
+.f-user { display: inline-block; position: relative; }
+.f-user__wrap { position: relative; }
+
+.f-user__trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.5rem;
+    border: 0;
+    border-radius: 999px;
+    background: none;
+    color: inherit;
+    font: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.f-user__trigger:hover { background: rgba(0, 0, 0, 0.05); }
+.f-user__trigger:focus-visible { outline: 2px solid var(--color-primary, #1d9e75); outline-offset: 2px; }
+
+.f-user__avatar {
+    flex: none;
+    inline-size: 2rem;
+    block-size: 2rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--color-primary, #1d9e75);
+    color: var(--color-on-primary, #fff);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.f-user__avatar--lg { inline-size: 2.6rem; block-size: 2.6rem; font-size: 0.9rem; }
+.f-user__name { max-inline-size: 9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.f-user__panel {
+    position: absolute;
+    inset-block-start: calc(100% + 0.4rem);
+    inset-inline-end: 0;
+    z-index: 70;
+    min-inline-size: 14rem;
+    padding: 0.4rem;
+    background: var(--f-surface);
+    border: 1px solid var(--f-border);
+    border-radius: calc(var(--f-radius) * 1.2);
+    box-shadow: 0 14px 36px rgba(8, 14, 12, 0.16);
+}
+
+.f-user__panel[hidden] { display: none; }
+
+.f-user__header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.6rem 0.65rem 0.75rem;
+    border-block-end: 1px solid var(--f-border);
+    margin-block-end: 0.3rem;
+}
+
+.f-user__greeting { display: flex; flex-direction: column; line-height: 1.25; min-inline-size: 0; }
+.f-user__greeting small { font-size: 0.68rem; color: var(--f-text-faint); }
+.f-user__greeting strong { font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.f-user__list { list-style: none; margin: 0; padding: 0; }
+
+.f-user__link {
+    inline-size: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.55rem 0.65rem;
+    border: 0;
+    border-radius: var(--f-radius);
+    background: none;
+    color: var(--f-text);
+    font: inherit;
+    font-size: 0.85rem;
+    text-align: start;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.f-user__link:hover { background: rgba(0, 0, 0, 0.05); }
+.f-user__icon { flex: none; display: inline-flex; color: var(--f-text-soft); }
+.f-user__item--logout { margin-block-start: 0.25rem; padding-block-start: 0.25rem; border-block-start: 1px solid var(--f-border); }
+.f-user__item--logout .f-user__link { color: var(--f-danger); }
+.f-user__item--logout .f-user__icon { color: currentColor; }
+
+/* Inline is a sidebar list, not a dropdown. */
+.f-user--inline { display: block; inline-size: 100%; }
+.f-user--inline .f-user__link { border-radius: 0; padding-inline: 0; }
+
+/* ========================================================================
+   Localization sheet
+   ======================================================================== */
+
+.f-locale { display: inline-block; }
+
+.f-locale__trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.6rem;
+    border: 0;
+    border-radius: 999px;
+    background: none;
+    color: inherit;
+    font: inherit;
+    font-size: 0.82rem;
+    cursor: pointer;
+}
+
+.f-locale__trigger:hover { background: rgba(0, 0, 0, 0.05); }
+.f-locale__trigger:focus-visible { outline: 2px solid var(--color-primary, #1d9e75); outline-offset: 2px; }
+.f-locale__globe { display: inline-flex; opacity: 0.75; }
+.f-locale__sep { opacity: 0.45; }
+
+.f-locale__group + .f-locale__group { margin-block-start: 1.25rem; }
+
+.f-locale__heading {
+    margin: 0 0 0.6rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--f-text-faint);
+}
+
+.f-locale__options { display: grid; gap: 0.4rem; }
+
+.f-locale__option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.65rem 0.85rem;
+    border: 1px solid var(--f-border);
+    border-radius: var(--f-radius);
+    background: var(--f-surface);
+    color: var(--f-text);
+    font: inherit;
+    font-size: 0.88rem;
+    text-align: start;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.f-locale__option:hover { border-color: var(--color-primary, #1d9e75); }
+
+.f-locale__option.is-current {
+    border-color: var(--color-primary, #1d9e75);
+    background: color-mix(in srgb, var(--color-primary, #1d9e75) 10%, transparent);
+    font-weight: 600;
+}
+
+.f-locale__code { font-size: 0.72rem; color: var(--f-text-faint); font-variant-numeric: tabular-nums; }
+
+/* ========================================================================
+   Comments / reviews
+   ======================================================================== */
+
+.f-comments { display: block; }
+.f-comments[hidden] { display: none; }
+
+.f-comments__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-block-end: 1rem;
+}
+
+.f-comments__title { margin: 0; font-size: 1.1rem; font-weight: 700; }
+.f-comments__empty { margin: 0; padding: 1.5rem 0; color: var(--f-text-soft); font-size: 0.88rem; }
+
+.f-comments__gate {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding: 0.9rem 1.1rem;
+    border: 1px dashed var(--f-border);
+    border-radius: var(--f-radius);
+    margin-block-end: 1.25rem;
+}
+
+.f-comments__gate p { margin: 0; font-size: 0.85rem; color: var(--f-text-soft); }
+
+.f-comments__form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    align-items: flex-start;
+    padding: 1.1rem;
+    border: 1px solid var(--f-border);
+    border-radius: var(--f-radius);
+    margin-block-end: 1.5rem;
+}
+
+.f-comments__rating { display: flex; align-items: center; gap: 0.6rem; }
+.f-comments__label { font-size: 0.82rem; font-weight: 600; color: var(--f-text-soft); }
+
+.f-comments__textarea {
+    inline-size: 100%;
+    padding: 0.7rem 0.85rem;
+    border: 1px solid var(--f-border);
+    border-radius: var(--f-radius);
+    background: var(--f-surface);
+    color: var(--f-text);
+    font: inherit;
+    font-size: 0.9rem;
+    resize: vertical;
+}
+
+.f-comments__textarea:focus {
+    outline: none;
+    border-color: var(--color-primary, #1d9e75);
+}
+
+.f-comments__error { margin: 0; font-size: 0.8rem; color: var(--f-danger); }
+
+.f-comments__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 1.1rem; }
+.f-comments__item { padding-block-end: 1.1rem; border-block-end: 1px solid var(--f-border); }
+.f-comments__item:last-child { border-block-end: 0; padding-block-end: 0; }
+
+.f-comments__meta { display: flex; align-items: center; gap: 0.65rem; margin-block-end: 0.4rem; }
+
+.f-comments__avatar {
+    flex: none;
+    inline-size: 2rem;
+    block-size: 2rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.06);
+    color: var(--f-text-soft);
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+/*
+    The name block must NOT stretch (`flex: 1` pushed the stars to the far
+    edge of the row, a screen-width away from the name they belong to).
+    Avatar, name and stars sit together as one group at the reading start.
+*/
+.f-comments__meta > div { display: flex; flex-direction: column; line-height: 1.3; min-inline-size: 0; }
+.f-comments__author { font-size: 0.85rem; }
+.f-comments__date { font-size: 0.72rem; color: var(--f-text-faint); }
+.f-comments__text { margin: 0; font-size: 0.88rem; line-height: 1.65; color: var(--f-text-soft); }
+.f-comments__more { display: flex; justify-content: center; margin-block-start: 1.25rem; }
+
+@media (prefers-reduced-motion: reduce) {
+    .f-locale__option { transition: none; }
+}
+
+/* Signed in but nothing to review against — a statement, not a call to action. */
+.f-comments__gate--quiet {
+    justify-content: flex-start;
+    border-style: solid;
+    background: rgba(0, 0, 0, 0.02);
+}
+
+/* A submitted review acknowledged while it waits for moderation. */
+.f-comments__pending {
+    margin: 0 0 1rem;
+    padding: 0.7rem 1rem;
+    border-radius: var(--f-radius);
+    border: 1px solid color-mix(in srgb, var(--color-primary, #1d9e75) 35%, transparent);
+    background: color-mix(in srgb, var(--color-primary, #1d9e75) 8%, transparent);
+    font-size: 0.85rem;
+    color: var(--f-text);
+}
+
+
+/* ========================================================================
+   Offers list — the React SpecialOffersModal, laid inline as a section
+   ======================================================================== */
+
+.f-offers { display: block; }
+.f-offers[hidden] { display: none; }
+
+.f-offers__title { margin: 0 0 1rem; font-size: 1.25rem; font-weight: 700; }
+
+.f-offers__grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+    gap: 1rem;
+}
+
+.f-offers__card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 1.1rem 1.2rem;
+    border: 1px dashed color-mix(in srgb, var(--color-primary, #1d9e75) 45%, transparent);
+    border-radius: calc(var(--f-radius) * 1.4);
+    background: color-mix(in srgb, var(--color-primary, #1d9e75) 6%, var(--f-surface));
+}
+
+.f-offers__benefit {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--color-primary, #1d9e75);
+}
+
+.f-offers__name { margin: 0; font-size: 0.95rem; font-weight: 700; color: var(--f-text); }
+.f-offers__text { margin: 0; font-size: 0.82rem; color: var(--f-text-soft); line-height: 1.55; }
+
+.f-offers__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem 0.9rem;
+    margin-block-start: 0.3rem;
+    font-size: 0.72rem;
+    color: var(--f-text-faint);
+}
+
+/* ========================================================================
+   Offers banner — the legacy OffersBanner strip + its list modal trigger
+   ======================================================================== */
+
+.f-offer-banner { display: block; }
+.f-offer-banner[hidden] { display: none; }
+
+.f-offer-banner__strip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    padding: 0.5rem 1rem;
+    background: color-mix(in srgb, var(--color-primary, #1d9e75) 10%, var(--f-surface));
+    border-block-end: 1px solid color-mix(in srgb, var(--color-primary, #1d9e75) 25%, transparent);
+    font-size: 0.85rem;
+}
+
+.f-offer-banner__text { font-weight: 600; color: var(--f-text); }
+
+.f-offer-banner__more {
+    padding: 0.25rem 0.9rem;
+    border: 1px solid var(--color-primary, #1d9e75);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--color-primary, #1d9e75);
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.f-offer-banner__more:hover {
+    background: var(--color-primary, #1d9e75);
+    color: var(--color-on-primary, #fff);
+}
+
+/* ========================================================================
+   Product questions & answers
+   ======================================================================== */
+
+.f-questions { display: block; }
+.f-questions[hidden] { display: none; }
+.f-questions[aria-busy="true"] { opacity: 0.6; pointer-events: none; }
+
+.f-questions__header { margin-block-end: 1rem; }
+.f-questions__header-row { display: flex; align-items: center; gap: 0.75rem; }
+
+.f-questions__badge {
+    flex: none;
+    inline-size: 2.6rem;
+    block-size: 2.6rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--f-radius);
+    background: rgba(0, 0, 0, 0.06);
+}
+
+.f-questions__title { margin: 0; font-size: 1.15rem; font-weight: 700; }
+.f-questions__subtitle { margin: 0.4rem 0 0; font-size: 0.85rem; color: var(--f-text-soft); }
+
+.f-questions__gate {
+    display: block;
+    inline-size: 100%;
+    padding: 0.9rem 1.1rem;
+    border: 1px dashed var(--f-border);
+    border-radius: var(--f-radius);
+    background: none;
+    color: var(--f-text-soft);
+    font: inherit;
+    font-size: 0.87rem;
+    text-align: center;
+    cursor: pointer;
+    margin-block-end: 1.25rem;
+}
+
+.f-questions__form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    padding: 1.1rem;
+    border: 1px solid var(--f-border);
+    border-radius: var(--f-radius);
+    margin-block-end: 1.5rem;
+}
+
+.f-questions__form-title {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.f-questions__textarea {
+    inline-size: 100%;
+    min-block-size: 5.5rem;
+    padding: 0.7rem 0.85rem;
+    border: 1px solid var(--f-border);
+    border-radius: var(--f-radius);
+    background: var(--f-surface);
+    color: var(--f-text);
+    font: inherit;
+    font-size: 0.9rem;
+    resize: vertical;
+}
+
+.f-questions__textarea:focus { outline: none; border-color: var(--color-primary, #1d9e75); }
+
+.f-questions__form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.f-questions__anonymous {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.85rem;
+    color: var(--f-text-soft);
+    cursor: pointer;
+    user-select: none;
+}
+
+.f-questions__error { margin: 0; font-size: 0.8rem; color: var(--f-danger); }
+
+.f-questions__list-title { margin: 0 0 1rem; font-size: 1rem; font-weight: 600; }
+.f-questions__list { display: grid; gap: 1rem; }
+
+.f-questions__item {
+    padding: 1.1rem;
+    border: 1px solid var(--f-border);
+    border-radius: var(--f-radius);
+}
+
+.f-questions__meta { display: flex; align-items: center; gap: 0.65rem; margin-block-end: 0.5rem; }
+
+.f-questions__avatar {
+    flex: none;
+    inline-size: 2.25rem;
+    block-size: 2.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.06);
+    color: var(--f-text-soft);
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.f-questions__who { display: flex; flex-direction: column; gap: 0.1rem; }
+.f-questions__name { font-size: 0.87rem; }
+.f-questions__time { font-size: 0.72rem; color: var(--f-text-soft); }
+
+.f-questions__text { margin: 0 0 0.75rem; font-size: 0.92rem; line-height: 1.6; }
+
+.f-questions__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding-block-start: 0.75rem;
+    border-block-start: 1px solid var(--f-border);
+}
+
+.f-questions__count {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.82rem;
+    color: var(--f-text-soft);
+}
+
+.f-questions__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.35rem 0.7rem;
+    border: none;
+    border-radius: var(--f-radius);
+    background: none;
+    color: var(--color-primary, #1d9e75);
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.f-questions__toggle:hover { background: rgba(0, 0, 0, 0.05); }
+
+.f-questions__replies {
+    margin-block-start: 0.9rem;
+    padding-block-start: 0.9rem;
+    border-block-start: 1px solid var(--f-border);
+    display: grid;
+    gap: 0.7rem;
+}
+
+.f-questions__reply { padding: 0.85rem; border-radius: var(--f-radius); background: rgba(0, 0, 0, 0.03); }
+
+.f-questions__reply-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-block-end: 0.4rem;
+}
+
+.f-questions__replier {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 0.4rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.f-questions__replier--admin { color: var(--f-success, #28a745); background: rgba(40, 167, 69, 0.1); }
+.f-questions__replier--customer { color: var(--color-primary, #1d9e75); background: rgba(0, 0, 0, 0.05); }
+
+.f-questions__reply-text { margin: 0; font-size: 0.85rem; line-height: 1.55; color: var(--f-text-soft); }
+
+.f-questions__empty { text-align: center; padding: 2.5rem 1rem; }
+
+.f-questions__empty-icon {
+    inline-size: 4.5rem;
+    block-size: 4.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--color-primary, #1d9e75);
+    margin-block-end: 1rem;
+}
+
+.f-questions__empty-title { margin: 0 0 0.4rem; font-size: 1.05rem; font-weight: 600; }
+.f-questions__empty-text { margin: 0; font-size: 0.88rem; color: var(--f-text-soft); }
+
+/* ========================================================================
+   User profile — the customer's editable details
+   ======================================================================== */
+.f-profile { display: block; }
+.f-profile__guest {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 2rem 1rem;
+    text-align: center;
+    opacity: 0.9;
+}
+.f-profile__icon { opacity: 0.5; }
+.f-profile__stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+    gap: 0.75rem;
+    margin: 0 0 1.5rem;
+    padding: 0;
+    list-style: none;
+}
+.f-profile__stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 0.75rem;
+    background: rgba(0, 0, 0, 0.02);
+}
+.f-profile__stat-value { font-size: 1.35rem; font-weight: 700; line-height: 1.1; }
+.f-profile__stat-label { font-size: 0.8rem; opacity: 0.7; }
+.f-profile__form { display: flex; flex-direction: column; gap: 1rem; }
+.f-profile__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1rem; }
+.f-profile__field--address { grid-column: 1 / -1; }
+.f-profile__input { inline-size: 100%; }
+.f-profile__custom-fields { display: flex; flex-direction: column; gap: 0.4rem; padding-block-start: 0.25rem; border-block-start: 1px solid var(--f-border); }
+.f-field__error { font-size: 0.8rem; color: var(--f-danger, #b91c1c); }
+.f-profile__error { margin: 0; font-size: 0.9rem; color: var(--f-danger, #b91c1c); }
+.f-profile__actions { display: flex; justify-content: flex-end; }
+.f-profile[aria-busy="true"] .f-profile__save { opacity: 0.6; pointer-events: none; }
+
+/* ========================================================================
+   Order summary — one order: status, timeline, items, totals, delivery, payment
+   ======================================================================== */
+.f-order { display: flex; flex-direction: column; gap: 1.5rem; }
+.f-order__guest, .f-order__empty, .f-order__loading { text-align: center; padding: 1.5rem 1rem; opacity: 0.85; }
+.f-order__skeleton { display: flex; flex-direction: column; gap: 1rem; }
+.f-order__guest { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; }
+.f-order__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.f-order__title { margin: 0; font-size: 1.35rem; }
+.f-order__date { display: block; margin-block-start: 0.25rem; font-size: 0.85rem; opacity: 0.7; }
+.f-order__status {
+    display: inline-block;
+    padding: 0.3rem 0.75rem;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.06);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+.f-order__status--pending, .f-order__status--awaiting_payment { background: #fef3c7; color: #92400e; }
+.f-order__status--processing { background: #dbeafe; color: #1e40af; }
+.f-order__status--shipped, .f-order__status--out_for_delivery { background: #e0e7ff; color: #3730a3; }
+.f-order__status--delivered, .f-order__status--completed { background: #dcfce7; color: #166534; }
+.f-order__status--cancelled, .f-order__status--refunded, .f-order__status--returned { background: #fee2e2; color: #991b1b; }
+.f-order__section { display: flex; flex-direction: column; gap: 0.75rem; }
+.f-order__section-title { margin: 0; font-size: 0.95rem; font-weight: 700; opacity: 0.85; }
+.f-order__steps { position: relative; margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 1rem; }
+.f-order__step { position: relative; display: flex; gap: 0.85rem; padding-inline-start: 0.25rem; }
+.f-order__step::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: 0.75rem;
+    inset-block-start: 1.1rem;
+    inset-block-end: -1.1rem;
+    border-inline-start: 2px solid rgba(0, 0, 0, 0.1);
+}
+.f-order__step:last-child::before { display: none; }
+.f-order__step-dot {
+    flex: none;
+    inline-size: 1.05rem;
+    block-size: 1.05rem;
+    margin-block-start: 0.15rem;
+    border-radius: 50%;
+    border: 2px solid rgba(0, 0, 0, 0.2);
+    background: var(--f-surface, #fff);
+    z-index: 1;
+}
+.f-order__step.is-done .f-order__step-dot { border-color: var(--f-primary, #15803d); background: var(--f-primary, #15803d); }
+.f-order__step.is-done::before { border-color: var(--f-primary, #15803d); }
+.f-order__step.is-current .f-order__step-dot { border-color: var(--f-primary, #15803d); }
+.f-order__step:not(.is-done):not(.is-current) .f-order__step-body { opacity: 0.55; }
+.f-order__step-body { display: flex; flex-direction: column; gap: 0.1rem; }
+.f-order__step-title { font-size: 0.95rem; }
+.f-order__step-text, .f-order__step-date { font-size: 0.8rem; opacity: 0.75; }
+.f-order__items { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0.75rem; }
+.f-order__item { display: flex; align-items: center; gap: 0.85rem; }
+.f-order__item-image { flex: none; inline-size: 3.5rem; block-size: 3.5rem; object-fit: cover; border-radius: 0.5rem; background: rgba(0, 0, 0, 0.05); }
+.f-order__item-info { flex: 1; display: flex; flex-direction: column; gap: 0.15rem; min-inline-size: 0; }
+.f-order__item-name { font-weight: 600; color: inherit; text-decoration: none; }
+.f-order__item-meta { font-size: 0.85rem; opacity: 0.7; }
+.f-order__item-total { font-weight: 600; white-space: nowrap; }
+.f-order__totals { gap: 0.4rem; padding: 1rem; border-radius: 0.75rem; background: rgba(0, 0, 0, 0.03); }
+.f-order__row { display: flex; justify-content: space-between; gap: 1rem; font-size: 0.95rem; }
+.f-order__row--discount { color: var(--f-success, #15803d); }
+.f-order__row--total { margin-block-start: 0.35rem; padding-block-start: 0.6rem; border-block-start: 1px solid rgba(0, 0, 0, 0.1); font-weight: 700; font-size: 1.05rem; }
+.f-order__details { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1rem; }
+.f-order__detail { display: flex; flex-direction: column; gap: 0.35rem; padding: 1rem; border: 1px solid rgba(0, 0, 0, 0.08); border-radius: 0.75rem; }
+.f-order__detail-text { margin: 0; font-size: 0.9rem; line-height: 1.5; }
+.f-order__detail-label { opacity: 0.7; }
+.f-order__pay-status { display: inline-block; margin-inline-start: 0.5rem; padding: 0.1rem 0.55rem; border-radius: 999px; background: rgba(0, 0, 0, 0.06); font-size: 0.78rem; font-weight: 600; }
+.f-order__pay-status--paid, .f-order__pay-status--completed { background: #dcfce7; color: #166534; }
+.f-order__pay-status--pending, .f-order__pay-status--unpaid { background: #fef3c7; color: #92400e; }
+.f-order__pay-status--failed { background: #fee2e2; color: #991b1b; }
+
+/* ========================================================================
+   Orders list — status filter, search, paged
+   ======================================================================== */
+
+.f-orders__guest { text-align: center; padding: 1.5rem 1rem; opacity: 0.85; display: flex; flex-direction: column; align-items: center; gap: 0.75rem; }
+.f-orders__skeleton { padding: 0.5rem 0; }
+
+.f-orders__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-block-end: 1.25rem;
+}
+.f-orders__search { flex: 1; min-inline-size: 12rem; }
+.f-orders__filter { flex: none; min-inline-size: 10rem; }
+
+.f-orders__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.75rem; }
+
+.f-orders__row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.9rem 1rem;
+    border: 1px solid var(--f-border);
+    border-radius: var(--f-radius);
+}
+
+.f-orders__main { flex: 1; display: flex; flex-direction: column; gap: 0.15rem; min-inline-size: 0; text-decoration: none; color: inherit; }
+.f-orders__number { font-weight: 700; }
+.f-orders__date { font-size: 0.82rem; color: var(--f-text-soft); }
+
+.f-orders__status {
+    flex: none;
+    padding: 0.25rem 0.7rem;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.06);
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+.f-orders__status--pending, .f-orders__status--awaiting_payment { background: #fef3c7; color: #92400e; }
+.f-orders__status--processing { background: #dbeafe; color: #1e40af; }
+.f-orders__status--shipped, .f-orders__status--out_for_delivery { background: #e0e7ff; color: #3730a3; }
+.f-orders__status--delivered, .f-orders__status--completed { background: #dcfce7; color: #166534; }
+.f-orders__status--cancelled, .f-orders__status--refunded, .f-orders__status--returned { background: #fee2e2; color: #991b1b; }
+
+.f-orders__total { flex: none; font-weight: 700; font-variant-numeric: tabular-nums; }
+.f-orders__more { display: flex; justify-content: center; margin-block-start: 1.25rem; }
+
+/* ========================================================================
+   Notification item — one row of a customer's notification history
+   ======================================================================== */
+
+.f-notification-item { display: block; }
+
+.f-notification-item__link,
+.f-notification-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem;
+    text-decoration: none;
+    color: inherit;
+}
+
+.f-notification-item__icon {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 2.25rem;
+    block-size: 2.25rem;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--color-primary, #1d9e75) 12%, transparent);
+    color: var(--color-primary, #1d9e75);
+}
+
+.f-notification-item__text { flex: 1; display: flex; flex-direction: column; gap: 0.15rem; min-inline-size: 0; }
+.f-notification-item__title { font-size: 0.92rem; }
+.f-notification-item__body { font-size: 0.85rem; color: var(--f-text-soft); }
+.f-notification-item__time { font-size: 0.78rem; color: var(--f-text-soft); }
+
+.f-notification-item__dot {
+    flex: none;
+    inline-size: 0.5rem;
+    block-size: 0.5rem;
+    margin-block-start: 0.4rem;
+    border-radius: 50%;
+    background: var(--color-primary, #1d9e75);
+}
+
+.f-notification-item.is-unread { background: color-mix(in srgb, var(--color-primary, #1d9e75) 5%, transparent); }
+
+/* ========================================================================
+   Custom fields — merchant-defined form fields
+   ======================================================================== */
+
+.f-custom-fields { display: flex; flex-direction: column; gap: 1rem; }
+.f-custom-fields__field falak-file-upload { margin-block-start: 0.35rem; }
+
+.f-custom-fields__options { display: flex; flex-wrap: wrap; gap: 0.75rem 1.25rem; }
+
+.f-custom-fields__option {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+/* ==== END SDK COMPONENT CLASSES ==== */
+
+/* ------------------------------------------------ platform components */
+/*
+    WHERE A DEVELOPER RESTYLES THE SDK COMPONENTS.
+
+    The platform links /sdk/falak-components.css BEFORE this file and wraps
+    it in `@layer falak`, and the full class list is copied into the block
+    above. Rules here beat both: the SDK's layered sheet on layering, the
+    copy on source order — match the copied rule's specificity and no
+    !important is ever needed. There are three levels, cheapest first:
+
+      1. Tokens.  The SDK reads --color-primary, --radius-sm, --color-border…
+         from :root above, so the theme palette already reaches every
+         component with no rule at all.
+      2. Component variables.  Some components expose their own knobs
+         (--f-announce-bg, --f-announce-fg, --f-slider-per-view).
+      3. Selectors.  Target the SDK's class (.f-btn, .f-modal__body) or the
+         element itself (falak-announcement, falak-quantity-input) and write
+         normal CSS. Class names are a stable contract across SDK releases.
+*/
+
+/* 2. Announcement bar: the theme's darker primary, with the theme's close
+      affordance. */
+falak-announcement {
+    --f-announce-bg: var(--color-primary-dark);
+    --f-announce-fg: var(--color-on-primary);
+}
+falak-announcement .f-announce__close:hover { background: rgba(255, 255, 255, 0.25); }
+
+/* 3. Any SDK class can be overridden by name — the SDK sheet
+      (/sdk/falak-components.css) is the reference for what exists. Here the
+      bar gets the theme's taller rhythm; every other property stays the
+      SDK's. */
+.f-announce__inner { min-height: 2.75rem; }
+/* Padding only for the centred bar: in marquee mode the copied rule
+   `.f-announce--scroll .f-announce__inner` (two classes) zeroes it so the
+   text can run edge to edge. Overrides must match the copied rule's
+   specificity — the copy above is unlayered, unlike the SDK's own sheet. */
+falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline: 3rem; }
+
+/* 3. SDK buttons rendered without `button-class` (user menu, modals, the
+      default add button) take this theme's .btn shape, so every button on
+      the page shares one silhouette. */
+.f-btn {
+    padding: 0.7rem 1.6rem;
+    min-block-size: auto;
+    border-radius: var(--radius-sm);
+    line-height: 1.4;
+    transition: background var(--transition), border-color var(--transition), color var(--transition);
+}
+.f-btn:hover:not(:disabled) { opacity: 1; }
+.f-btn--primary:hover:not(:disabled) { background: var(--color-primary-dark); }
+.f-btn:active:not(:disabled) { transform: translateY(1px); }
+
+/* 3. Cards the SDK renders (home grid, sliders) carry the same buy button
+      as the Twig card (.btn--card) so both card kinds look alike. */
+.f-card__add {
+    padding: 0.55rem 1rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    transition: background var(--transition), border-color var(--transition), color var(--transition);
+}
+.f-card__add:active:not(:disabled) { transform: translateY(1px); }
+.f-card__wishlist { border-radius: var(--radius-sm); }
+
+/* 3. Header cart entry: the platform component wearing this theme's
+      .cart-link outline. */
+.cart-link .f-cart-summary__link { gap: 0.5rem; }
+.cart-link .f-cart-summary__icon { width: auto; height: auto; background: transparent; }
+.cart-link .f-cart-summary__count { position: static; margin-inline-start: 0.1rem; }
+.cart-link .f-cart-summary__label { display: none; }
+.cart-link .f-cart-summary__total { font-size: 0.9rem; }
+
+/* 3. Modals and dropdowns follow the theme's radius and shadow rather than
+      the SDK's derived ones. */
+.f-modal__body { border-radius: var(--radius-lg); box-shadow: var(--shadow); }
+.f-menu__list--sub { border-radius: var(--radius); box-shadow: var(--shadow); }
+
 /* ---------------------------------------------------------------- header */
 
 /* Two-row header: brand bar on top, navigation bar below (Al-Mahud style). */
 .site-header {
-    background: var(--color-bg);
+    /* --color-header-bg is only emitted when the merchant sets one, so an
+       unset value falls through to the page background rather than pinning
+       the header to a colour the theme never chose. */
+    background: var(--color-header-bg, var(--color-bg));
 }
 
 .site-header--sticky {
     position: sticky;
     top: 0;
     z-index: 50;
+    /* Soft edge so the header reads as its own surface over page content. */
+    box-shadow: var(--shadow-sm);
 }
 
 .site-header__topbar-inner {
@@ -223,17 +3856,6 @@ a { color: var(--color-primary); }
     margin-inline-start: auto;
 }
 
-.lang-switch {
-    color: inherit;
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 0.88rem;
-    padding: 0.45rem 0.7rem;
-    border-radius: var(--radius-sm);
-    transition: color var(--transition);
-}
-.lang-switch:hover { color: var(--color-primary); }
-
 /* cart pill */
 .cart-link {
     display: inline-flex;
@@ -246,27 +3868,16 @@ a { color: var(--color-primary); }
     text-decoration: none;
     font-weight: 600;
     font-size: 0.9rem;
+    white-space: nowrap;
     transition: border-color var(--transition);
 }
 .cart-link:hover { border-color: var(--color-primary); }
 
-.cart-link__count {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 1.35rem;
-    height: 1.35rem;
-    padding-inline: 0.3rem;
-    border-radius: 999px;
-    background: var(--color-primary);
-    color: var(--color-on-primary);
-    font-size: 0.75rem;
-    line-height: 1;
-}
-
 /* dark top bar variant */
 .topnav-is-dark .site-header {
-    background: #171a21;
+    /* This selector outranks .site-header, so it has to honour the merchant's
+       colour too — otherwise picking one does nothing while dark mode is on. */
+    background: var(--color-header-bg, #171a21);
     color: #fff;
 }
 .topnav-is-dark .site-header__navbar { border-color: #2a2e38; }
@@ -331,7 +3942,8 @@ a { color: var(--color-primary); }
     z-index: 60;
 }
 
-/* Opened by click (app.js), closed by outside click / Escape / second click. */
+/* Opened by <falak-menu>, which toggles .is-open here; closed by outside
+   click, Escape, or a second click on the parent. */
 .main-menu__item.is-open > .main-menu__submenu { display: flex; }
 
 .main-menu__submenu a {
@@ -365,8 +3977,42 @@ a { color: var(--color-primary); }
 @media (max-width: 860px) {
     .menu-toggle { display: flex; }
 
+    /* Tighter rhythm: at desktop gaps the toggle + brand + actions row is
+       wider than a phone screen, which pushed the whole page into a
+       horizontal scroll and shoved the menu button out of view. */
+    .site-header__topbar-inner { gap: 0.75rem; }
+
+    .site-header__actions { gap: 0.5rem; }
+
+    /* A long store name must squeeze and ellipsize, never widen the page. */
+    .site-header__logo {
+        flex-shrink: 1;
+        min-width: 0;
+    }
+
+    .site-header__logo span {
+        min-width: 0;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        /* The name's own script sets its direction, so truncation always
+           keeps the START of the name ("Tahseen U…"), never the tail
+           ("…o Store") — e.g. a Latin store name on the RTL storefront. */
+        unicode-bidi: plaintext;
+        text-align: start;
+    }
+
     /* Page menu moves to the drawer; the categories bar stays and scrolls. */
     .cat-bar ul { justify-content: flex-start; }
+
+    /* Edge fade hints that the categories bar keeps scrolling. Symmetric, so
+       it needs no RTL variant. */
+    .cat-bar {
+        -webkit-mask-image: linear-gradient(to right,
+            transparent, #000 1.25rem, #000 calc(100% - 1.25rem), transparent);
+        mask-image: linear-gradient(to right,
+            transparent, #000 1.25rem, #000 calc(100% - 1.25rem), transparent);
+    }
 
     .site-header .main-menu {
         position: fixed;
@@ -377,6 +4023,9 @@ a { color: var(--color-primary); }
         color: var(--color-text);
         box-shadow: var(--shadow);
         padding: 1.25rem;
+        /* Rounded trailing edge — the drawer reads as a card, not a cut. */
+        border-start-end-radius: var(--radius-lg);
+        border-end-end-radius: var(--radius-lg);
         transform: translateX(calc(var(--rtl-flip, -1) * 105%));
         transition: transform 220ms ease;
         z-index: 80;
@@ -407,6 +4056,7 @@ a { color: var(--color-primary); }
         position: fixed;
         inset: 0;
         background: rgba(15, 18, 24, 0.45);
+        backdrop-filter: blur(2px);
         opacity: 0;
         pointer-events: none;
         transition: opacity 200ms ease;
@@ -424,7 +4074,7 @@ a { color: var(--color-primary); }
 .site-footer {
     margin-top: 4rem;
     border-top: 1px solid var(--color-border);
-    background: var(--color-surface);
+    background: var(--color-footer-bg, var(--color-surface));
     padding-block: 2.5rem 1.5rem;
     font-size: 0.95rem;
 }
@@ -435,6 +4085,18 @@ a { color: var(--color-primary); }
     gap: 2rem;
     justify-content: space-between;
     align-items: flex-start;
+}
+
+/* Stacked footer centers instead of ragged-wrapping. */
+@media (max-width: 640px) {
+    .site-footer__inner {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 1.5rem;
+    }
+
+    .site-footer__menu ul { justify-content: center; }
 }
 
 .site-footer__brand { max-width: 32ch; }
@@ -463,33 +4125,28 @@ a { color: var(--color-primary); }
 }
 .site-footer__menu a:hover { color: var(--color-primary); }
 
-.social-links {
+.site-footer__contact {
     display: flex;
-    gap: 0.6rem;
-    align-items: center;
+    flex-direction: column;
+    gap: 0.5rem;
 }
 
-.social-links a {
-    display: flex;
+.site-footer__contact a {
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
-    width: 2.4rem;
-    height: 2.4rem;
-    border: 1px solid var(--color-border);
-    border-radius: 999px;
+    gap: 0.5rem;
     color: var(--color-text-soft);
-    transition: color var(--transition), border-color var(--transition);
+    text-decoration: none;
+    font-size: 0.92rem;
 }
 
-.social-links a:hover {
-    color: var(--color-primary);
-    border-color: var(--color-primary);
+.site-footer__contact a:hover { color: var(--color-primary); }
+
+.site-footer__contact svg {
+    width: 1.05rem;
+    height: 1.05rem;
+    flex-shrink: 0;
 }
-
-.social-links svg { width: 1.15rem; height: 1.15rem; }
-
-.footer-is-dark .site-footer .social-links a { border-color: #3a3f4b; color: #9aa1ad; }
-.footer-is-dark .site-footer .social-links a:hover { color: var(--color-primary-light); border-color: var(--color-primary-light); }
 
 .site-footer__copyright {
     margin: 2rem 0 0;
@@ -502,12 +4159,14 @@ a { color: var(--color-primary); }
 }
 
 .footer-is-dark .site-footer {
-    background: #171a21;
+    background: var(--color-footer-bg, #171a21);
     border-top-color: #2a2e38;
     color: #d5d9e0;
 }
 .footer-is-dark .site-footer__about,
+.footer-is-dark .site-footer__contact a,
 .footer-is-dark .site-footer__menu a { color: #9aa1ad; }
+.footer-is-dark .site-footer__contact a:hover { color: var(--color-primary-light); }
 .footer-is-dark .site-footer__menu a:hover { color: var(--color-primary-light); }
 .footer-is-dark .site-footer__copyright { border-top-color: #2a2e38; color: #6b7280; }
 
@@ -518,6 +4177,17 @@ a { color: var(--color-primary); }
 .block__title {
     text-align: center;
     margin-bottom: 2rem;
+}
+
+/* Raed-style accent: a short primary bar anchors every section heading. */
+.block__title::after {
+    content: '';
+    display: block;
+    width: 2.5rem;
+    height: 3px;
+    border-radius: 999px;
+    background: var(--color-primary);
+    margin: 0.6rem auto 0;
 }
 
 /* hero slider — full-bleed photography with a directional scrim (Al-Mahud style) */
@@ -642,6 +4312,16 @@ a { color: var(--color-primary); }
 
 @media (max-width: 640px) {
     .hero-slider__arrow { display: none; }
+
+    /* No reading side on a narrow slide: an even scrim keeps the title
+       legible wherever it lands on the photo. Also stated for RTL because
+       the directional RTL scrim rule is more specific than this one. */
+    .hero-slider__slide::after,
+    [dir="rtl"] .hero-slider__slide::after {
+        background: rgba(12, 14, 18, 0.5);
+    }
+
+    .hero-slider__content { padding-block: 2.5rem 3.25rem; }
 }
 
 /* testimonials */
@@ -658,6 +4338,13 @@ a { color: var(--color-primary); }
     border-radius: var(--radius);
     background: var(--color-bg);
     box-shadow: var(--shadow-sm);
+    transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
+}
+
+.testimonial-card:hover {
+    border-color: color-mix(in srgb, var(--color-primary) 35%, var(--color-border));
+    box-shadow: var(--shadow);
+    transform: translateY(-2px);
 }
 
 .testimonial-card__stars {
@@ -719,6 +4406,13 @@ a { color: var(--color-primary); }
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
     background: var(--color-bg);
+    transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
+}
+
+.feature-card:hover {
+    border-color: color-mix(in srgb, var(--color-primary) 35%, var(--color-border));
+    box-shadow: var(--shadow-sm);
+    transform: translateY(-2px);
 }
 
 .feature-card__icon {
@@ -835,6 +4529,13 @@ a { color: var(--color-primary); }
     overflow: hidden;
     background: var(--color-surface);
     border: 1px solid var(--color-border);
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+/* The image zoom reads as elevation once the frame lifts with it. */
+.product-card:hover .product-card__media {
+    border-color: color-mix(in srgb, var(--color-primary) 25%, var(--color-border));
+    box-shadow: var(--shadow);
 }
 
 .product-card__media img {
@@ -954,37 +4655,6 @@ a { color: var(--color-primary); }
     align-items: center;
 }
 
-.qty {
-    display: inline-flex;
-    align-items: center;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-sm);
-    overflow: hidden;
-}
-
-.qty button {
-    width: 2.6rem;
-    height: 2.9rem;
-    border: none;
-    background: var(--color-surface);
-    font-size: 1.1rem;
-    cursor: pointer;
-    color: var(--color-text);
-}
-
-.qty input {
-    width: 3rem;
-    height: 2.9rem;
-    border: none;
-    text-align: center;
-    font: inherit;
-    font-weight: 600;
-    -moz-appearance: textfield;
-}
-
-.qty input::-webkit-outer-spin-button,
-.qty input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-
 /* ------------------------------------------------------------------ cart */
 
 .cart-page { padding-block: 1rem 2rem; }
@@ -1072,20 +4742,6 @@ a { color: var(--color-primary); }
 
 /* ---------------------------------------------------------- misc / pages */
 
-.breadcrumbs {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.5rem;
-    padding-block: 1.25rem;
-    font-size: 0.875rem;
-    color: var(--color-text-soft);
-}
-
-.breadcrumbs a { color: inherit; text-decoration: none; }
-.breadcrumbs a:hover { color: var(--color-primary); }
-.breadcrumbs span[aria-hidden] { color: var(--color-text-faint); }
-
 .empty-state {
     text-align: center;
     padding-block: 4rem;
@@ -1094,6 +4750,44 @@ a { color: var(--color-primary); }
 
 .empty-state__icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
 .empty-state p { margin-bottom: 1.5rem; }
+
+/*
+    The "other products" grid shown when a category turns up empty. Only the
+    heading needs rules — the grid and cards inside it are <falak-products-list>,
+    styled by the platform's falak-components.css.
+*/
+.product-listing__fallback {
+    margin-block-start: 1rem;
+    padding-block-start: 2.5rem;
+    border-block-start: 1px solid var(--color-border);
+}
+
+.product-listing__fallback h2 {
+    font-size: 1.125rem;
+    margin-bottom: 1.25rem;
+    text-align: center;
+}
+
+/* falak-price-range itself is SDK-styled; this is just the label + spacing
+   around it on the listing page. */
+.product-listing__filters {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    max-width: 26rem;
+    margin-block-end: 1.5rem;
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+}
+
+.product-listing__filters-label {
+    flex: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.product-listing__filters falak-price-range { flex: 1; min-width: 0; }
 
 .error-page { text-align: center; padding-block: 6rem 5rem; }
 
@@ -1258,20 +4952,6 @@ a { color: var(--color-primary); }
     padding: 0;
 }
 
-.notification {
-    padding: 1rem 1.25rem;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius);
-    margin-bottom: 0.75rem;
-}
-
-.notification--unread { border-inline-start: 3px solid var(--color-primary); }
-
-.notification a { font-weight: 600; text-decoration: none; color: inherit; }
-.notification a:hover { color: var(--color-primary); }
-.notification p { margin: 0.25rem 0 0; color: var(--color-text-soft); font-size: 0.92rem; }
-.notification time { display: block; margin-top: 0.4rem; color: var(--color-text-faint); font-size: 0.8rem; }
-
 /* -------------------------------------------------------------- blog */
 
 .article-grid {
@@ -1336,10 +5016,14 @@ a { color: var(--color-primary); }
     background: var(--color-bg);
     padding: 1.25rem;
     text-decoration: none;
-    transition: border-color var(--transition), box-shadow var(--transition);
+    transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
 }
 
-.brand-card:hover { border-color: var(--color-primary); box-shadow: var(--shadow-sm); }
+.brand-card:hover {
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-sm);
+    transform: translateY(-2px);
+}
 
 .brand-card img { max-height: 100%; object-fit: contain; }
 
@@ -1441,3 +5125,282 @@ a.photo-tile:hover img { transform: scale(1.04); }
     height: 100%;
     border: 0;
 }
+
+/* ------------------------------------------------------- component showcase */
+/*
+    Layout for the review-only "Component showcase" section. Nothing here styles
+    a component — each one brings its own; this just gives them room and a label
+    so you can see which tag produced what.
+*/
+
+.showcase {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+    gap: 1rem;
+}
+
+.showcase__item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: flex-start;
+    padding: 1.1rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+}
+
+/* Lists and carousels need the full row to be judged at all. */
+.showcase__item--wide { grid-column: 1 / -1; }
+
+.showcase__tag {
+    font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+    font-size: 0.7rem;
+    color: var(--color-text-faint);
+    letter-spacing: 0.01em;
+}
+
+.showcase__row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
+
+.showcase__note {
+    margin: 0;
+    font-size: 0.75rem;
+    color: var(--color-text-soft);
+}
+
+.showcase__item > falak-accordion,
+.showcase__item > falak-products-list,
+.showcase__item > falak-products-slider { width: 100%; }
+
+/* ---------------------------------------------------------------- toasts */
+/* The visible half of falak.notify(): bottom-centre, colour by type. */
+.toasts {
+    position: fixed;
+    inset-inline: 0;
+    bottom: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0 1rem;
+    pointer-events: none;
+    z-index: 1000;
+}
+.toast {
+    max-width: min(26rem, 100%);
+    padding: 0.75rem 1.1rem;
+    border-radius: var(--radius-sm);
+    background: var(--color-text);
+    color: var(--color-bg);
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+    opacity: 0;
+    transform: translateY(0.75rem);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    pointer-events: auto;
+}
+.toast.is-in { opacity: 1; transform: none; }
+.toast--success { background: var(--color-primary); color: var(--color-on-primary); }
+.toast--error { background: #c0392b; color: #fff; }
+@media (prefers-reduced-motion: reduce) { .toast { transition: none; transform: none; } }
+
+/* The SDK add button inherits this theme's .btn skin through button-class;
+   the host is display:contents so the button takes its place in the layout. */
+.buy-box .f-add-product__button { flex: 1 1 auto; }
+
+/* ------------------------------------------------------ cart page v2 */
+/* Lines with a quantity stepper and remove; coupon; summary. Extends the
+   base .cart-* rules above. */
+
+.cart-item__media { flex: none; }
+.cart-item__media img { width: 72px; height: 72px; object-fit: cover; border-radius: var(--radius-sm); }
+.cart-item__name { font-weight: 600; color: var(--color-text); text-decoration: none; display: block; }
+.cart-item__name:hover { color: var(--color-primary); }
+.cart-item__variation { display: block; font-size: 0.85rem; color: var(--color-text-soft); }
+.cart-item__unit { display: block; font-size: 0.9rem; color: var(--color-text-soft); }
+.cart-item__unit del { margin-inline-start: 0.35rem; color: var(--color-text-faint); }
+
+.cart-item__qty {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+.cart-item__step {
+    width: 2.1rem;
+    height: 2.1rem;
+    border: 0;
+    background: transparent;
+    color: var(--color-text);
+    font: inherit;
+    font-size: 1.1rem;
+    cursor: pointer;
+}
+.cart-item__step:hover { background: var(--color-surface); color: var(--color-primary); }
+.cart-item__qty-value { min-width: 2rem; text-align: center; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.cart-item__remove {
+    flex: none;
+    width: 2.1rem;
+    height: 2.1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--color-text-faint);
+    cursor: pointer;
+}
+.cart-item__remove:hover { background: var(--color-surface); color: var(--color-danger); }
+
+.cart-page.is-busy .cart-layout { opacity: 0.55; pointer-events: none; }
+
+/* Coupon control is <falak-cart-coupons>; it wears the theme's inputs. */
+.cart-coupon { display: block; margin-bottom: 1rem; }
+.cart-coupon .f-cart-coupons__input { border-radius: var(--radius-sm); background: #fff; }
+.cart-coupon .f-cart-coupons__button { border-radius: var(--radius-sm); }
+
+.cart-summary__row--discount { color: var(--color-primary); }
+.cart-summary__continue { display: block; margin-top: 0.75rem; text-align: center; font-size: 0.9rem; color: var(--color-text-soft); }
+
+@media (max-width: 767px) {
+    .cart-item { flex-wrap: wrap; }
+    .cart-item__info { flex: 1 1 60%; }
+    .cart-item__line-total { margin-inline-start: auto; }
+}
+.cart-summary__note { margin: 0.25rem 0 0.5rem; font-size: 0.85rem; color: var(--color-primary); }
+
+/* ------------------------------------------------------ variant chooser */
+.product-single__options { margin-block: 0.25rem 1rem; }
+.product-single__price del { margin-inline-start: 0.4rem; font-size: 0.85em; font-weight: 400; color: var(--color-text-faint); }
+.product-single__options .f-options__pill { border-radius: var(--radius-sm); }
+
+/* ------------------------------------------------------------ wishlist */
+/* The card row: buy button + heart square side by side. */
+.product-card falak-add-product-button,
+.product-card falak-wishlist-button { display: contents; }
+.product-card .btn--card-icon {
+    position: absolute;
+    inset-inline-end: 0.75rem;
+    inset-block-start: 0.75rem;
+    z-index: 2;
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.92);
+    color: var(--color-text-soft);
+}
+.product-card .btn--card-icon:hover,
+.product-card .btn--card-icon.is-added { color: var(--color-danger); border-color: var(--color-danger); background: #fff; }
+.product-card .btn--card-icon.is-added .f-wishlist__icon { fill: currentColor; }
+
+.buy-box .btn--wishlist {
+    flex: none;
+    width: 2.75rem;
+    padding: 0;
+    color: var(--color-text-soft);
+}
+.buy-box .btn--wishlist:hover,
+.buy-box .btn--wishlist.is-added { color: var(--color-danger); border-color: var(--color-danger); background: transparent; }
+.buy-box .btn--wishlist.is-added .f-wishlist__icon { fill: currentColor; }
+
+/* ------------------------------------------------------------- search */
+/* Header trigger matches the wishlist/account icons; the dropdown panel
+   takes the theme's surface, radius and price colours. */
+.search-link .f-search__trigger {
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 1px solid var(--color-border);
+    background: transparent;
+    color: var(--color-text);
+    transition: border-color var(--transition), color var(--transition);
+}
+.search-link .f-search__trigger:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.topnav-is-dark .site-header .search-link .f-search__trigger { border-color: #3a3f4b; }
+
+#falak-search .f-modal__body { background: var(--color-surface); border-radius: var(--radius); }
+#falak-search .f-search__input { background: var(--color-bg); border-color: var(--color-border); border-radius: var(--radius-sm); }
+#falak-search .f-search__link:hover { background: var(--color-surface-alt, var(--color-bg)); }
+#falak-search .f-search__thumb { border-radius: var(--radius-sm); }
+#falak-search .f-search__price-now { color: var(--color-primary); }
+#falak-search .f-search__view-all { color: var(--color-primary); border-color: var(--color-border); }
+
+/* ------------------------------------------------------ wishlist drawer */
+/* Header trigger matches the account avatar / cart link; the panel takes
+   the theme's surface, radius and button skins. */
+.wishlist-link .f-wishlist-drawer__trigger {
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 1px solid var(--color-border);
+    background: transparent;
+    color: var(--color-text);
+    transition: border-color var(--transition), color var(--transition);
+}
+.wishlist-link .f-wishlist-drawer__trigger:hover { border-color: var(--color-danger); color: var(--color-danger); }
+.wishlist-link .f-wishlist-drawer__count { background: var(--color-primary); color: var(--color-on-primary); }
+.topnav-is-dark .site-header .wishlist-link .f-wishlist-drawer__trigger { border-color: #3a3f4b; }
+
+.wishlist-link .f-drawer { background: var(--color-bg); color: var(--color-text); }
+.wishlist-link .f-drawer__head { background: var(--color-surface); }
+.wishlist-link .f-drawer__title { font-size: 1.15rem; }
+.wishlist-link .f-drawer__badge { background: var(--color-primary); color: var(--color-on-primary); }
+.wishlist-link .f-drawer__close { border-radius: var(--radius-sm); }
+.wishlist-link .f-wishlist-drawer__item { background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius); padding: 0.75rem; margin-block: 0.6rem; }
+.wishlist-link .f-wishlist-drawer__media { border-radius: var(--radius-sm); }
+.wishlist-link .f-wishlist-drawer__name { font-size: 0.92rem; }
+.wishlist-link .f-wishlist-drawer__actions .f-add-product__button {
+    padding: 0.5rem 0.9rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+}
+.wishlist-link .f-wishlist-drawer__actions .f-wishlist__button {
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    border-radius: var(--radius-sm);
+}
+.wishlist-link .f-drawer__foot { background: var(--color-surface); }
+.wishlist-link .f-wishlist-drawer__all { border-radius: var(--radius-sm); padding: 0.7rem 1.6rem; min-block-size: auto; }
+
+@media (max-width: 767px) {
+    .wishlist-link .f-drawer { inline-size: 100vw; }
+}
+
+/* ------------------------------------------------------------- checkout */
+/* The platform checkout wearing this theme: card steps, the theme's inputs
+   and buttons, the summary as a surface card. */
+.checkout-page { padding-block: 1rem 3rem; }
+.checkout-page .f-checkout__step { padding: 1.25rem; margin-block-end: 1rem; border: 1px solid var(--color-border); border-radius: var(--radius); background: #fff; }
+.checkout-page .f-checkout__step--active { border-color: var(--color-primary); box-shadow: var(--shadow-sm); }
+.checkout-page .f-checkout__step-icon { border-radius: var(--radius-sm); }
+.checkout-page .f-input { border-radius: var(--radius-sm); background: #fff; }
+.checkout-page .f-checkout__method { border-radius: var(--radius-sm); background: #fff; }
+.checkout-page .f-checkout__summary { background: var(--color-surface); border-radius: var(--radius); }
+.checkout-page .f-btn { border-radius: var(--radius-sm); }
+.checkout-page .f-btn--primary { background: var(--color-primary); color: var(--color-on-primary); }
+.checkout-page .f-btn--primary:hover:not(:disabled) { background: var(--color-primary-dark); opacity: 1; }
+.checkout-page .f-checkout__signin { border-radius: var(--radius); }
+
+.payment-status-page { padding-block: 2rem 4rem; }
+
+.thank-you__note { color: var(--color-text-soft); }
+.thank-you__items { list-style: none; margin: 1.25rem auto; padding: 0; max-width: 32rem; text-align: start; display: flex; flex-direction: column; gap: 0.6rem; }
+.thank-you__items li { display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem 0.75rem; border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: #fff; }
+.thank-you__items img { width: 2.75rem; height: 2.75rem; object-fit: cover; border-radius: var(--radius-sm); }
+.thank-you__item-name { flex: 1 1 auto; min-width: 0; }
+.thank-you__item-qty { color: var(--color-text-soft); }
+.thank-you__item-total { font-weight: 700; white-space: nowrap; }
+.order-head__address { color: var(--color-text-soft); font-size: 0.9rem; }
+
+/* ------------------------------ availability / size guide / reviews summary */
+.product-single__availability { margin-block-start: 0.75rem; }
+.btn--notify { display: inline-flex; align-items: center; gap: 0.45rem; }
+.product-single__size-guide { margin-block: 0.25rem 0.75rem; }
+.product-single__reviews > h2 { margin-block-end: 1rem; }
+.product-single__reviews-summary { padding: 1.25rem; margin-block-end: 1.5rem; border: 1px solid var(--color-border); border-radius: var(--radius); background: #fff; }

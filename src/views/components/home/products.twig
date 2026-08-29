@@ -1,0 +1,45 @@
+{#
+    Products grid — merchant-placeable.
+
+    Unlike the other home components, the products are NOT rendered server-side:
+    <falak-products-list> fetches them from /api/storefront and renders its own
+    <falak-product-card> children. That keeps this section live without the
+    merchant republishing — a price or stock change shows on the next page load,
+    and the card stays the single definition of what a product looks like.
+
+    The trade-off is deliberate and only acceptable here: the home page is not
+    the page a shopper reaches from a product search, so the products being
+    absent from the initial HTML costs nothing. The product listing page renders
+    server-side for exactly the opposite reason.
+
+    | Variable            | Type    | Description                             |
+    | component.title     | ?string | section title, localized server-side    |
+    | component.limit     | ?int    | how many products to show               |
+    | component.columns   | ?string | grid density on desktop                 |
+    | component.category  | ?string | category id; empty means all products   |
+    | component.show_count| ?bool   | render the "showing N of M" line        |
+    | position            | int     |                                         |
+
+    Customizer bindings — full rules in README, "Customizer annotations".
+    | Element         | Tag                      |
+    | h2.block__title | data-falak-field="title" |
+
+    The grid itself carries no binding: its fields are settings rather than
+    text, and the platform already makes the whole component selectable.
+#}
+<section class="block block--products" id="products-{{ position }}">
+    <div class="container">
+        {% if component.title %}
+            <h2 class="block__title" data-falak-field="title" data-falak-label="{{ trans('editor.field.title') }}">{{ component.title }}</h2>
+        {% endif %}
+
+        <falak-products-list
+            limit="{{ component.limit|default(8) }}"
+            columns="{{ component.columns|default(4) }}"
+            {% if component.category %}category="{{ component.category }}"{% endif %}
+            {% if component.show_count %}show-count{% endif %}
+            {# Each card carries the platform add-to-cart button. #}
+            card-button
+            source="home.products"></falak-products-list>
+    </div>
+</section>

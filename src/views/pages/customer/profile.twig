@@ -12,27 +12,31 @@
 {% block account_content %}
     <h1>{{ trans('account.profile') }}</h1>
 
-    {% if customer|default(null) %}
-        <dl class="account-details">
-            <div class="account-details__row">
-                <dt>{{ trans('account.name') }}</dt>
-                <dd>{{ customer.name }}</dd>
-            </div>
-            <div class="account-details__row">
-                <dt>{{ trans('account.email') }}</dt>
-                <dd>{{ customer.email }}</dd>
-            </div>
-            {% if customer.phone|default(null) %}
+    {# Editable details + order counts; the SDK component renders the form.
+       The server-rendered list inside is what shows until the script runs. #}
+    <falak-user-profile>
+        {% if customer|default(null) %}
+            <dl class="account-details">
                 <div class="account-details__row">
-                    <dt>{{ trans('account.phone') }}</dt>
-                    <dd dir="ltr">{{ customer.phone }}</dd>
+                    <dt>{{ trans('account.name') }}</dt>
+                    <dd>{{ customer.name }}</dd>
                 </div>
-            {% endif %}
-        </dl>
-    {% else %}
-        <div class="empty-state">
-            <div class="empty-state__icon" aria-hidden="true">👤</div>
-            <p>{{ trans('account.sign_in_prompt') }}</p>
-        </div>
-    {% endif %}
+                <div class="account-details__row">
+                    <dt>{{ trans('account.email') }}</dt>
+                    <dd>{{ customer.email }}</dd>
+                </div>
+                {% if customer.phone|default(null) %}
+                    <div class="account-details__row">
+                        <dt>{{ trans('account.phone') }}</dt>
+                        <dd dir="ltr">{{ customer.phone }}</dd>
+                    </div>
+                {% endif %}
+            </dl>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-state__icon" aria-hidden="true">👤</div>
+                <p>{{ trans('account.sign_in_prompt') }}</p>
+            </div>
+        {% endif %}
+    </falak-user-profile>
 {% endblock %}

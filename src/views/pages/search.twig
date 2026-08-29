@@ -24,11 +24,9 @@
                 {% endfor %}
             </div>
         {% else %}
-            <div class="empty-state">
-                <div class="empty-state__icon" aria-hidden="true">🔍</div>
-                <p>{{ trans('search.no_results') }}</p>
-                <a class="btn btn--outline" href="/products">{{ trans('common.products') }}</a>
-            </div>
+            <falak-placeholder icon="🔍" text="{{ trans('search.no_results') }}"
+                               action-text="{{ trans('common.products') }}" action-href="/products"
+                               action-class="btn btn--outline"></falak-placeholder>
         {% endif %}
     </div>
 {% endblock %}

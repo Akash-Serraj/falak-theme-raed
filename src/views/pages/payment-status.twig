@@ -1,0 +1,14 @@
+{#
+    Return page for online payment gateways. The component reads
+    ?order_number=… from the URL, verifies with the platform and moves on.
+#}
+{% extends "layouts.master" %}
+
+{% block title %}{{ trans('checkout.payment_status') }} — {{ store.name }}{% endblock %}
+
+{% block content %}
+    <div class="container payment-status-page">
+        <falak-payment-status thank-you-url="/thank-you/{order}" checkout-url="/checkout"
+                              order-url="/customer/orders/{order}"></falak-payment-status>
+    </div>
+{% endblock %}

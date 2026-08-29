@@ -23,62 +23,303 @@
     },
     "settings": [
         {
+            "group": "maintenance",
+            "name": {
+                "ar": "إشعار الصيانة",
+                "en": "Maintenance notice"
+            },
+            "icon": "alert-triangle-line",
+            "fields": [
+                {
+                    "id": "maintenance_enabled",
+                    "type": "boolean",
+                    "format": "switch",
+                    "label": {
+                        "ar": "تفعيل إشعار الصيانة",
+                        "en": "Show a maintenance notice"
+                    },
+                    "description": {
+                        "ar": "شريط بارز أعلى كل صفحة — للصيانة المجدولة أو إيقاف الطلبات مؤقتًا",
+                        "en": "A prominent bar at the top of every page — for scheduled maintenance or a temporary pause on orders"
+                    },
+                    "value": false
+                },
+                {
+                    "id": "maintenance_title",
+                    "type": "string",
+                    "format": "text",
+                    "label": {
+                        "ar": "العنوان",
+                        "en": "Title"
+                    },
+                    "multilanguage": true,
+                    "required": false,
+                    "maxLength": 80
+                },
+                {
+                    "id": "maintenance_message",
+                    "type": "string",
+                    "format": "text",
+                    "label": {
+                        "ar": "نص الإشعار",
+                        "en": "Notice text"
+                    },
+                    "description": {
+                        "ar": "مثال: المتجر تحت الصيانة المجدولة، سنعود قريبًا",
+                        "en": "Example: The store is under scheduled maintenance, we'll be back soon"
+                    },
+                    "multilanguage": true,
+                    "required": false,
+                    "maxLength": 200
+                },
+                {
+                    "id": "maintenance_dismissible",
+                    "type": "boolean",
+                    "format": "switch",
+                    "label": {
+                        "ar": "السماح للزائر بإغلاق الإشعار",
+                        "en": "Let visitors dismiss the notice"
+                    },
+                    "value": false
+                }
+            ]
+        },
+        {
+            "group": "announcement",
+            "name": {
+                "ar": "شريط الإعلانات",
+                "en": "Announcement bar"
+            },
+            "icon": "megaphone-line",
+            "fields": [
+                {
+                    "id": "announcement_enabled",
+                    "type": "boolean",
+                    "format": "switch",
+                    "label": {
+                        "ar": "تفعيل شريط الإعلانات",
+                        "en": "Show the announcement bar"
+                    },
+                    "description": {
+                        "ar": "شريط أعلى المتجر لعرض العروض والتنبيهات",
+                        "en": "A strip at the very top of your store for promos and notices"
+                    },
+                    "value": false
+                },
+                {
+                    "id": "announcement_text",
+                    "type": "string",
+                    "format": "text",
+                    "label": {
+                        "ar": "نص الإعلان",
+                        "en": "Announcement text"
+                    },
+                    "description": {
+                        "ar": "مثال: شحن مجاني للطلبات فوق 200 ريال",
+                        "en": "Example: Free shipping on orders over 200 SAR"
+                    },
+                    "multilanguage": true,
+                    "required": false,
+                    "maxLength": 120
+                },
+                {
+                    "id": "announcement_link",
+                    "type": "string",
+                    "format": "text",
+                    "label": {
+                        "ar": "رابط الإعلان",
+                        "en": "Announcement link"
+                    },
+                    "description": {
+                        "ar": "اختياري — يفتح عند الضغط على الشريط",
+                        "en": "Optional — opens when the bar is clicked"
+                    },
+                    "required": false,
+                    "maxLength": 255
+                },
+                {
+                    "id": "announcement_dismissible",
+                    "type": "boolean",
+                    "format": "switch",
+                    "label": {
+                        "ar": "السماح للزائر بإغلاق الشريط",
+                        "en": "Let visitors dismiss the bar"
+                    },
+                    "value": true
+                }
+            ]
+        },
+        {
             "group": "header",
-            "name": { "ar": "خيارات أعلى الصفحة", "en": "Top of page options" },
+            "name": {
+                "ar": "خيارات أعلى الصفحة",
+                "en": "Top of page options"
+            },
             "icon": "layout-top-line",
             "fields": [
                 {
                     "id": "header_is_sticky",
                     "type": "boolean",
                     "format": "switch",
-                    "label": { "ar": "تثبيت القائمة الرئيسية أعلى الصفحة عند التمرير", "en": "Keep the main menu fixed at the top when scrolling" },
-                    "description": { "ar": "يُنصح بإلغاء تفعيلها في حال وجود عناصر كثيرة في القائمة", "en": "Recommended off if the menu has many items" },
+                    "label": {
+                        "ar": "تثبيت القائمة الرئيسية أعلى الصفحة عند التمرير",
+                        "en": "Keep the main menu fixed at the top when scrolling"
+                    },
+                    "description": {
+                        "ar": "يُنصح بإلغاء تفعيلها في حال وجود عناصر كثيرة في القائمة",
+                        "en": "Recommended off if the menu has many items"
+                    },
                     "value": true
                 },
                 {
                     "id": "topnav_is_dark",
                     "type": "boolean",
                     "format": "switch",
-                    "label": { "ar": "شريط علوي داكن", "en": "Dark top bar" },
+                    "label": {
+                        "ar": "شريط علوي داكن",
+                        "en": "Dark top bar"
+                    },
                     "value": false
                 }
             ]
         },
         {
             "group": "footer",
-            "name": { "ar": "خيارات أسفل الصفحة", "en": "Bottom of page options" },
+            "name": {
+                "ar": "خيارات أسفل الصفحة",
+                "en": "Bottom of page options"
+            },
             "icon": "layout-bottom-line",
             "fields": [
                 {
                     "id": "footer_is_dark",
                     "type": "boolean",
                     "format": "switch",
-                    "label": { "ar": "الوضع الداكن للفوتر", "en": "Dark footer" },
+                    "label": {
+                        "ar": "الوضع الداكن للفوتر",
+                        "en": "Dark footer"
+                    },
                     "value": false
                 },
                 {
                     "id": "footer_about",
                     "type": "string",
                     "format": "textarea",
-                    "label": { "ar": "نبذة عن المتجر", "en": "About the store" },
-                    "description": { "ar": "نص قصير يظهر أسفل اسم المتجر في الفوتر", "en": "A short line shown under the store name in the footer" },
+                    "label": {
+                        "ar": "نبذة عن المتجر",
+                        "en": "About the store"
+                    },
+                    "description": {
+                        "ar": "نص قصير يظهر أسفل اسم المتجر في الفوتر",
+                        "en": "A short line shown under the store name in the footer"
+                    },
                     "multilanguage": true,
                     "required": false,
                     "maxLength": 200
+                },
+                {
+                    "id": "footer_phone",
+                    "type": "string",
+                    "format": "text",
+                    "label": {
+                        "ar": "رقم التواصل",
+                        "en": "Contact phone"
+                    },
+                    "description": {
+                        "ar": "مثال: +9665xxxxxxxx — يظهر في الفوتر كرابط اتصال",
+                        "en": "Example: +9665xxxxxxxx — shown in the footer as a call link"
+                    },
+                    "required": false,
+                    "maxLength": 30
+                },
+                {
+                    "id": "footer_email",
+                    "type": "string",
+                    "format": "text",
+                    "label": {
+                        "ar": "البريد الإلكتروني للتواصل",
+                        "en": "Contact email"
+                    },
+                    "required": false,
+                    "maxLength": 255
+                }
+            ]
+        },
+        {
+            "group": "colors",
+            "name": {
+                "ar": "الألوان",
+                "en": "Colors"
+            },
+            "icon": "palette-line",
+            "fields": [
+                {
+                    "id": "header_bg_color",
+                    "type": "string",
+                    "format": "color",
+                    "css_var": "--color-header-bg",
+                    "label": {
+                        "ar": "لون خلفية الهيدر",
+                        "en": "Header background colour"
+                    },
+                    "description": {
+                        "ar": "اتركه فارغًا لاستخدام لون القالب الافتراضي",
+                        "en": "Leave empty to keep the theme's own colour"
+                    },
+                    "required": false
+                },
+                {
+                    "id": "body_bg_color",
+                    "type": "string",
+                    "format": "color",
+                    "css_var": "--color-bg",
+                    "label": {
+                        "ar": "لون خلفية الصفحة",
+                        "en": "Page background colour"
+                    },
+                    "description": {
+                        "ar": "اتركه فارغًا لاستخدام لون القالب الافتراضي",
+                        "en": "Leave empty to keep the theme's own colour"
+                    },
+                    "required": false
+                },
+                {
+                    "id": "footer_bg_color",
+                    "type": "string",
+                    "format": "color",
+                    "css_var": "--color-footer-bg",
+                    "label": {
+                        "ar": "لون خلفية الفوتر",
+                        "en": "Footer background colour"
+                    },
+                    "description": {
+                        "ar": "اتركه فارغًا لاستخدام لون القالب الافتراضي",
+                        "en": "Leave empty to keep the theme's own colour"
+                    },
+                    "required": false
                 }
             ]
         },
         {
             "group": "social",
-            "name": { "ar": "حسابات التواصل الاجتماعي", "en": "Social media accounts" },
+            "name": {
+                "ar": "حسابات التواصل الاجتماعي",
+                "en": "Social media accounts"
+            },
             "icon": "share-line",
             "fields": [
                 {
                     "id": "social_instagram",
                     "type": "string",
                     "format": "text",
-                    "label": { "ar": "انستقرام", "en": "Instagram" },
-                    "description": { "ar": "رابط الحساب كاملاً", "en": "Full profile URL" },
+                    "label": {
+                        "ar": "انستقرام",
+                        "en": "Instagram"
+                    },
+                    "description": {
+                        "ar": "رابط الحساب كاملاً",
+                        "en": "Full profile URL"
+                    },
                     "required": false,
                     "maxLength": 255
                 },
@@ -86,7 +327,10 @@
                     "id": "social_x",
                     "type": "string",
                     "format": "text",
-                    "label": { "ar": "إكس (تويتر)", "en": "X (Twitter)" },
+                    "label": {
+                        "ar": "إكس (تويتر)",
+                        "en": "X (Twitter)"
+                    },
                     "required": false,
                     "maxLength": 255
                 },
@@ -94,7 +338,10 @@
                     "id": "social_tiktok",
                     "type": "string",
                     "format": "text",
-                    "label": { "ar": "تيك توك", "en": "TikTok" },
+                    "label": {
+                        "ar": "تيك توك",
+                        "en": "TikTok"
+                    },
                     "required": false,
                     "maxLength": 255
                 },
@@ -102,7 +349,10 @@
                     "id": "social_snapchat",
                     "type": "string",
                     "format": "text",
-                    "label": { "ar": "سناب شات", "en": "Snapchat" },
+                    "label": {
+                        "ar": "سناب شات",
+                        "en": "Snapchat"
+                    },
                     "required": false,
                     "maxLength": 255
                 },
@@ -110,7 +360,10 @@
                     "id": "social_youtube",
                     "type": "string",
                     "format": "text",
-                    "label": { "ar": "يوتيوب", "en": "YouTube" },
+                    "label": {
+                        "ar": "يوتيوب",
+                        "en": "YouTube"
+                    },
                     "required": false,
                     "maxLength": 255
                 },
@@ -118,8 +371,14 @@
                     "id": "social_whatsapp",
                     "type": "string",
                     "format": "text",
-                    "label": { "ar": "واتساب", "en": "WhatsApp" },
-                    "description": { "ar": "مثال: https://wa.me/9665xxxxxxxx", "en": "Example: https://wa.me/9665xxxxxxxx" },
+                    "label": {
+                        "ar": "واتساب",
+                        "en": "WhatsApp"
+                    },
+                    "description": {
+                        "ar": "مثال: https://wa.me/9665xxxxxxxx",
+                        "en": "Example: https://wa.me/9665xxxxxxxx"
+                    },
                     "required": false,
                     "maxLength": 255
                 }
@@ -127,26 +386,63 @@
         },
         {
             "group": "product",
-            "name": { "ar": "خيارات صفحة المنتج", "en": "Product page options" },
+            "name": {
+                "ar": "خيارات صفحة المنتج",
+                "en": "Product page options"
+            },
             "icon": "shopping-bag-line",
             "fields": [
                 {
                     "id": "product_show_breadcrumbs",
                     "type": "boolean",
                     "format": "switch",
-                    "label": { "ar": "إظهار مسار التنقل في صفحة المنتج", "en": "Show breadcrumbs on the product page" },
+                    "label": {
+                        "ar": "إظهار مسار التنقل في صفحة المنتج",
+                        "en": "Show breadcrumbs on the product page"
+                    },
                     "value": true
                 },
                 {
                     "id": "product_image_fit",
                     "type": "items",
                     "format": "dropdown-list",
-                    "label": { "ar": "طريقة عرض صور المنتج", "en": "Product image display mode" },
+                    "label": {
+                        "ar": "طريقة عرض صور المنتج",
+                        "en": "Product image display mode"
+                    },
                     "value": "contain",
                     "options": [
-                        { "label": { "ar": "تغطية كامل المساحة (Cover)", "en": "Cover the full area (Cover)" }, "value": "cover" },
-                        { "label": { "ar": "إظهار الصورة كاملة في المنتصف (Contain)", "en": "Show the full image centered (Contain)" }, "value": "contain" }
+                        {
+                            "label": {
+                                "ar": "تغطية كامل المساحة (Cover)",
+                                "en": "Cover the full area (Cover)"
+                            },
+                            "value": "cover"
+                        },
+                        {
+                            "label": {
+                                "ar": "إظهار الصورة كاملة في المنتصف (Contain)",
+                                "en": "Show the full image centered (Contain)"
+                            },
+                            "value": "contain"
+                        }
                     ]
+                },
+                {
+                    "id": "shipping_note",
+                    "type": "string",
+                    "format": "textarea",
+                    "label": {
+                        "ar": "ملاحظة الشحن والإرجاع",
+                        "en": "Shipping & returns note"
+                    },
+                    "description": {
+                        "ar": "يظهر داخل قسم \"الشحن والإرجاع\" في صفحة المنتج",
+                        "en": "Shown inside the \"Shipping & returns\" section on the product page"
+                    },
+                    "multilanguage": true,
+                    "required": false,
+                    "maxLength": 500
                 }
             ]
         }
@@ -154,12 +450,18 @@
     "presets": [
         {
             "id": "default",
-            "name": { "ar": "الأساسي", "en": "Default" },
+            "name": {
+                "ar": "الأساسي",
+                "en": "Default"
+            },
             "settings": {}
         },
         {
             "id": "dark",
-            "name": { "ar": "داكن", "en": "Dark" },
+            "name": {
+                "ar": "داكن",
+                "en": "Dark"
+            },
             "settings": {
                 "topnav_is_dark": true,
                 "footer_is_dark": true

@@ -1,0 +1,186 @@
+{#
+    Component showcase — every platform component on one page, in this store.
+
+    A QA surface, not a shop section. Add it to the home page in the customizer
+    to see the whole set rendered with this store's colours, fonts, currency,
+    language and direction, then remove it again. The playground at
+    /sdk/playground.html shows the same components against stubbed data; this
+    shows them against yours.
+
+    | Variable            | Type   | Description                        |
+    | component.title     | ?string| section heading                    |
+    | component.product_id| ?string| product used by the live examples  |
+    | position            | int    |                                    |
+#}
+<section class="block block--showcase" id="showcase-{{ position }}">
+    <div class="container">
+        <h2 class="block__title" data-falak-field="title" data-falak-label="{{ trans('editor.field.title') }}">
+            {{ component.title|default('Component showcase') }}
+        </h2>
+
+        <div class="showcase">
+
+            {# ---------------------------------------------------- primitives #}
+            <div class="showcase__item">
+                <code class="showcase__tag">&lt;falak-button&gt;</code>
+                <div class="showcase__row">
+                    <falak-button color="primary">Primary</falak-button>
+                    <falak-button color="light">Light</falak-button>
+                    <falak-button color="primary" fill="outline">Outline</falak-button>
+                    <falak-button color="primary" size="small">Small</falak-button>
+                    <falak-button color="primary" size="large">Large</falak-button>
+                    <falak-button shape="link" color="primary">Link</falak-button>
+                </div>
+            </div>
+
+            <div class="showcase__item">
+                <code class="showcase__tag">&lt;falak-modal&gt;</code>
+                <div class="showcase__row">
+                    <falak-button color="primary" fill="outline" size="small"
+                                  data-showcase-open="showcase-modal">Open modal</falak-button>
+                </div>
+                <falak-modal id="showcase-modal" width="sm"
+                             modal-title="{{ trans('common.preferences') }}"
+                             sub-title="Backdrop, Escape and the close button all dismiss this.">
+                    <p>Scroll lock is reference-counted, so a modal opened from inside another behaves.</p>
+                </falak-modal>
+            </div>
+
+            {# ------------------------------------------------ product surface #}
+            <div class="showcase__item">
+                <code class="showcase__tag">&lt;falak-quantity-input&gt;</code>
+                <div class="showcase__row">
+                    <falak-quantity-input value="1" min="1" max="10" name="showcase-qty"></falak-quantity-input>
+                </div>
+            </div>
+
+            <div class="showcase__item">
+                <code class="showcase__tag">&lt;falak-rating-stars&gt;</code>
+                <div class="showcase__row">
+                    <falak-rating-stars value="4.2" total="18" show-value></falak-rating-stars>
+                    <falak-rating-stars value="0" max="5" interactive></falak-rating-stars>
+                </div>
+            </div>
+
+            <div class="showcase__item">
+                <code class="showcase__tag">&lt;falak-accordion&gt;</code>
+                <falak-accordion collapsible bordered name="showcase">
+                    <falak-accordion-head>
+                        <span slot="title">{{ trans('product.shipping_returns') }}</span>
+                    </falak-accordion-head>
+                    <falak-accordion-body>
+                        State is <code>data-collapsed</code>; the theme CSS decides what collapsed looks like.
+                    </falak-accordion-body>
+                </falak-accordion>
+            </div>
+
+            <div class="showcase__item showcase__item--wide">
+                <code class="showcase__tag">&lt;falak-product-card&gt; variants — minimal · full-image · special · horizontal</code>
+                <div class="showcase__row" style="align-items: stretch;">
+                    <div style="inline-size:11rem"><falak-product-card product-id="92" fetch minimal></falak-product-card></div>
+                    <div style="inline-size:11rem"><falak-product-card product-id="92" fetch full-image></falak-product-card></div>
+                    <div style="inline-size:11rem"><falak-product-card product-id="92" fetch special></falak-product-card></div>
+                    <div style="inline-size:20rem"><falak-product-card product-id="92" fetch horizontal></falak-product-card></div>
+                </div>
+            </div>
+
+            <div class="showcase__item showcase__item--wide">
+                <code class="showcase__tag">&lt;falak-products-list&gt;</code>
+                <falak-products-list limit="4" columns="4" show-count source="showcase"></falak-products-list>
+            </div>
+
+            <div class="showcase__item showcase__item--wide">
+                <code class="showcase__tag">&lt;falak-products-slider&gt; + &lt;falak-slider&gt;</code>
+                <falak-products-slider block-title="{{ trans('product.related') }}"
+                                       limit="8" slides-per-view="4"
+                                       show-controls controls-outer
+                                       source="latest" source-label="showcase"></falak-products-slider>
+            </div>
+
+            {# ----------------------------------------------------- navigation #}
+            <div class="showcase__item">
+                <code class="showcase__tag">&lt;falak-breadcrumb&gt;</code>
+                <falak-breadcrumb></falak-breadcrumb>
+                <p class="showcase__note">Empty on the home page by design — a breadcrumb to nowhere is noise.</p>
+            </div>
+
+            {# --------------------------------------------------------- footer #}
+            <div class="showcase__item">
+                <code class="showcase__tag">&lt;falak-social&gt;</code>
+                <falak-social></falak-social>
+                <falak-social mode="share" hide-title share-text="{{ store.name }}"></falak-social>
+            </div>
+
+            <div class="showcase__item">
+                <code class="showcase__tag">&lt;falak-payments&gt;</code>
+                <falak-payments></falak-payments>
+            </div>
+
+            <div class="showcase__item">
+                <code class="showcase__tag">&lt;falak-trust-badges&gt;</code>
+                <falak-trust-badges></falak-trust-badges>
+                <p class="showcase__note">Renders nothing until the store has documents on file.</p>
+            </div>
+
+            <div class="showcase__item">
+                <code class="showcase__tag">&lt;falak-apps-icons&gt;</code>
+                <falak-apps-icons></falak-apps-icons>
+                <p class="showcase__note">Renders nothing — there is no app-links column yet.</p>
+            </div>
+
+            {# -------------------------------------------------------- account #}
+            <div class="showcase__item">
+                <code class="showcase__tag">&lt;falak-user-menu&gt;</code>
+                <div class="showcase__row">
+                    <falak-user-menu show-trigger show-header></falak-user-menu>
+                </div>
+            </div>
+
+            <div class="showcase__item">
+                <code class="showcase__tag">&lt;falak-localization-modal&gt;</code>
+                <div class="showcase__row">
+                    <falak-localization-modal show-trigger></falak-localization-modal>
+                </div>
+            </div>
+
+            <div class="showcase__item">
+                <code class="showcase__tag">&lt;falak-login-modal&gt;</code>
+                <div class="showcase__row">
+                    <falak-button color="primary" fill="outline" size="small"
+                                  data-showcase-login>{{ trans('auth.sign_in') }}</falak-button>
+                </div>
+                <p class="showcase__note">Dispatches <code>auth::required</code>; the layout's login sheet answers it.</p>
+            </div>
+
+            {% if component.product_id %}
+                <div class="showcase__item showcase__item--wide">
+                    <code class="showcase__tag">&lt;falak-comments&gt;</code>
+                    <falak-comments product-id="{{ component.product_id }}" per-page="3"></falak-comments>
+                </div>
+            {% endif %}
+
+        </div>
+    </div>
+</section>
+
+{#
+    Two triggers only. Everything else here is the components' own behaviour —
+    if a control needs script to demonstrate a component, the component is
+    missing something.
+#}
+<script>
+(function () {
+    document.addEventListener('click', function (event) {
+        var open = event.target.closest('[data-showcase-open]');
+        if (open) {
+            var modal = document.getElementById(open.getAttribute('data-showcase-open'));
+            if (modal && modal.open) modal.open();
+            return;
+        }
+
+        if (event.target.closest('[data-showcase-login]') && window.falak) {
+            window.falak.event.dispatch('auth::required');
+        }
+    });
+})();
+</script>

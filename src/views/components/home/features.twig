@@ -6,16 +6,23 @@
     | component.items[].title  | string  | localized server-side       |
     | component.items[].text   | ?string | localized server-side       |
     | position                 | int     |                             |
+
+    Customizer bindings — full rules in README, "Customizer annotations".
+    | Element         | Tag                                            |
+    | h2.block__title | data-falak-field="title"                       |
+    | .feature-card   | data-falak-field="items" data-falak-bind="none" |
+
+    `items` is a collection — see bind="none" in the README.
 #}
 <section class="block block--features" id="features-{{ position }}">
     <div class="container">
         {% if component.title %}
-            <h2 class="block__title">{{ component.title }}</h2>
+            <h2 class="block__title" data-falak-field="title" data-falak-label="{{ trans('editor.field.title') }}">{{ component.title }}</h2>
         {% endif %}
 
         <div class="features-grid">
             {% for item in component.items %}
-                <div class="feature-card">
+                <div class="feature-card" data-falak-field="items" data-falak-label="{{ trans('editor.field.items') }}" data-falak-bind="none">
                     <div class="feature-card__icon" aria-hidden="true">
                         {% if item.icon %}<img src="{{ item.icon }}" alt="">{% else %}✦{% endif %}
                     </div>

@@ -1,11 +1,12 @@
 /*
     Falak Theme 2026 — site-wide behavior.
 
-    The platform injects `window.Falak.boot` ({storeId, locale, cartCount}) at
-    body:end. The full FalakSDK (cart mutations etc.) arrives in a later platform
-    phase, so every commerce action here degrades gracefully: it emits a
-    `falak:cart:add` CustomEvent for the SDK to pick up when it exists, and gives
-    the shopper immediate visual feedback either way.
+    Commerce actions (add to cart, quantity, wishlist, checkout) are NOT
+    handled here — they're delegated entirely to the `<falak-*>` SDK web
+    components (see falak-add-product-button.js and friends), so a page keeps
+    working even if this file fails to load. What's left here is markup-only
+    behavior the SDK doesn't own: the mobile menu drawer, language-switch link
+    rewriting, and small per-page glue (e.g. the price-filter reload below).
 */
 (function () {
     'use strict';
@@ -31,8 +32,9 @@
 
     if (backdrop) backdrop.addEventListener('click', closeMenu);
 
-    // Dropdown submenus are handled inline in master.twig — see the comment
-    // there. Keeping them out of this file avoids double-toggling.
+    // Dropdown submenus, keyboard handling and viewport-edge flipping are
+    // handled by <falak-menu> (see menu.twig's own comment) — kept out of
+    // this file entirely to avoid double-toggling.
 
     document.addEventListener('keydown', function (event) {
         if (event.key === 'Escape') closeMenu();
@@ -66,47 +68,183 @@
         });
     }
 
+    /* --------------------------------------------------- announcement bar */
+    // Now <falak-announcement> (platform component): dashboard declarations,
+    // the customizer text, the welcome fallback, marquee and per-text
+    // dismissal all live there. Nothing for the theme to do.
+
+    /* -------------------------------------------- video embed normalizer */
+    // Merchants paste whatever YouTube/Vimeo link they have, but only the
+    // /embed/ and player.vimeo.com forms may load inside an iframe (watch
+    // pages send X-Frame-Options and show a grey refused-to-connect box).
+    // Rewrite the common share forms to the embeddable ones.
+
+    function embedUrlFor(raw) {
+        var url;
+
+        try { url = new URL(raw, window.location.origin); } catch (e) { return null; }
+
+        var host = url.hostname.replace(/^(www|m)\./, '');
+
+        if (host === 'youtube.com' || host === 'youtube-nocookie.com') {
+            if (url.pathname.indexOf('/embed/') === 0) return null; // already fine
+
+            var id = url.searchParams.get('v');
+            if (!id && /^\/(shorts|live)\//.test(url.pathname)) id = url.pathname.split('/')[2];
+
+            return id ? 'https://www.youtube.com/embed/' + id : null;
+        }
+
+        if (host === 'youtu.be') {
+            var short = url.pathname.slice(1).split('/')[0];
+            return short ? 'https://www.youtube.com/embed/' + short : null;
+        }
+
+        if (host === 'vimeo.com') {
+            var vid = url.pathname.slice(1).split('/')[0];
+            return /^\d+$/.test(vid) ? 'https://player.vimeo.com/video/' + vid : null;
+        }
+
+        return null;
+    }
+
+    document.querySelectorAll('.video-embed iframe').forEach(function (frame) {
+        var fixed = embedUrlFor(frame.getAttribute('src') || '');
+        if (fixed) frame.src = fixed;
+    });
+
     /* ------------------------------------------------------- add to cart */
+    /*
+        Adding is <falak-add-product-button>'s job now: it reads the quantity
+        stepper, performs the add for a guest or a customer, and reports back.
+        What is left for the theme is the visible side — a toast for the SDK's
+        notify() (silent until a theme claims it) and the header badge.
+    */
 
-    document.addEventListener('click', function (event) {
-        var button = event.target.closest('[data-add-to-cart]');
-        if (!button) return;
-
-        var qtyInput = document.querySelector('[data-qty-input]');
-        var detail = {
-            productId: Number(button.getAttribute('data-product-id')),
-            quantity: qtyInput ? Math.max(1, Number(qtyInput.value) || 1) : 1
-        };
-
-        // The SDK contract: listen for this event and perform the mutation.
-        document.dispatchEvent(new CustomEvent('falak:cart:add', { detail: detail }));
-
-        // Optimistic feedback so the button never feels dead.
-        var label = button.querySelector('[data-label]') || button;
-        var original = label.textContent;
-        button.classList.add('is-added');
-        button.disabled = true;
-        label.textContent = button.getAttribute('data-added-text') || original;
-
+    function showToast(message, type) {
+        var host = document.querySelector('[data-toasts]');
+        if (!host) {
+            host = document.createElement('div');
+            host.className = 'toasts';
+            host.setAttribute('data-toasts', '');
+            host.setAttribute('aria-live', 'polite');
+            document.body.appendChild(host);
+        }
+        var el = document.createElement('div');
+        el.className = 'toast toast--' + (type || 'info');
+        el.setAttribute('role', type === 'error' ? 'alert' : 'status');
+        el.textContent = message;
+        host.appendChild(el);
+        requestAnimationFrame(function () { el.classList.add('is-in'); });
         window.setTimeout(function () {
-            button.classList.remove('is-added');
-            button.disabled = false;
-            label.textContent = original;
-        }, 1600);
-    });
+            el.classList.remove('is-in');
+            window.setTimeout(function () { el.remove(); }, 300);
+        }, type === 'error' ? 4500 : 2800);
+    }
 
-    /* ------------------------------------------------------ qty stepper */
+    // A <falak-notifications> on the page renders its own toast stack off
+    // the same falak.notify calls (it listens on the bus, not this handler
+    // slot) — leaving this registered too would show every message twice.
+    if (window.falak && !document.querySelector('falak-notifications')) {
+        window.falak.notify.setNotifier(function (message, type) { showToast(message, type); });
+    }
 
-    document.addEventListener('click', function (event) {
-        var step = event.target.closest('[data-qty-step]');
-        if (!step) return;
+    /* --------------------------------------------------------- cart page */
+    /*
+        The page is server-rendered; each control asks the SDK for the change
+        and reloads so the server draws the new state — one source of truth,
+        no client-side templating. The header's <falak-cart-summary> follows
+        the SDK on its own.
+    */
 
-        var input = document.querySelector('[data-qty-input]');
-        if (!input) return;
+    var cartPage = document.querySelector('[data-cart-page]');
 
-        var next = (Number(input.value) || 1) + Number(step.getAttribute('data-qty-step'));
-        input.value = Math.max(1, next);
-    });
+    if (cartPage && window.falak) {
+        var cartBusy = false;
+
+        function lineOf(el) {
+            var line = el.closest('[data-cart-line]');
+            if (!line) return null;
+            return {
+                productId: line.getAttribute('data-product-id'),
+                variationId: line.getAttribute('data-variation-id') || null,
+                quantity: parseInt(line.querySelector('[data-cart-qty-value]').textContent, 10) || 1
+            };
+        }
+
+        function runCart(action) {
+            if (cartBusy) return;
+            cartBusy = true;
+            cartPage.classList.add('is-busy');
+            action().then(function () {
+                window.location.reload();
+            }).catch(function (error) {
+                cartBusy = false;
+                cartPage.classList.remove('is-busy');
+                showToast((error && error.message) || window.falak.lang.get('common.load_failed'), 'error');
+            });
+        }
+
+        cartPage.addEventListener('click', function (event) {
+            var step = event.target.closest('[data-cart-qty]');
+            if (step) {
+                var line = lineOf(step);
+                if (!line) return;
+                var next = line.quantity + (step.getAttribute('data-cart-qty') === 'up' ? 1 : -1);
+                runCart(function () {
+                    return next < 1
+                        ? window.falak.cart.remove(line.productId, { variationId: line.variationId })
+                        : window.falak.cart.update(line.productId, next, { variationId: line.variationId });
+                });
+                return;
+            }
+
+            var remove = event.target.closest('[data-cart-remove]');
+            if (remove) {
+                var target = lineOf(remove);
+                if (!target) return;
+                runCart(function () { return window.falak.cart.remove(target.productId, { variationId: target.variationId }); });
+                return;
+            }
+        });
+
+        // The coupon control is <falak-cart-coupons>; it applies and removes on
+        // its own and shows its own error. The page only needs new totals.
+        window.falak.event.on('cart::coupon.applied', function () { window.location.reload(); });
+        window.falak.event.on('cart::coupon.removed', function () { window.location.reload(); });
+    }
+
+    /*
+        Components announce on the bus as well as the DOM. Subscribing here is
+        how the theme reacts to a component without either side holding a
+        reference to the other — the same decoupling the platform relies on.
+    */
+    if (window.falak) {
+        window.falak.event.on('product::quantity.changed', function (payload) {
+            window.falak.log('quantity changed', payload);
+        });
+    }
+
+    /* --------------------------------------------- variant price display */
+    // <falak-product-options> announces the chosen variant; the page shows
+    // its price where the product's price was.
+
+    if (window.falak) {
+        window.falak.event.on('product::options.changed', function (payload) {
+            var el = document.querySelector('[data-product-price]');
+            if (!el || !payload) return;
+            if (!el.dataset.basePrice) el.dataset.basePrice = el.innerHTML;
+
+            if (payload.price === null || payload.price === undefined) {
+                el.innerHTML = el.dataset.basePrice;
+                return;
+            }
+
+            var html = window.falak.money(payload.price);
+            if (payload.comparePrice) html += ' <del>' + window.falak.money(payload.comparePrice) + '</del>';
+            el.innerHTML = html;
+        });
+    }
 
     /* -------------------------------------------------- product gallery */
 
@@ -126,4 +264,34 @@
             el.classList.toggle('is-active', el === thumb);
         });
     });
+
+    /* ------------------------------------------------------ price filter */
+    // <falak-price-range> only picks a range and emits it; reloading the
+    // listing with it applied is the theme's job. Query-string only, so it
+    // works unchanged on both /products and /category/{id}.
+
+    var priceFilter = document.querySelector('[data-price-filter]');
+
+    if (priceFilter) {
+        priceFilter.addEventListener('change', function (event) {
+            var range = event.detail;
+            if (!range) return;
+
+            var boundsMin = Number(priceFilter.getAttribute('data-bounds-min'));
+            var boundsMax = Number(priceFilter.getAttribute('data-bounds-max'));
+            var url = new URL(window.location.href);
+
+            // At the full store range, drop the params rather than write a
+            // no-op filter into the URL.
+            if (range.min <= boundsMin && range.max >= boundsMax) {
+                url.searchParams.delete('min_price');
+                url.searchParams.delete('max_price');
+            } else {
+                url.searchParams.set('min_price', range.min);
+                url.searchParams.set('max_price', range.max);
+            }
+
+            window.location.href = url.toString();
+        });
+    }
 })();

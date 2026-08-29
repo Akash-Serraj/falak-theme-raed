@@ -1,29 +1,49 @@
 {#
     Main navigation — consumes the platform-resolved `menus` global.
     Each item: title (localized), url (resolved live from typed link), is_new_tab, image, children[].
-    On mobile the <nav> becomes an off-canvas drawer (see app.css + app.js).
-#}
-<nav class="main-menu" id="main-menu" aria-label="{{ trans('common.menu') }}">
-    <ul>
-        {% for item in menus.main_menu|default([]) %}
-            <li class="main-menu__item{{ item.children|length > 0 ? ' has-children' : '' }}">
-                <a href="{{ item.url }}"{{ item.is_new_tab ? ' target="_blank" rel="noopener"' : '' }}>
-                    {% if item.image %}<img src="{{ item.image }}" alt="" width="20" height="20">{% endif %}
-                    {{ item.title }}
-                </a>
 
-                {% if item.children|length > 0 %}
-                    <ul class="main-menu__submenu">
-                        {% for child in item.children %}
-                            <li>
-                                <a href="{{ child.url }}"{{ child.is_new_tab ? ' target="_blank" rel="noopener"' : '' }}>
-                                    {{ child.title }}
-                                </a>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                {% endif %}
-            </li>
-        {% endfor %}
-    </ul>
-</nav>
+    Server-rendered on purpose. `MenuResolver` already has these items at render
+    time, so the markup below costs nothing extra and ships in the initial HTML
+    where crawlers and no-JS visitors can see it — with no skeleton flash while
+    a request completes.
+
+    <falak-menu> wraps it rather than replacing it: the component finds the list
+    that is already here and adds only the parts that need JavaScript — dropdown
+    state, keyboard handling, the mobile drawer and viewport-edge flipping. It
+    discovers structure from the markup, so these class names stay the theme's
+    own and app.css keeps styling them.
+
+    On mobile the <nav> becomes an off-canvas drawer (see app.css + app.js).
+
+    Customizer: the platform wraps every {% component %} in draft renders, so
+    this block is selectable in the preview on its own and opens the "Header &
+    footer" panel. Its values come from theme.settings (theme.json groups),
+    which the customizer edits by group — data-falak-* addresses a component
+    blueprint's fields, so there is nothing to tag here.
+#}
+<falak-menu>
+    <nav class="main-menu" id="main-menu" aria-label="{{ trans('common.menu') }}">
+        <ul>
+            {% for item in menus.main_menu|default([]) %}
+                <li class="main-menu__item{{ item.children|length > 0 ? ' has-children' : '' }}">
+                    <a href="{{ item.url }}"{{ item.is_new_tab ? ' target="_blank" rel="noopener"' : '' }}>
+                        {% if item.image %}<img src="{{ item.image }}" alt="" width="20" height="20">{% endif %}
+                        {{ item.title }}
+                    </a>
+
+                    {% if item.children|length > 0 %}
+                        <ul class="main-menu__submenu">
+                            {% for child in item.children %}
+                                <li>
+                                    <a href="{{ child.url }}"{{ child.is_new_tab ? ' target="_blank" rel="noopener"' : '' }}>
+                                        {{ child.title }}
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    </nav>
+</falak-menu>

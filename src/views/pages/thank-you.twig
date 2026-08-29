@@ -18,6 +18,26 @@
                 {{ trans('account.order') }} <strong>#{{ order.number }}</strong>
                 — {{ falak_currency(order.total|default(0)) }}
             </p>
+            {% if order.payment_method == 'cash_on_delivery' %}
+                <p class="thank-you__note">{{ trans('checkout.cod_note') }}</p>
+            {% endif %}
+
+            {# Items + totals only; the order page shows the timeline and address. #}
+            <falak-order-summary compact order="{{ order|json_encode|escape('html_attr') }}">
+                {% if order.items|default([])|length > 0 %}
+                    <ul class="thank-you__items">
+                        {% for item in order.items %}
+                            <li>
+                                {% if item.image %}<img src="{{ item.image }}" alt="">{% endif %}
+                                <span class="thank-you__item-name">{{ item.name }}</span>
+                                <span class="thank-you__item-qty">× {{ item.quantity }}</span>
+                                <span class="thank-you__item-total">{{ falak_currency(item.total) }}</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </falak-order-summary>
+
             {% if order.url|default(null) %}
                 <a class="btn btn--primary" href="{{ order.url }}">{{ trans('thank_you.view_order') }}</a>
             {% endif %}

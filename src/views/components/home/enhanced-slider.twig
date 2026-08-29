@@ -7,11 +7,20 @@
     | component.slides[].button_text | ?string  | CTA label, localized server-side         |
     | component.slides[].button_url  | ?string  | CTA target                               |
     | position                       | int      | render order index, starts at 0          |
+
+    Customizer bindings — full rules in README, "Customizer annotations".
+    | Element             | Tag                                             |
+    | .hero-slider__slide | data-falak-field="slides" data-falak-bind="none" |
+
+    `slides` is a collection, so its value is a list rather than a string.
+    bind="none" keeps it selectable in the preview while leaving the editing to
+    the panel; without it the customizer would write the whole list into the
+    slide as text the first time the merchant touched that field.
 #}
 <section class="block block--hero-slider" id="hero-slider-{{ position }}">
     <div class="hero-slider">
         {% for slide in component.slides %}
-            <div class="hero-slider__slide{{ loop.first ? ' is-active' : '' }}">
+            <div class="hero-slider__slide{{ loop.first ? ' is-active' : '' }}" data-falak-field="slides" data-falak-label="{{ trans('editor.field.slides') }}" data-falak-bind="none">
                 <img class="hero-slider__img" src="{{ slide.image }}"
                      alt="{{ slide.title|default('') }}"{{ loop.first ? '' : ' loading="lazy"' }}>
                 <div class="hero-slider__content container">

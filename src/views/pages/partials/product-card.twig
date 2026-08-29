@@ -15,10 +15,20 @@
     <h3><a class="product-card__link" href="{{ product.url }}">{{ product.name }}</a></h3>
     <p class="product-card__price">{{ product.price }}</p>
 
-    <button class="btn btn--card" type="button"
-            data-add-to-cart
-            data-product-id="{{ product.id }}"
-            data-added-text="{{ trans('product.added_to_cart') }}">
-        <span data-label>{{ trans('product.add_to_cart') }}</span>
-    </button>
+    {# The SDK's add button performs the add itself (guest or customer) and
+       reports success/failure; button-class keeps this card's skin, and the
+       stretched name link stays underneath (.product-card .btn--card is
+       z-indexed above it). Definedness test on in_stock — `|default(true)`
+       would turn an explicit false back into true. #}
+    <falak-add-product-button product-id="{{ product.id }}"
+                              product-status="{{ (product.in_stock is defined and not product.in_stock) ? 'out' : 'sale' }}"
+                              {{ product.has_variations|default(false) ? 'has-options' : '' }}
+                              product-name="{{ product.name }}"
+                              product-image="{{ product.image }}"
+                              product-price="{{ product.price }}"
+                              quantity-selector=""
+                              button-class="btn btn--card"
+                              source="listing"></falak-add-product-button>
+    {# The heart, beside the buy button — guest or customer. #}
+    <falak-wishlist-button product-id="{{ product.id }}" button-class="btn btn--card btn--card-icon"></falak-wishlist-button>
 </div>

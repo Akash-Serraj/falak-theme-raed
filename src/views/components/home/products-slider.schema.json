@@ -1,0 +1,178 @@
+{
+    "key": "falak-products-slider",
+    "path": "home.products-slider",
+    "title": {
+        "ar": "شريط المنتجات",
+        "en": "Products Carousel"
+    },
+    "icon": "carousel-view",
+    "is_default": false,
+    "areas": [
+        "home",
+        "pages"
+    ],
+    "fields": [
+        {
+            "id": "title",
+            "type": "string",
+            "format": "text",
+            "label": {
+                "ar": "عنوان القسم",
+                "en": "Section title"
+            },
+            "description": {
+                "ar": "مثال: وصل حديثاً",
+                "en": "Example: New arrivals"
+            },
+            "multilanguage": true,
+            "required": false,
+            "maxLength": 100,
+            "value": {
+                "ar": "وصل حديثاً",
+                "en": "New arrivals"
+            }
+        },
+        {
+            "id": "limit",
+            "type": "number",
+            "format": "integer",
+            "label": {
+                "ar": "عدد المنتجات",
+                "en": "How many products"
+            },
+            "description": {
+                "ar": "عدد المنتجات التي يجلبها الشريط",
+                "en": "How many products the carousel loads"
+            },
+            "required": false,
+            "min": 2,
+            "max": 24,
+            "value": 10
+        },
+        {
+            "id": "slides",
+            "type": "items",
+            "format": "dropdown-list",
+            "label": {
+                "ar": "المنتجات الظاهرة",
+                "en": "Products in view"
+            },
+            "description": {
+                "ar": "على الشاشات الكبيرة فقط — يتكيف الشريط تلقائياً على الجوال",
+                "en": "Large screens only — the carousel adapts on mobile automatically"
+            },
+            "value": "4",
+            "options": [
+                {
+                    "label": {
+                        "ar": "منتجان",
+                        "en": "Two"
+                    },
+                    "value": "2"
+                },
+                {
+                    "label": {
+                        "ar": "ثلاثة",
+                        "en": "Three"
+                    },
+                    "value": "3"
+                },
+                {
+                    "label": {
+                        "ar": "أربعة",
+                        "en": "Four"
+                    },
+                    "value": "4"
+                },
+                {
+                    "label": {
+                        "ar": "خمسة",
+                        "en": "Five"
+                    },
+                    "value": "5"
+                }
+            ]
+        },
+        {
+            "id": "category",
+            "type": "string",
+            "format": "text",
+            "label": {
+                "ar": "رقم التصنيف",
+                "en": "Category ID"
+            },
+            "description": {
+                "ar": "اتركه فارغاً لعرض أحدث المنتجات",
+                "en": "Leave empty to show the latest products"
+            },
+            "required": false,
+            "maxLength": 20
+        },
+        {
+            "id": "all_url",
+            "type": "string",
+            "format": "text",
+            "label": {
+                "ar": "رابط عرض الكل",
+                "en": "View all link"
+            },
+            "description": {
+                "ar": "اختياري — يظهر بجانب عنوان القسم",
+                "en": "Optional — appears beside the section title"
+            },
+            "required": false,
+            "maxLength": 255
+        },
+        {
+            "id": "autoplay",
+            "type": "boolean",
+            "format": "switch",
+            "label": {
+                "ar": "تمرير تلقائي",
+                "en": "Advance automatically"
+            },
+            "description": {
+                "ar": "يتوقف عند مرور المؤشر أو عند التفاعل",
+                "en": "Pauses on hover and stops once a shopper interacts"
+            },
+            "value": false
+        },
+        {
+            "id": "autoplay_speed",
+            "type": "items",
+            "format": "dropdown-list",
+            "label": {
+                "ar": "سرعة التمرير",
+                "en": "Autoplay speed"
+            },
+            "description": {
+                "ar": "يُطبق فقط عند تفعيل التمرير التلقائي",
+                "en": "Applies only while autoplay is on"
+            },
+            "value": "5000",
+            "options": [
+                {
+                    "label": {
+                        "ar": "سريع — كل 3 ثوانٍ",
+                        "en": "Fast — every 3 seconds"
+                    },
+                    "value": "3000"
+                },
+                {
+                    "label": {
+                        "ar": "متوسط — كل 5 ثوانٍ",
+                        "en": "Medium — every 5 seconds"
+                    },
+                    "value": "5000"
+                },
+                {
+                    "label": {
+                        "ar": "هادئ — كل 8 ثوانٍ",
+                        "en": "Calm — every 8 seconds"
+                    },
+                    "value": "8000"
+                }
+            ]
+        }
+    ]
+}

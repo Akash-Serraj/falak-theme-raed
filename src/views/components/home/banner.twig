@@ -7,15 +7,25 @@
     | component.button_text | ?string | CTA label, localized server-side  |
     | component.button_url  | ?string | CTA target                        |
     | position              | int     |                                   |
+
+    Customizer bindings — full rules in README, "Customizer annotations".
+    | Element  | Tag                                                              |
+    | .banner  | data-falak-field="image" data-falak-bind="background"             |
+    | h2       | data-falak-field="title"                                         |
+    | p        | data-falak-field="description"                                   |
+    | a.btn    | data-falak-field="button_text" data-falak-bind-href="button_url" |
+
+    A text binding replaces the element's content, so it belongs on the element
+    that holds that value and nothing else — never on a wrapper.
 #}
 <section class="block block--banner" id="banner-{{ position }}">
     <div class="container">
-        <div class="banner" style="background-image: url({{ component.image }});">
+        <div class="banner" data-falak-field="image" data-falak-label="{{ trans('editor.field.image') }}" data-falak-bind="background" style="background-image: url({{ component.image }});">
             <div class="banner__content">
-                {% if component.title %}<h2>{{ component.title }}</h2>{% endif %}
-                {% if component.description %}<p>{{ component.description }}</p>{% endif %}
+                {% if component.title %}<h2 data-falak-field="title" data-falak-label="{{ trans('editor.field.title') }}">{{ component.title }}</h2>{% endif %}
+                {% if component.description %}<p data-falak-field="description" data-falak-label="{{ trans('editor.field.description') }}">{{ component.description }}</p>{% endif %}
                 {% if component.button_text and component.button_url %}
-                    <a class="btn btn--primary" href="{{ component.button_url }}">{{ component.button_text }}</a>
+                    <a class="btn btn--primary" data-falak-field="button_text" data-falak-label="{{ trans('editor.field.button') }}" data-falak-bind-href="button_url" href="{{ component.button_url }}">{{ component.button_text }}</a>
                 {% endif %}
             </div>
         </div>

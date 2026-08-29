@@ -1,16 +1,15 @@
 {#
     Product listing — category, search results, and tag listing all share this shape.
-    | Variable | Type   | Description                          |
-    | products | array  | list of product cards                |
-    | category | ?array | present when listing a category      |
+    | Variable    | Type   | Description                                             |
+    | products    | array  | list of product cards                                    |
+    | category    | ?array | present when listing a category                         |
+    | priceFilter | array  | min, max (current selection), bounds_min, bounds_max     |
 #}
 {% extends "layouts.master" %}
 
 {% block title %}{{ category ? category.name : trans('common.products') }} — {{ store.name }}{% endblock %}
 
 {% block content %}
-    {% component listing_top %}
-
     <div class="container product-listing">
         <header class="page-head">
             <h1>{{ category ? category.name : trans('common.products') }}</h1>
@@ -19,6 +18,22 @@
             {% endif %}
         </header>
 
+        {# Reloads with ?min_price=&max_price= on the current path — works for
+           both /products and /category/{id} since it only ever touches the
+           query string. app.js reads the bounds/current selection off these
+           data attributes rather than templating them straight into the
+           component, so the same script works with or without this filter present. #}
+        {% if priceFilter is defined and priceFilter.bounds_max > priceFilter.bounds_min %}
+            <div class="product-listing__filters" data-price-filter
+                 data-bounds-min="{{ priceFilter.bounds_min }}" data-bounds-max="{{ priceFilter.bounds_max }}"
+                 data-value-min="{{ priceFilter.min }}" data-value-max="{{ priceFilter.max }}">
+                <span class="product-listing__filters-label">{{ trans('common.price') }}</span>
+                <falak-price-range min="{{ priceFilter.bounds_min }}" max="{{ priceFilter.bounds_max }}"
+                                   value-min="{{ priceFilter.min }}" value-max="{{ priceFilter.max }}"
+                                   step="{{ priceFilter.bounds_max > 200 ? 5 : 1 }}"></falak-price-range>
+            </div>
+        {% endif %}
+
         {% if products|length > 0 %}
             <div class="product-grid">
                 {% for product in products %}
@@ -26,11 +41,23 @@
                 {% endfor %}
             </div>
         {% else %}
-            <div class="empty-state">
-                <div class="empty-state__icon" aria-hidden="true">🛒</div>
-                <p>{{ trans('common.no_products') }}</p>
-                <a class="btn btn--outline" href="{{ store.url }}">{{ trans('common.back_home') }}</a>
-            </div>
+            <falak-placeholder icon="🛒" text="{{ trans('common.no_products') }}"
+                               action-text="{{ trans('common.back_home') }}" action-href="{{ store.url }}"
+                               action-class="btn btn--outline"></falak-placeholder>
+
+            {#
+                An empty CATEGORY is not an empty store, so offer a way onward
+                rather than a dead end. Guarded on `category` on purpose: with
+                no filter the listing is empty because the store itself is, and
+                the component would render a second empty message under the
+                first one.
+            #}
+            {% if category %}
+                <section class="product-listing__fallback">
+                    <h2>{{ trans('product.other_products') }}</h2>
+                    <falak-products-list limit="4" columns="4" source="listing.empty"></falak-products-list>
+                </section>
+            {% endif %}
         {% endif %}
     </div>
 {% endblock %}

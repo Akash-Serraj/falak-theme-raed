@@ -12,24 +12,27 @@
 {% block account_content %}
     <h1>{{ trans('account.orders') }}</h1>
 
-    {% if orders|default([])|length > 0 %}
-        <ul class="order-list">
-            {% for order in orders %}
-                <li class="order-row">
-                    <a href="{{ order.url }}" class="order-row__main">
-                        <span class="order-row__number">#{{ order.number }}</span>
-                        <span class="order-row__date">{{ order.created_at|date('Y/m/d') }}</span>
-                    </a>
-                    <span class="order-status order-status--{{ order.status }}">{{ trans('account.status.' ~ order.status) }}</span>
-                    <span class="order-row__total">{{ falak_currency(order.total) }}</span>
-                </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <div class="empty-state">
-            <div class="empty-state__icon" aria-hidden="true">📦</div>
-            <p>{{ trans('account.no_orders') }}</p>
-            <a class="btn btn--primary" href="/products">{{ trans('cart.start_shopping') }}</a>
-        </div>
-    {% endif %}
+    {# The SDK component takes over live: filtering by status, searching by
+       order number, and paging past the 50 the server-rendered list caps at.
+       The markup below is what shows until it upgrades. #}
+    <falak-orders orders="{{ orders|default([])|json_encode|escape('html_attr') }}">
+        {% if orders|default([])|length > 0 %}
+            <ul class="order-list">
+                {% for order in orders %}
+                    <li class="order-row">
+                        <a href="{{ order.url }}" class="order-row__main">
+                            <span class="order-row__number">#{{ order.number }}</span>
+                            <span class="order-row__date">{{ order.created_at|date('Y/m/d') }}</span>
+                        </a>
+                        <span class="order-status order-status--{{ order.status }}">{{ trans('account.status.' ~ order.status) }}</span>
+                        <span class="order-row__total">{{ falak_currency(order.total) }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <falak-placeholder icon="📦" text="{{ trans('account.no_orders') }}"
+                               action-text="{{ trans('cart.start_shopping') }}" action-href="/products"
+                               action-class="btn btn--primary"></falak-placeholder>
+        {% endif %}
+    </falak-orders>
 {% endblock %}

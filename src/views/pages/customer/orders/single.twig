@@ -12,11 +12,20 @@
 
 {% block account_content %}
     {% if order|default(null) %}
+        {# The SDK order summary: fetches the live status + timeline for the
+           signed-in customer; the server-rendered order inside shows first. #}
+        <falak-order-summary order-number="{{ order.number }}" order="{{ order|json_encode|escape('html_attr') }}">
         <header class="order-head">
             <h1>{{ trans('account.order') }} #{{ order.number }}</h1>
             <span class="order-status order-status--{{ order.status }}">{{ trans('account.status.' ~ order.status) }}</span>
         </header>
         <p class="order-head__date">{{ order.created_at|date('Y/m/d') }}</p>
+        {% if order.address|default(null) and order.address.address|default(null) %}
+            <p class="order-head__address">
+                <strong>{{ trans('checkout.deliver_to') }}:</strong>
+                {{ order.address.name|default('') }} — {{ order.address.address }}, {{ order.address.city|default('') }} {{ order.address.country|default('') }}
+            </p>
+        {% endif %}
 
         <ul class="cart-items">
             {% for item in order.items|default([]) %}
@@ -39,10 +48,28 @@
                 <span>{{ trans('cart.subtotal') }}</span>
                 <span>{{ falak_currency(order.subtotal|default(0)) }}</span>
             </div>
-            {% if order.shipping|default(null) %}
+            {% if order.discount|default(0) > 0 %}
+                <div class="cart-summary__row cart-summary__row--discount">
+                    <span>{{ trans('cart.discount') }}</span>
+                    <span>&minus; {{ falak_currency(order.discount) }}</span>
+                </div>
+            {% endif %}
+            {% if order.shipping|default(0) > 0 %}
                 <div class="cart-summary__row">
                     <span>{{ trans('account.shipping') }}</span>
                     <span>{{ falak_currency(order.shipping) }}</span>
+                </div>
+            {% endif %}
+            {% if order.cod_fee|default(0) > 0 %}
+                <div class="cart-summary__row">
+                    <span>{{ trans('checkout.cod_fee') }}</span>
+                    <span>{{ falak_currency(order.cod_fee) }}</span>
+                </div>
+            {% endif %}
+            {% if order.tax|default(0) > 0 %}
+                <div class="cart-summary__row">
+                    <span>{{ trans('checkout.tax') }}</span>
+                    <span>{{ falak_currency(order.tax) }}</span>
                 </div>
             {% endif %}
             <div class="cart-summary__row cart-summary__row--total">
@@ -50,11 +77,10 @@
                 <span>{{ falak_currency(order.total|default(0)) }}</span>
             </div>
         </div>
+        </falak-order-summary>
     {% else %}
-        <div class="empty-state">
-            <div class="empty-state__icon" aria-hidden="true">📦</div>
-            <p>{{ trans('account.order_not_found') }}</p>
-            <a class="btn btn--outline" href="/customer/orders">{{ trans('account.orders') }}</a>
-        </div>
+        <falak-placeholder icon="📦" text="{{ trans('account.order_not_found') }}"
+                           action-text="{{ trans('account.orders') }}" action-href="/customer/orders"
+                           action-class="btn btn--outline"></falak-placeholder>
     {% endif %}
 {% endblock %}

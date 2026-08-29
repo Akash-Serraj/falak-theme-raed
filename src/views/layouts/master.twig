@@ -3,11 +3,15 @@
     Structure check enforces: hook('head:end') + hook('body:end').
 
     Shared globals available in all views (see config/theme-context.php):
-    | store    | store.name, store.logo, store.url, store.settings.*         |
+    | store    | store.name, store.logo, store.favicon, store.url, store.settings.* |
     | theme    | theme.settings.get(key, default), theme.color.*, theme.is_rtl |
     | menus    | menus.main_menu, menus.footer_menu                           |
     | page     | page.slug, page.title                                        |
     | user     | user.language.code                                           |
+
+    {% hook 'body:end' %} also carries the customizer's editor bridge in draft
+    renders. Dropping the hook does not merely lose the platform SDK — it
+    silently turns off click-to-edit in the merchant's preview.
 #}
 <!DOCTYPE html>
 <html lang="{{ user.language.code }}" dir="{{ theme.is_rtl ? 'rtl' : 'ltr' }}">
@@ -19,9 +23,13 @@
     <title>{% block title %}{{ store.name }}{% endblock %}</title>
     <meta name="description" content="{% block meta_description %}{{ store.name }}{% endblock %}">
 
+    {% if store.favicon %}
+        <link rel="icon" href="{{ store.favicon }}">
+    {% endif %}
+
     {% block styles %}{% endblock %}
     {# ?v= busts browser caches from before the dev no-cache header; bump on asset changes #}
-    <link rel="stylesheet" href="{{ 'styles/app.css'|asset }}?v=8">
+    <link rel="stylesheet" href="{{ 'styles/app.css'|asset }}?v=36">
 
     <style>
         :root {
@@ -32,15 +40,21 @@
                (near-white when primary is dark) — never the body text color. #}
             --color-on-primary: {{ theme.color.text }};
             --font-main: '{{ theme.font.name }}';
-        }
 
-        /*
-         * Dropdown state lives inline (style here, behavior at body end):
-         * the HTML is generated per-request and can never be stale, so the
-         * closed-by-default state always ships with the markup it controls.
-         */
-        .main-menu__submenu { display: none; }
-        .main-menu__item.is-open > .main-menu__submenu { display: flex; }
+            {# Merchant background colours (customizer -> Colors group).
+               Emitted ONLY when set: an unset value must fall through to the
+               theme's own default, including the dark header/footer presets,
+               rather than being pinned to whatever white happened to be. #}
+            {% if theme.settings.get('body_bg_color') %}
+            --color-bg: {{ theme.settings.get('body_bg_color') }};
+            {% endif %}
+            {% if theme.settings.get('header_bg_color') %}
+            --color-header-bg: {{ theme.settings.get('header_bg_color') }};
+            {% endif %}
+            {% if theme.settings.get('footer_bg_color') %}
+            --color-footer-bg: {{ theme.settings.get('footer_bg_color') }};
+            {% endif %}
+        }
     </style>
 
     {# platform injections: custom CSS, tracking, content protection #}
@@ -61,39 +75,25 @@
         {% component 'footer.footer' %}
     </div>
 
+    {# Placed once for the whole storefront. The login sheet opens itself on
+       `auth::required`, which is what falak.auth.requireLoginThen() dispatches
+       — so no gated action needs a reference to it. #}
+    <falak-login-modal></falak-login-modal>
+
+    {# The "added to your cart" card: listens to cart::added, so every add
+       button on the page (lists, quick-add, product page) uses it. #}
+    <falak-add-product-toast cart-url="/cart" checkout-url="/checkout"></falak-add-product-toast>
+
+    {# The platform's own toast stack (validation errors, "coupon applied",
+       anything falak.notify fires) — top corner, so it never collides with
+       the add-to-cart card above. app.js stops routing its own bridge here
+       when it sees this element, so a message never shows twice. #}
+    <falak-notifications position="top-end"></falak-notifications>
+
     {# platform injection: FalakSDK script + init #}
     {% hook 'body:end' %}
 
-    {# Dropdown behavior — inline so it always matches this page's markup. #}
-    <script>
-    (function () {
-        function closeAll(except) {
-            document.querySelectorAll('.main-menu__item.is-open').forEach(function (item) {
-                if (item !== except) item.classList.remove('is-open');
-            });
-        }
-
-        document.addEventListener('click', function (event) {
-            var link = event.target.closest('.main-menu__item.has-children > a');
-
-            if (link) {
-                event.preventDefault();
-                var item = link.parentElement;
-                closeAll(item);
-                item.classList.toggle('is-open');
-                return;
-            }
-
-            if (!event.target.closest('.main-menu')) closeAll(null);
-        });
-
-        document.addEventListener('keydown', function (event) {
-            if (event.key === 'Escape') closeAll(null);
-        });
-    })();
-    </script>
-
-    <script defer src="{{ 'js/app.js'|asset }}?v=8"></script>
+    <script defer src="{{ 'js/app.js'|asset }}?v=17"></script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

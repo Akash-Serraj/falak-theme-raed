@@ -1,0 +1,25 @@
+{#
+    Checkout.
+
+    The platform component walks the shopper through delivery, payment and
+    review, with the order summary beside it, and places the order through
+    the same APIs the dashboard reads. A guest is asked to sign in first.
+    Online payment gateways come back to /payment-status; everything else
+    lands on /thank-you/{order}.
+
+    | Variable | Type   | Description                     |
+    | customer | ?array | id, name, email, phone, or null |
+#}
+{% extends "layouts.master" %}
+
+{% block title %}{{ trans('checkout.title') }} — {{ store.name }}{% endblock %}
+
+{% block content %}
+    <div class="container checkout-page">
+        <header class="page-head">
+            <h1>{{ trans('checkout.title') }}</h1>
+        </header>
+
+        <falak-checkout thank-you-url="/thank-you/{order}" cart-url="/cart"></falak-checkout>
+    </div>
+{% endblock %}

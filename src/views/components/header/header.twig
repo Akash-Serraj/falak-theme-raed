@@ -5,8 +5,41 @@
     and actions; the second bar carries ONLY the categories menu — a separate
     tenant menu with the handle `categories-menu`, managed like any other menu.
     No categories menu -> no second bar.
+
+    Customizer: the platform wraps every {% component %} in draft renders, so
+    this block is selectable in the preview on its own and opens the "Header &
+    footer" panel. Its values come from theme.settings (theme.json groups),
+    which the customizer edits by group — data-falak-* addresses a component
+    blueprint's fields, so there is nothing to tag here.
 #}
 <header class="site-header{{ theme.settings.get('header_is_sticky', true) ? ' site-header--sticky' : '' }}">
+    {# Maintenance notice — plain and static, and not dismissible by default:
+       unlike the announcement bar below, this is meant to stay put. Above
+       the announcement bar since it takes priority when both are on. #}
+    <falak-maintenance-alert
+        {{ theme.settings.get('maintenance_enabled') ? 'enabled' : '' }}
+        title="{{ theme.settings.get('maintenance_title') }}"
+        message="{{ theme.settings.get('maintenance_message') }}"
+        {{ theme.settings.get('maintenance_dismissible', false) ? 'dismissible' : '' }}></falak-maintenance-alert>
+
+    {# Announcement bar — the platform component. What it shows, in order:
+         1. the merchant's active dashboard declarations (ads) for this page,
+            joined into one scrolling strip — the legacy storefront's top bar;
+         2. else the customizer text below (announcement group), when enabled;
+         3. else a "Welcome to {store}" line, when enabled.
+       Dismissal is remembered per text, so a new message reappears for all. #}
+    <falak-announcement
+        {{ theme.settings.get('announcement_enabled') ? 'enabled' : '' }}
+        text="{{ theme.settings.get('announcement_text') }}"
+        link="{{ theme.settings.get('announcement_link') }}"
+        {{ theme.settings.get('announcement_dismissible', true) ? 'dismissible' : '' }}
+        declarations></falak-announcement>
+
+    {# Offers banner + list modal — the legacy OffersBanner/SpecialOffersModal
+       pair. Fully gated by the dashboard Marketing Settings (enable special
+       offers + display in popup); renders nothing otherwise. #}
+    <falak-offer-modal></falak-offer-modal>
+
     <div class="site-header__topbar">
         <div class="container site-header__topbar-inner">
             <button class="menu-toggle" type="button" data-menu-toggle
@@ -25,15 +58,28 @@
             {% component 'header.menu' %}
 
             <div class="site-header__actions">
-                {# Switches ?lang= and reloads; app.js keeps the choice on every internal link. #}
-                <a href="#" class="lang-switch" data-set-lang="{{ user.language.code == 'ar' ? 'en' : 'ar' }}">
-                    {{ trans('lang.other') }}
-                </a>
+                {# Live product search — a magnifier that opens a dropdown of
+                   matching products (image + price) as the shopper types;
+                   Enter or "view all results" lands on the full /search page. #}
+                <falak-search class="search-link" limit="6"></falak-search>
 
-                <a href="/cart" class="cart-link">
-                    <span>{{ trans('cart.title') }}</span>
-                    <span class="cart-link__count" id="cart-count">{{ cart_count }}</span>
-                </a>
+                {# Language and currency in one sheet. Replaces the two-language
+                   toggle: a store with more than one currency needs both. #}
+                <falak-localization-modal show-trigger></falak-localization-modal>
+
+                {# Signed out, this is the sign-in entry point; signed in, the
+                   account dropdown. It redraws itself on auth events. #}
+                <falak-user-menu avatar-only show-header show-trigger></falak-user-menu>
+
+                {# Saved products — heart with a count; opens the wishlist
+                   drawer. Guest or customer, same list the card hearts toggle. #}
+                <falak-wishlist-drawer show-trigger href="/customer/wishlist" class="wishlist-link"></falak-wishlist-drawer>
+
+                {# Cart entry — the platform component. Count and total are
+                   computed in the browser from the SDK's cart, so they are
+                   right for a guest and a signed-in customer alike and follow
+                   every change (add, quantity, coupon, sign-in) on their own. #}
+                <falak-cart-summary class="cart-link" show-cart-label href="/cart"></falak-cart-summary>
             </div>
         </div>
     </div>
@@ -46,7 +92,6 @@
                         {% for item in menus.categories_menu %}
                             <li>
                                 <a href="{{ item.url }}"{{ item.is_new_tab ? ' target="_blank" rel="noopener"' : '' }}>
-                                    {% if item.image %}<img src="{{ item.image }}" alt="" width="22" height="22">{% endif %}
                                     {{ item.title }}
                                 </a>
                             </li>

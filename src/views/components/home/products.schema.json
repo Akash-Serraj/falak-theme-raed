@@ -1,0 +1,65 @@
+{
+    "key": "falak-products",
+    "path": "home.products",
+    "title": {
+        "ar": "شبكة المنتجات",
+        "en": "Products Grid"
+    },
+    "icon": "shopping-bag-line",
+    "is_default": false,
+    "areas": ["home", "pages"],
+    "fields": [
+        {
+            "id": "title",
+            "type": "string",
+            "format": "text",
+            "label": { "ar": "عنوان القسم", "en": "Section title" },
+            "description": { "ar": "مثال: الأكثر مبيعاً", "en": "Example: Best sellers" },
+            "multilanguage": true,
+            "required": false,
+            "maxLength": 100,
+            "value": { "ar": "منتجاتنا", "en": "Our products" }
+        },
+        {
+            "id": "limit",
+            "type": "number",
+            "format": "integer",
+            "label": { "ar": "عدد المنتجات", "en": "How many products" },
+            "description": { "ar": "أقصى عدد من المنتجات يُعرض في هذا القسم", "en": "The most products this section will show" },
+            "required": false,
+            "min": 1,
+            "max": 24,
+            "value": 8
+        },
+        {
+            "id": "columns",
+            "type": "items",
+            "format": "dropdown-list",
+            "label": { "ar": "عدد الأعمدة", "en": "Columns" },
+            "description": { "ar": "على الشاشات الكبيرة فقط — تتكيف الشبكة تلقائياً على الجوال", "en": "Large screens only — the grid adapts on mobile automatically" },
+            "value": "4",
+            "options": [
+                { "label": { "ar": "عمودان", "en": "Two" }, "value": "2" },
+                { "label": { "ar": "ثلاثة أعمدة", "en": "Three" }, "value": "3" },
+                { "label": { "ar": "أربعة أعمدة", "en": "Four" }, "value": "4" },
+                { "label": { "ar": "خمسة أعمدة", "en": "Five" }, "value": "5" }
+            ]
+        },
+        {
+            "id": "category",
+            "type": "string",
+            "format": "text",
+            "label": { "ar": "رقم التصنيف", "en": "Category ID" },
+            "description": { "ar": "اتركه فارغاً لعرض كل المنتجات", "en": "Leave empty to show every product" },
+            "required": false,
+            "maxLength": 20
+        },
+        {
+            "id": "show_count",
+            "type": "boolean",
+            "format": "switch",
+            "label": { "ar": "إظهار عدد المنتجات", "en": "Show the product count" },
+            "value": false
+        }
+    ]
+}

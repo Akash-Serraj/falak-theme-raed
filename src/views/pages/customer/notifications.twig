@@ -15,21 +15,17 @@
     {% if notifications|default([])|length > 0 %}
         <ul class="notification-list">
             {% for item in notifications %}
-                <li class="notification{{ item.is_read|default(false) ? '' : ' notification--unread' }}">
-                    {% if item.url|default(null) %}
-                        <a href="{{ item.url }}">{{ item.title }}</a>
-                    {% else %}
-                        <span>{{ item.title }}</span>
-                    {% endif %}
-                    {% if item.body|default(null) %}<p>{{ item.body }}</p>{% endif %}
-                    <time>{{ item.created_at|date('Y/m/d') }}</time>
+                <li>
+                    <falak-notification-item
+                        title="{{ item.title }}"
+                        body="{{ item.body|default('') }}"
+                        url="{{ item.url|default('') }}"
+                        created-at="{{ item.created_at }}"
+                        {{ item.is_read|default(false) ? '' : 'unread' }}></falak-notification-item>
                 </li>
             {% endfor %}
         </ul>
     {% else %}
-        <div class="empty-state">
-            <div class="empty-state__icon" aria-hidden="true">🔔</div>
-            <p>{{ trans('account.no_notifications') }}</p>
-        </div>
+        <falak-placeholder icon="🔔" text="{{ trans('account.no_notifications') }}"></falak-placeholder>
     {% endif %}
 {% endblock %}

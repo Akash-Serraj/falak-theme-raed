@@ -1,56 +1,120 @@
 {#
     Cart page.
-    | Variable   | Type  | Description                                |
-    | cart_items | array | each: name, quantity, price, image, url    |
-    | cart_total | array | subtotal, total                            |
+
+    Rendered server-side (right on first paint, works without JS); the SDK
+    drives every mutation from app.js — quantity, remove, coupon — and the
+    page re-renders afterwards. The customer is known to the server through
+    the auth cookie set at sign-in, so this is the same cart the SDK writes.
+
+    | Variable   | Type  | Description                                              |
+    | cart_items | array | each: product, variation, quantity, unit_amount,         |
+    |            |       | line_total_amount, old_amount                            |
+    | cart_total | array | subtotal, discount, discount_code, total (numeric)       |
 #}
 {% extends "layouts.master" %}
 
 {% block title %}{{ trans('cart.title') }} — {{ store.name }}{% endblock %}
 
 {% block content %}
-    <div class="container cart-page">
+    <div class="container cart-page" data-cart-page>
         <header class="page-head">
             <h1>{{ trans('cart.title') }}</h1>
+            {% if cart_items|length > 0 %}
+                <p class="page-head__meta">{{ trans('cart.items_count', {count: cart_items|length}) }}</p>
+            {% endif %}
         </header>
 
         {% if cart_items|length > 0 %}
             <div class="cart-layout">
                 <ul class="cart-items">
                     {% for item in cart_items %}
-                        <li class="cart-item">
-                            {% if item.image %}
-                                <img src="{{ item.image }}" alt="{{ item.name }}">
-                            {% endif %}
+                        <li class="cart-item"
+                            data-cart-line
+                            data-product-id="{{ item.product.id }}"
+                            {% if item.variation_id %}data-variation-id="{{ item.variation_id }}"{% endif %}>
+                            <a class="cart-item__media" href="{{ item.product.url }}">
+                                {% if item.product.image %}
+                                    <img src="{{ item.product.image }}" alt="{{ item.product.name }}" loading="lazy">
+                                {% endif %}
+                            </a>
+
                             <div class="cart-item__info">
-                                <a href="{{ item.url }}">{{ item.name }}</a>
-                                <span class="cart-item__meta">{{ item.quantity }} × {{ item.price }}</span>
+                                <a class="cart-item__name" href="{{ item.product.url }}">{{ item.product.name }}</a>
+                                {% if item.variation and item.variation.attributes is defined and item.variation.attributes %}
+                                    <span class="cart-item__variation">
+                                        {%- for key, value in item.variation.attributes -%}
+                                            {{ key }}: {{ value }}{{ not loop.last ? ' · ' : '' }}
+                                        {%- endfor -%}
+                                    </span>
+                                {% endif %}
+                                <span class="cart-item__unit">
+                                    {{ falak_currency(item.unit_amount) }}
+                                    {% if item.old_amount %}<del>{{ falak_currency(item.old_amount) }}</del>{% endif %}
+                                </span>
                             </div>
+
+                            <div class="cart-item__qty" role="group" aria-label="{{ trans('cart.quantity') }}">
+                                <button type="button" class="cart-item__step" data-cart-qty="down" aria-label="{{ trans('cart.decrease') }}">&minus;</button>
+                                <span class="cart-item__qty-value" data-cart-qty-value>{{ item.quantity }}</span>
+                                <button type="button" class="cart-item__step" data-cart-qty="up" aria-label="{{ trans('cart.increase') }}">+</button>
+                            </div>
+
+                            <span class="cart-item__line-total">{{ falak_currency(item.line_total_amount) }}</span>
+
+                            <button type="button" class="cart-item__remove" data-cart-remove aria-label="{{ trans('cart.remove') }}">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                            </button>
                         </li>
                     {% endfor %}
                 </ul>
 
                 <aside class="cart-summary" aria-label="{{ trans('cart.summary') }}">
                     <h2>{{ trans('cart.summary') }}</h2>
+
+                    {# Coupon — the platform component: input with apply/remove,
+                       inline error, applied chip, and coupon cards when the
+                       theme passes any. app.js reloads on its coupon events so
+                       the server redraws the totals. #}
+                    <falak-cart-coupons class="cart-coupon"></falak-cart-coupons>
+
                     <div class="cart-summary__row">
                         <span>{{ trans('cart.subtotal') }}</span>
                         <span>{{ falak_currency(cart_total.subtotal) }}</span>
                     </div>
+                    {% if cart_total.product_discount > 0 %}
+                        <div class="cart-summary__row cart-summary__row--discount">
+                            <span>{{ trans('cart.product_discount') }}</span>
+                            <span>&minus; {{ falak_currency(cart_total.product_discount) }}</span>
+                        </div>
+                    {% endif %}
+                    {% if cart_total.discount > 0 %}
+                        <div class="cart-summary__row cart-summary__row--discount">
+                            <span>{{ trans('cart.discount') }}</span>
+                            <span>&minus; {{ falak_currency(cart_total.discount) }}</span>
+                        </div>
+                    {% endif %}
+                    {% if cart_total.special_offer_discount > 0 %}
+                        <div class="cart-summary__row cart-summary__row--discount">
+                            <span>{{ trans('cart.special_offer') }}</span>
+                            <span>&minus; {{ falak_currency(cart_total.special_offer_discount) }}</span>
+                        </div>
+                    {% endif %}
+                    {% if cart_total.free_shipping %}
+                        <p class="cart-summary__note">{{ trans('cart.free_shipping') }}</p>
+                    {% endif %}
                     <div class="cart-summary__row cart-summary__row--total">
                         <span>{{ trans('cart.total') }}</span>
                         <span>{{ falak_currency(cart_total.total) }}</span>
                     </div>
-                    <button class="btn btn--primary btn--block" type="button">{{ trans('cart.checkout') }}</button>
+
+                    <a class="btn btn--primary btn--block" href="/checkout">{{ trans('cart.checkout') }}</a>
+                    <a class="cart-summary__continue" href="/products">{{ trans('cart.continue_shopping') }}</a>
                 </aside>
             </div>
         {% else %}
-            <div class="empty-state">
-                <div class="empty-state__icon" aria-hidden="true">🛒</div>
-                <p>{{ trans('cart.empty') }}</p>
-                <a class="btn btn--primary" href="/products">{{ trans('cart.start_shopping') }}</a>
-            </div>
+            <falak-placeholder data-cart-empty icon="🛒" text="{{ trans('cart.empty') }}"
+                               action-text="{{ trans('cart.start_shopping') }}" action-href="/products"
+                               action-class="btn btn--primary"></falak-placeholder>
         {% endif %}
     </div>
-
-    {% component cart_below %}
 {% endblock %}

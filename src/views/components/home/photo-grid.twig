@@ -6,22 +6,30 @@
     | component.items[].title  | ?string | caption, localized          |
     | component.items[].url    | ?string | tile link                   |
     | position                 | int     |                             |
+
+    Customizer bindings — full rules in README, "Customizer annotations".
+    | Element                     | Tag                                             |
+    | h2.block__title             | data-falak-field="title"                        |
+    | .photo-tile (both branches) | data-falak-field="items" data-falak-bind="none" |
+
+    Both sides of the {% if item.url %} carry the tag, or half the tiles would
+    be unselectable depending on whether the merchant set a link.
 #}
 <section class="block block--photo-grid" id="photo-grid-{{ position }}">
     <div class="container">
         {% if component.title %}
-            <h2 class="block__title">{{ component.title }}</h2>
+            <h2 class="block__title" data-falak-field="title" data-falak-label="{{ trans('editor.field.title') }}">{{ component.title }}</h2>
         {% endif %}
 
         <div class="photo-grid">
             {% for item in component.items %}
                 {% if item.url|default(null) %}
-                    <a class="photo-tile" href="{{ item.url }}">
+                    <a class="photo-tile" data-falak-field="items" data-falak-label="{{ trans('editor.field.items') }}" data-falak-bind="none" href="{{ item.url }}">
                         <img src="{{ item.image }}" alt="{{ item.title|default('') }}" loading="lazy">
                         {% if item.title %}<span class="photo-tile__caption">{{ item.title }}</span>{% endif %}
                     </a>
                 {% else %}
-                    <div class="photo-tile">
+                    <div class="photo-tile" data-falak-field="items" data-falak-label="{{ trans('editor.field.items') }}" data-falak-bind="none">
                         <img src="{{ item.image }}" alt="{{ item.title|default('') }}" loading="lazy">
                         {% if item.title %}<span class="photo-tile__caption">{{ item.title }}</span>{% endif %}
                     </div>

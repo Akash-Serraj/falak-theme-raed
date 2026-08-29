@@ -6,16 +6,23 @@
     | component.items[].stars   | int     | 1..5                                |
     | component.items[].text    | string  | localized server-side               |
     | position                  | int     |                                     |
+
+    Customizer bindings — full rules in README, "Customizer annotations".
+    | Element           | Tag                                             |
+    | h2.block__title   | data-falak-field="title"                        |
+    | figure.testimonial-card | data-falak-field="items" data-falak-bind="none" |
+
+    `items` is a collection — see bind="none" in the README.
 #}
 <section class="block block--testimonials" id="testimonials-{{ position }}">
     <div class="container">
         {% if component.title %}
-            <h2 class="block__title">{{ component.title }}</h2>
+            <h2 class="block__title" data-falak-field="title" data-falak-label="{{ trans('editor.field.title') }}">{{ component.title }}</h2>
         {% endif %}
 
         <div class="testimonials-grid">
             {% for item in component.items %}
-                <figure class="testimonial-card">
+                <figure class="testimonial-card" data-falak-field="items" data-falak-label="{{ trans('editor.field.items') }}" data-falak-bind="none">
                     <div class="testimonial-card__stars" aria-label="{{ item.stars }}/5">
                         {% for i in range(1, item.stars) %}★{% endfor %}
                     </div>

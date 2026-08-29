@@ -2,17 +2,28 @@
     Video embed — merchant-placeable.
     | Variable            | Type    | Description                                        |
     | component.title     | ?string | section title                                      |
-    | component.embed_url | string  | full embed URL (e.g. https://www.youtube.com/embed/ID) |
+    | component.embed_url | string  | video URL; watch/share links are rewritten to the
+    |                     |         | embeddable form client-side (see app.js)           |
     | position            | int     |                                                    |
+
+    Customizer bindings — full rules in README, "Customizer annotations".
+    | Element      | Tag                                                 |
+    | h2.block__title | data-falak-field="title"                         |
+    | .video-embed | data-falak-field="embed_url" data-falak-bind="none" |
+    | iframe       | data-falak-bind-src="embed_url"                     |
+
+    Selection sits on the wrapper because an <iframe> swallows mouse events and
+    the click would never reach the editor; the value is written into the frame
+    through a separate bind-src on the iframe itself.
 #}
 <section class="block block--video" id="video-{{ position }}">
     <div class="container">
         {% if component.title %}
-            <h2 class="block__title">{{ component.title }}</h2>
+            <h2 class="block__title" data-falak-field="title" data-falak-label="{{ trans('editor.field.title') }}">{{ component.title }}</h2>
         {% endif %}
 
-        <div class="video-embed">
-            <iframe src="{{ component.embed_url }}"
+        <div class="video-embed" data-falak-field="embed_url" data-falak-label="{{ trans('editor.field.video') }}" data-falak-bind="none">
+            <iframe data-falak-bind-src="embed_url" src="{{ component.embed_url }}"
                     title="{{ component.title|default('Video') }}"
                     loading="lazy"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
