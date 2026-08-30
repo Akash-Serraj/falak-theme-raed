@@ -15,3 +15,13 @@ First complete version.
 - 7 merchant components: hero slider, testimonials, promo banner, store
   features, image with text, photo grid, video
 - Full Arabic/English locales
+
+## 1.1.0 — 2026-08-30
+
+- Listing: `<falak-filters>` sidebar (categories with counts, price, rating,
+  availability) with applied chips and reset; sort select; off-canvas
+  filters drawer on phones
+- New SDK components available to blocks: `<falak-count-down>` (offer and
+  pre-order timers) and `<falak-filters>`
+- Product page: buy-now hidden while sold out; spacing between detail panels
+- Locales: countdown, filters and sort strings (ar/en)

@@ -152,6 +152,35 @@
                 <p class="showcase__note">Dispatches <code>auth::required</code>; the layout's login sheet answers it.</p>
             </div>
 
+            {# ------------------------------------------------- timers & filters #}
+            <div class="showcase__item">
+                <code class="showcase__tag">&lt;falak-countdown&gt;</code>
+                <div class="showcase__row">
+                    <falak-countdown date="2026-12-31" end-of-day boxed labeled></falak-countdown>
+                </div>
+                <div class="showcase__row">
+                    <falak-countdown date="2026-12-31 23:59:59" size="sm" prefix-text="{{ trans('offer.title') }}"></falak-countdown>
+                </div>
+                <div class="showcase__row">
+                    <falak-countdown date="2020-01-01" boxed labeled size="sm"></falak-countdown>
+                </div>
+                <p class="showcase__note">Boxed + labeled, inline with a prefix, and an already-ended one. <code>&lt;falak-count-down&gt;</code> (Salla spelling) is the same component.</p>
+            </div>
+
+            <div class="showcase__item showcase__item--wide">
+                <code class="showcase__tag">&lt;falak-countdown theme="…" title="…"&gt;</code>
+                <falak-countdown date="2026-12-31" end-of-day boxed labeled size="lg" theme="primary"
+                                 title="Limited-time offer" description="The whole band is the component: headline, copy, clock, button."
+                                 button-text="{{ trans('offer.shop_now') }}" button-href="/products"></falak-countdown>
+                <p class="showcase__note">This is what the Offer Countdown block renders — one tag, all attributes.</p>
+            </div>
+
+            <div class="showcase__item">
+                <code class="showcase__tag">&lt;falak-filters&gt;</code>
+                <falak-filters mode="event" filters='[{"key":"category_id","type":"values","values":[{"key":1,"value":"A","count":4},{"key":2,"value":"B","count":9}]},{"key":"price","type":"range","values":{"min":0,"max":500}},{"key":"rating","type":"minimum","values":[5,4,3,2,1]},{"key":"in_stock","type":"boolean"}]'></falak-filters>
+                <p class="showcase__note"><code>mode="event"</code> here so it only emits; on the listing page it reloads with the selection in the URL.</p>
+            </div>
+
             {% if component.product_id %}
                 <div class="showcase__item showcase__item--wide">
                     <code class="showcase__tag">&lt;falak-comments&gt;</code>

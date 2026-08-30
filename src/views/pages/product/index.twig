@@ -1,16 +1,23 @@
 {#
     Product listing — category, search results, and tag listing all share this shape.
-    | Variable    | Type   | Description                                             |
-    | products    | array  | list of product cards                                    |
-    | category    | ?array | present when listing a category                         |
-    | priceFilter | array  | min, max (current selection), bounds_min, bounds_max     |
+    | Variable    | Type   | Description                                                      |
+    | products    | array  | list of product cards                                             |
+    | category    | ?array | present when listing a category                                  |
+    | filters     | array  | sidebar options for <falak-filters> (categories, price, rating…) |
+    | sort        | string | the active sort key                                              |
+    | sorts       | array  | every sort key the listing accepts                               |
+    | is_filtered | bool   | true when the shopper narrowed the list                          |
+    | priceFilter | array  | min, max (current selection), bounds_min, bounds_max — legacy    |
 #}
 {% extends "layouts.master" %}
 
 {% block title %}{{ category ? category.name : trans('common.products') }} — {{ store.name }}{% endblock %}
 
 {% block content %}
-    <div class="container product-listing">
+    {% set hasFilters = filters is defined and filters|length > 0 %}
+    {% set filtered = is_filtered|default(false) %}
+
+    <div class="container product-listing{{ hasFilters ? ' product-listing--with-sidebar' : '' }}">
         {# Seeds the session trail with the category name, so a product
            reached from here shows Home / Category / Product instead of just
            Home / Product — see <falak-breadcrumb>'s own doc comment. #}
@@ -23,46 +30,71 @@
             {% endif %}
         </header>
 
-        {# Reloads with ?min_price=&max_price= on the current path — works for
-           both /products and /category/{id} since it only ever touches the
-           query string. app.js reads the bounds/current selection off these
-           data attributes rather than templating them straight into the
-           component, so the same script works with or without this filter present. #}
-        {% if priceFilter is defined and priceFilter.bounds_max > priceFilter.bounds_min %}
-            <div class="product-listing__filters" data-price-filter
-                 data-bounds-min="{{ priceFilter.bounds_min }}" data-bounds-max="{{ priceFilter.bounds_max }}"
-                 data-value-min="{{ priceFilter.min }}" data-value-max="{{ priceFilter.max }}">
-                <span class="product-listing__filters-label">{{ trans('common.price') }}</span>
-                <falak-price-range min="{{ priceFilter.bounds_min }}" max="{{ priceFilter.bounds_max }}"
-                                   value-min="{{ priceFilter.min }}" value-max="{{ priceFilter.max }}"
-                                   step="{{ priceFilter.bounds_max > 200 ? 5 : 1 }}"></falak-price-range>
-            </div>
-        {% endif %}
-
-        {% if products|length > 0 %}
-            <div class="product-grid">
-                {% for product in products %}
-                    {% include 'pages.partials.product-card' %}
-                {% endfor %}
-            </div>
-        {% else %}
-            <falak-placeholder icon="🛒" text="{{ trans('common.no_products') }}"
-                               action-text="{{ trans('common.back_home') }}" action-href="{{ store.url }}"
-                               action-class="btn btn--outline"></falak-placeholder>
-
-            {#
-                An empty CATEGORY is not an empty store, so offer a way onward
-                rather than a dead end. Guarded on `category` on purpose: with
-                no filter the listing is empty because the store itself is, and
-                the component would render a second empty message under the
-                first one.
-            #}
-            {% if category %}
-                <section class="product-listing__fallback">
-                    <h2>{{ trans('product.other_products') }}</h2>
-                    <falak-products-list limit="4" columns="4" source="listing.empty"></falak-products-list>
-                </section>
+        <div class="product-listing__layout">
+            {% if hasFilters %}
+                {# The sidebar. <falak-filters> owns the widgets and writes the
+                   selection to the query string (category_id[], min_price,
+                   max_price, rating, in_stock) and reloads — so the page's
+                   first paint is already filtered and the URL is shareable.
+                   On phones it becomes a drawer, opened by the toolbar button. #}
+                <aside class="product-listing__sidebar" data-filters-panel aria-label="{{ trans('filters.title') }}">
+                    <div class="product-listing__sidebar-head">
+                        <h2>{{ trans('filters.title') }}</h2>
+                        <button type="button" class="product-listing__sidebar-close" data-filters-close aria-label="{{ trans('common.close') }}">×</button>
+                    </div>
+                    <falak-filters filters="{{ filters|json_encode }}"
+                                   {% if category %}category-id="{{ category.id }}"{% endif %}></falak-filters>
+                </aside>
+                <div class="product-listing__backdrop" data-filters-backdrop hidden></div>
             {% endif %}
-        {% endif %}
+
+            <div class="product-listing__main">
+                <div class="product-listing__toolbar">
+                    {% if hasFilters %}
+                        <button type="button" class="btn btn--outline product-listing__filters-trigger" data-filters-open>
+                            {{ trans('filters.title') }}{% if filtered %} <span class="product-listing__filters-dot" aria-hidden="true"></span>{% endif %}
+                        </button>
+                    {% endif %}
+
+                    <label class="product-listing__sort">
+                        <span>{{ trans('common.sort') }}</span>
+                        <select class="f-input" data-sort>
+                            {% for key in sorts|default(['newest', 'price_asc', 'price_desc', 'name']) %}
+                                <option value="{{ key }}" {{ (sort|default('newest')) == key ? 'selected' : '' }}>{{ trans('sort.' ~ key) }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                </div>
+
+                {% if products|length > 0 %}
+                    <div class="product-grid">
+                        {% for product in products %}
+                            {% include 'pages.partials.product-card' %}
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    {# A filtered-out list offers "reset" (the bare path drops
+                       every query param); an empty store offers the way home. #}
+                    <falak-placeholder icon="🛒" text="{{ trans('common.no_products') }}"
+                                       action-text="{{ filtered ? trans('filters.reset') : trans('common.back_home') }}"
+                                       action-href="{{ filtered ? '?' : store.url }}"
+                                       action-class="btn btn--outline"></falak-placeholder>
+
+                    {#
+                        An empty CATEGORY is not an empty store, so offer a way onward
+                        rather than a dead end. Guarded on `category` on purpose: with
+                        no filter the listing is empty because the store itself is, and
+                        the component would render a second empty message under the
+                        first one.
+                    #}
+                    {% if category and not filtered %}
+                        <section class="product-listing__fallback">
+                            <h2>{{ trans('product.other_products') }}</h2>
+                            <falak-products-list limit="4" columns="4" source="listing.empty"></falak-products-list>
+                        </section>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
     </div>
 {% endblock %}

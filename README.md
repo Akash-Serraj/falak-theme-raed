@@ -66,6 +66,7 @@ types, and editable in place.
 | `data-falak-label="…"` | What the merchant sees on the overlay. Use `trans()` so it follows their language; falls back to the field id. |
 | `data-falak-bind="target"` | Where the value is written: `text` (default), `src` (default for `<img>`/`<iframe>`), `href`, `alt`, `background`, or `none`. |
 | `data-falak-bind-<target>="id"` | Binds a *second* field to the same element — one `<a>` carrying both its label and its href. |
+| `data-falak-bind="attr:<name>"` / `data-falak-bind-attr-<name>="id"` | Writes the value into an attribute. This is how a field reaches an SDK component: `<falak-countdown title="…" data-falak-field="title" data-falak-bind="attr:title" data-falak-bind-attr-date="ends_at">` re-renders itself as the merchant types. An element carrying only `bind-attr-*` bindings also needs `data-falak-bound`. |
 
 ### Rules worth knowing before you tag anything
 

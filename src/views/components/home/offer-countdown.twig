@@ -1,0 +1,40 @@
+{#
+    Offer countdown — merchant-placeable component (home + builder pages).
+    One SDK component does the whole band: headline, copy, background, the
+    ticking clock and the call to action — <falak-countdown> given a `theme`.
+
+    | Variable              | Type    | Description                                  |
+    | component.title       | string  | localized server-side                        |
+    | component.description | ?string | localized server-side                        |
+    | component.ends_at     | string  | "YYYY-MM-DD" or "YYYY-MM-DD HH:mm", store time |
+    | component.end_text    | ?string | shown once the moment passes                 |
+    | component.image       | ?string | background image URL                         |
+    | component.style       | string  | dark | light | primary                       |
+    | component.button_text | ?string | CTA label, localized server-side             |
+    | component.button_url  | ?string | CTA target                                   |
+    | position              | int     |                                              |
+
+    Customizer bindings — full rules in README, "Customizer annotations".
+    Every field is an attribute of the component, so each binds with
+    `attr:<name>`; the component re-renders itself as the merchant types.
+#}
+<section class="block block--countdown" id="countdown-{{ position }}">
+    <div class="container">
+        <falak-countdown date="{{ component.ends_at }}" end-of-day boxed labeled size="lg"
+                         theme="{{ component.style|default('dark') }}"
+                         title="{{ component.title }}"
+                         description="{{ component.description }}"
+                         image="{{ component.image }}"
+                         end-text="{{ component.end_text }}"
+                         button-text="{{ component.button_text }}"
+                         button-href="{{ component.button_url }}"
+                         data-falak-field="title" data-falak-label="{{ trans('editor.field.title') }}" data-falak-bind="attr:title"
+                         data-falak-bind-attr-description="description"
+                         data-falak-bind-attr-date="ends_at"
+                         data-falak-bind-attr-end-text="end_text"
+                         data-falak-bind-attr-image="image"
+                         data-falak-bind-attr-theme="style"
+                         data-falak-bind-attr-button-text="button_text"
+                         data-falak-bind-attr-button-href="button_url"></falak-countdown>
+    </div>
+</section>

@@ -6,7 +6,7 @@
     components (see falak-add-product-button.js and friends), so a page keeps
     working even if this file fails to load. What's left here is markup-only
     behavior the SDK doesn't own: the mobile menu drawer, language-switch link
-    rewriting, and small per-page glue (e.g. the price-filter reload below).
+    rewriting, and small per-page glue (e.g. the listing sort + filters drawer below).
 */
 (function () {
     'use strict';
@@ -270,28 +270,42 @@
     // listing with it applied is the theme's job. Query-string only, so it
     // works unchanged on both /products and /category/{id}.
 
-    var priceFilter = document.querySelector('[data-price-filter]');
+    /* ------------------------------------------------ listing: sort + filters drawer */
 
-    if (priceFilter) {
-        priceFilter.addEventListener('change', function (event) {
-            var range = event.detail;
-            if (!range) return;
+    // <falak-filters> reloads with the selection itself; the sort select and
+    // the phone-width drawer are the only listing glue left to the theme.
+    var sort = document.querySelector('[data-sort]');
 
-            var boundsMin = Number(priceFilter.getAttribute('data-bounds-min'));
-            var boundsMax = Number(priceFilter.getAttribute('data-bounds-max'));
+    if (sort) {
+        sort.addEventListener('change', function () {
             var url = new URL(window.location.href);
 
-            // At the full store range, drop the params rather than write a
-            // no-op filter into the URL.
-            if (range.min <= boundsMin && range.max >= boundsMax) {
-                url.searchParams.delete('min_price');
-                url.searchParams.delete('max_price');
-            } else {
-                url.searchParams.set('min_price', range.min);
-                url.searchParams.set('max_price', range.max);
-            }
+            if (sort.value === 'newest') url.searchParams.delete('sort');
+            else url.searchParams.set('sort', sort.value);
 
+            url.searchParams.delete('page');
             window.location.href = url.toString();
         });
     }
+
+    var panel = document.querySelector('[data-filters-panel]');
+    var filtersBackdrop = document.querySelector('[data-filters-backdrop]');
+
+    function setFilters(open) {
+        if (!panel) return;
+        panel.classList.toggle('is-open', open);
+        document.body.classList.toggle('filters-are-open', open);
+        if (filtersBackdrop) filtersBackdrop.hidden = !open;
+    }
+
+    document.querySelectorAll('[data-filters-open]').forEach(function (button) {
+        button.addEventListener('click', function () { setFilters(true); });
+    });
+    document.querySelectorAll('[data-filters-close]').forEach(function (button) {
+        button.addEventListener('click', function () { setFilters(false); });
+    });
+    if (filtersBackdrop) filtersBackdrop.addEventListener('click', function () { setFilters(false); });
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') setFilters(false);
+    });
 })();
