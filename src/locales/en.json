@@ -313,5 +313,6 @@
     "sort.newest": "Newest",
     "sort.price_asc": "Price: low to high",
     "sort.price_desc": "Price: high to low",
-    "sort.name": "Name"
+    "sort.name": "Name",
+    "videos.toggle_sound": "Toggle sound"
 }

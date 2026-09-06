@@ -25,3 +25,5 @@ First complete version.
   pre-order timers) and `<falak-filters>`
 - Product page: buy-now hidden while sold out; spacing between detail panels
 - Locales: countdown, filters and sort strings (ar/en)
+- New home block: Videos Slider — portrait (9:16) video cards in a 4-column
+  row; muted autoplay while visible, per-card sound toggle, caption + CTA

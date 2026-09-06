@@ -313,5 +313,6 @@
     "sort.newest": "الأحدث",
     "sort.price_asc": "السعر: من الأقل للأعلى",
     "sort.price_desc": "السعر: من الأعلى للأقل",
-    "sort.name": "الاسم"
+    "sort.name": "الاسم",
+    "videos.toggle_sound": "تشغيل/كتم الصوت"
 }

@@ -1,0 +1,78 @@
+{
+    "key": "falak-videos-slider",
+    "path": "home.videos-slider",
+    "title": {
+        "ar": "شريط فيديوهات",
+        "en": "Videos Slider"
+    },
+    "icon": "film-line",
+    "is_default": false,
+    "areas": ["home", "pages"],
+    "fields": [
+        {
+            "id": "title",
+            "type": "string",
+            "format": "text",
+            "label": { "ar": "عنوان القسم", "en": "Section title" },
+            "multilanguage": true,
+            "required": false,
+            "maxLength": 100
+        },
+        {
+            "id": "items",
+            "type": "collection",
+            "format": "collection",
+            "label": { "ar": "الفيديوهات", "en": "Videos" },
+            "item_label": { "ar": "فيديو", "en": "Video" },
+            "required": true,
+            "minLength": 1,
+            "maxLength": 12,
+            "value": [],
+            "fields": [
+                {
+                    "id": "items.video",
+                    "type": "string",
+                    "format": "text",
+                    "label": { "ar": "رابط الفيديو (MP4)", "en": "Video URL (MP4)" },
+                    "description": { "ar": "رابط ملف فيديو مباشر — الأفضل بالطول (9:16)", "en": "A direct video file URL — portrait (9:16) looks best" },
+                    "required": true,
+                    "maxLength": 500
+                },
+                {
+                    "id": "items.poster",
+                    "type": "string",
+                    "format": "image",
+                    "label": { "ar": "صورة الغلاف", "en": "Poster image" },
+                    "description": { "ar": "تظهر قبل تشغيل الفيديو — اختيارية", "en": "Shown before the video plays — optional" },
+                    "required": false
+                },
+                {
+                    "id": "items.title",
+                    "type": "string",
+                    "format": "text",
+                    "label": { "ar": "العنوان", "en": "Caption" },
+                    "multilanguage": true,
+                    "required": false,
+                    "maxLength": 60
+                },
+                {
+                    "id": "items.url",
+                    "type": "string",
+                    "format": "text",
+                    "label": { "ar": "الرابط", "en": "Link" },
+                    "required": false,
+                    "maxLength": 255
+                },
+                {
+                    "id": "items.button_text",
+                    "type": "string",
+                    "format": "text",
+                    "label": { "ar": "نص الزر", "en": "Button label" },
+                    "multilanguage": true,
+                    "required": false,
+                    "maxLength": 30
+                }
+            ]
+        }
+    ]
+}

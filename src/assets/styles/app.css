@@ -1663,6 +1663,16 @@ body.f-modal-open { overflow: hidden; }
 .f-slider__arrow--prev::before { transform: rotate(-45deg); margin-inline-start: 0.2rem; }
 .f-slider__arrow--next::before { transform: rotate(135deg); margin-inline-end: 0.2rem; }
 
+/*
+    The chevron's SIDES are logical (they follow the writing mode) but its
+    ROTATION is not — in RTL the same -45° turned the glyph downwards. The
+    angles flip with the direction so prev/next always point outwards.
+*/
+[dir='rtl'] .f-slider__arrow--prev::before,
+.f-slider[dir='rtl'] .f-slider__arrow--prev::before { transform: rotate(45deg); }
+[dir='rtl'] .f-slider__arrow--next::before,
+.f-slider[dir='rtl'] .f-slider__arrow--next::before { transform: rotate(-135deg); }
+
 .f-slider:not(.f-slider--controls-outer) .f-slider__controls {
     position: absolute;
     inset-block-start: 50%;
@@ -1698,6 +1708,107 @@ body.f-modal-open { overflow: hidden; }
     border-radius: 999px;
     background: var(--color-primary, #1d9e75);
 }
+
+/* ---- gap + auto widths (slides-per-view="auto") ---- */
+.f-slider__track { gap: var(--f-slider-gap, 1rem); }
+.f-slider--per-auto .f-slider__track { grid-auto-columns: max-content; }
+
+/* ---- centered (blog / photos): active slide in the middle, edges peeking ---- */
+.f-slider--centered .f-slider__slide { scroll-snap-align: center; }
+.f-slider--centered .f-slider__track { scroll-padding-inline: 10%; padding-inline: 10%; }
+
+/* ---- vertical & fullscreen: the same track, snapping on the other axis ---- */
+@media (min-width: 768px) {
+    .f-slider--vertical .f-slider__track {
+        grid-auto-flow: row;
+        grid-auto-columns: unset;
+        grid-auto-rows: 100%;
+        overflow-x: hidden;
+        overflow-y: auto;
+        scroll-snap-type: y mandatory;
+        block-size: var(--f-slider-height, 480px);
+    }
+    .f-slider--vertical .f-slider__slide { scroll-snap-align: start; }
+}
+.f-slider--fullscreen { --f-slider-height: 100svh; }
+.f-slider--fullscreen .f-slider__track { padding-block-end: 0; }
+
+/* ---- type presets that are pure sizing ---- */
+.f-slider--fullwidth .f-slider__track,
+.f-slider--fullscreen .f-slider__track,
+.f-slider--testimonials .f-slider__track,
+.f-slider--blog .f-slider__track,
+.f-slider--thumbs .f-slider__track {
+    grid-auto-columns: 100%;
+}
+@media (min-width: 1024px) {
+    .f-slider--testimonials .f-slider__track { grid-auto-columns: calc((100% - var(--f-slider-gap, 1rem)) / 2); }
+}
+
+/* ---- overlays: badges and buttons an author placed over the gallery ---- */
+.f-slider__extra { position: absolute; z-index: 2; }
+
+/* ---- thumbs gallery ---- */
+.f-slider__body { display: flex; flex-direction: column; gap: 0.75rem; }
+.f-slider__body .f-slider__viewport { min-inline-size: 0; flex: 1; }
+
+.f-slider__thumbs { position: relative; }
+
+.f-slider__thumbs-track {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+}
+.f-slider__thumbs-track::-webkit-scrollbar { display: none; }
+
+.f-slider__thumb {
+    flex: none;
+    inline-size: 4.5rem;
+    block-size: 4.5rem;
+    padding: 0;
+    border: 2px solid transparent;
+    border-radius: var(--f-radius);
+    overflow: hidden;
+    background: none;
+    cursor: pointer;
+    scroll-snap-align: start;
+    opacity: 0.7;
+    transition: opacity 0.15s ease, border-color 0.15s ease;
+}
+.f-slider__thumb img { inline-size: 100%; block-size: 100%; object-fit: cover; display: block; }
+.f-slider__thumb:hover { opacity: 1; }
+.f-slider__thumb.is-active { opacity: 1; border-color: var(--color-primary, #1d9e75); }
+
+.f-slider__thumbs-nav {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline: -0.5rem;
+    display: flex;
+    justify-content: space-between;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+.f-slider__thumbs-nav .f-slider__arrow { pointer-events: auto; inline-size: 1.75rem; block-size: 1.75rem; }
+
+/* Thumbs beside the gallery on desktop. */
+@media (min-width: 768px) {
+    .f-slider--vertical-thumbs .f-slider__body { flex-direction: row-reverse; }
+    .f-slider--vertical-thumbs .f-slider__thumbs-track {
+        flex-direction: column;
+        overflow-x: hidden;
+        overflow-y: auto;
+        max-block-size: var(--f-slider-height, 480px);
+        scroll-snap-type: y proximity;
+    }
+    .f-slider--vertical-thumbs .f-slider__thumbs-nav { display: none; }
+}
+
+/* Thumbs as a wrapping grid — no strip, no arrows. */
+.f-slider--grid-thumbs .f-slider__thumbs-track { flex-wrap: wrap; overflow: visible; }
+.f-slider--grid-thumbs .f-slider__thumbs-nav { display: none; }
 
 .f-products-slider { display: block; }
 .f-products-slider[hidden] { display: none; }
@@ -3161,6 +3272,7 @@ body.f-modal-open { overflow: hidden; }
     min-inline-size: 14rem;
     padding: 0.4rem;
     background: var(--f-surface);
+    color: var(--f-text);
     border: 1px solid var(--f-border);
     border-radius: calc(var(--f-radius) * 1.2);
     box-shadow: 0 14px 36px rgba(8, 14, 12, 0.16);
@@ -5375,6 +5487,128 @@ a.photo-tile:hover img { transform: scale(1.04); }
     background: linear-gradient(transparent, rgba(10, 12, 16, 0.65));
     color: #fff;
     font-weight: 600;
+}
+
+/* portrait video cards — the videos-slider block (reels row) */
+.block--videos-slider .f-slider__slide { min-width: 0; }
+
+.video-card {
+    position: relative;
+    aspect-ratio: 9 / 16;
+    border-radius: 18px;
+    overflow: hidden;
+    background: #14161a;
+    box-shadow: 0 10px 28px rgba(15, 23, 32, 0.14);
+    transform: translateZ(0);
+    transition: transform 0.35s ease, box-shadow 0.35s ease;
+}
+
+.video-card:hover { transform: translateY(-4px); box-shadow: 0 18px 40px rgba(15, 23, 32, 0.22); }
+.video-card.is-unmuted { box-shadow: 0 0 0 2px var(--color-primary), 0 18px 40px rgba(15, 23, 32, 0.22); }
+
+.video-card__media {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s ease;
+}
+.video-card:hover .video-card__media { transform: scale(1.05); }
+
+/* Frosted-glass sound toggle; the slash lifts when the card is unmuted. */
+.video-card__sound {
+    position: absolute;
+    inset-block-start: 0.7rem;
+    inset-inline-end: 0.7rem;
+    inline-size: 2.1rem;
+    block-size: 2.1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 50%;
+    background: rgba(20, 22, 26, 0.35);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    color: #fff;
+    cursor: pointer;
+    z-index: 2;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+}
+.video-card__sound:hover { transform: scale(1.08); background: rgba(20, 22, 26, 0.55); }
+
+.video-card__sound-icon {
+    position: relative;
+    inline-size: 0.9rem;
+    block-size: 0.9rem;
+    background: currentColor;
+    clip-path: polygon(0 35%, 30% 35%, 60% 8%, 60% 92%, 30% 65%, 0 65%);
+}
+.video-card:not(.is-unmuted) .video-card__sound::after {
+    content: "";
+    position: absolute;
+    inline-size: 1.35rem;
+    block-size: 2px;
+    border-radius: 2px;
+    background: #fff;
+    transform: rotate(-45deg);
+}
+
+.video-card__caption {
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.55rem;
+    padding: 3.5rem 1rem 1.1rem;
+    background: linear-gradient(180deg, transparent 0%, rgba(10, 14, 18, 0.25) 40%, rgba(10, 14, 18, 0.78) 100%);
+    color: #fff;
+    z-index: 2;
+}
+.video-card__title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1.35;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+}
+
+/* White pill CTA — flips to the store colour on hover. */
+.video-card__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.42rem 1.05rem;
+    border: 0;
+    border-radius: 999px;
+    background: #fff;
+    color: #14161a;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+.video-card__link::after { content: "←"; font-size: 0.85em; transition: transform 0.2s ease; }
+[dir='ltr'] .video-card__link::after { content: "→"; }
+.video-card__link:hover { background: var(--color-primary); color: #fff; transform: translateY(-1px); }
+
+/* Reels-style progress line along the bottom edge. */
+.video-card__progress {
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 0;
+    block-size: 3px;
+    background: rgba(255, 255, 255, 0.22);
+    z-index: 3;
+}
+.video-card__progress i {
+    display: block;
+    block-size: 100%;
+    inline-size: 0;
+    background: var(--color-primary);
+    border-radius: 0 2px 2px 0;
 }
 
 .video-embed {

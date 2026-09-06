@@ -1,0 +1,106 @@
+{#
+    Videos slider — merchant-placeable component (home + builder pages).
+    Portrait video cards (reels style) in a <falak-slider> row, four per view
+    on desktop. Videos start muted and looping the moment they scroll into
+    view and pause off-screen (IntersectionObserver below); tapping a card
+    toggles its sound. An optional link + caption sits over each video.
+
+    | Variable              | Type    | Description                          |
+    | component.title       | ?string | section title                        |
+    | component.items[]     | array   | video (URL), caption, url — per card |
+    | position              | int     |                                      |
+
+    Customizer bindings — full rules in README, "Customizer annotations".
+    Collection items take bind="none": their value is a list, the panel edits it.
+#}
+<section class="block block--videos-slider" id="videos-slider-{{ position }}">
+    <div class="container">
+        {% if component.title %}
+            <h2 class="block__title" data-falak-field="title" data-falak-label="{{ trans('editor.field.title') }}">{{ component.title }}</h2>
+        {% endif %}
+
+        <falak-slider slides-per-view="4" gap="1.25rem" show-controls
+                      data-falak-field="items" data-falak-label="{{ trans('editor.field.items') }}" data-falak-bind="none">
+            <div slot="items">
+                {% for item in component.items|default([]) %}
+                    <div class="video-card">
+                        <video class="video-card__media" src="{{ item.video }}"
+                               {% if item.poster %}poster="{{ item.poster }}"{% endif %}
+                               muted loop playsinline preload="metadata"
+                               aria-label="{{ item.title|default('') }}"></video>
+
+                        <button type="button" class="video-card__sound" data-video-sound aria-label="{{ trans('videos.toggle_sound') }}">
+                            <span class="video-card__sound-icon" aria-hidden="true"></span>
+                        </button>
+
+                        <span class="video-card__progress" aria-hidden="true"><i data-video-progress></i></span>
+
+                        {% if item.title or item.url %}
+                            <div class="video-card__caption">
+                                {% if item.title %}<span class="video-card__title">{{ item.title }}</span>{% endif %}
+                                {% if item.url %}
+                                    <a class="video-card__link btn btn--primary" href="{{ item.url }}">{{ item.button_text|default(trans('offer.shop_now')) }}</a>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </falak-slider>
+    </div>
+</section>
+
+{#
+    Play only what is on screen: browsers refuse un-muted autoplay anyway, so
+    each card autoplays muted while visible and pauses when scrolled away.
+    The sound button unmutes one card and mutes the rest — reels behaviour.
+#}
+<script>
+(function () {
+    var root = document.getElementById('videos-slider-{{ position }}');
+    if (!root) return;
+
+    var videos = Array.prototype.slice.call(root.querySelectorAll('.video-card__media'));
+    if (!videos.length) return;
+
+    var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+            var video = entry.target;
+            // A portrait card can be TALLER than a phone's viewport, so its
+            // ratio never reaches 0.4 — also count "fills most of the screen".
+            var rootH = (entry.rootBounds && entry.rootBounds.height) || window.innerHeight;
+            var visible = entry.intersectionRatio >= 0.4 || entry.intersectionRect.height > rootH * 0.5;
+            if (visible) video.play().catch(function () {});
+            else { video.pause(); video.muted = true; video.closest('.video-card').classList.remove('is-unmuted'); }
+        });
+    }, { threshold: [0, 0.15, 0.4] });
+
+    videos.forEach(function (video) { observer.observe(video); });
+
+    // Reels-style progress line — timeupdate is a few times a second, cheap.
+    videos.forEach(function (video) {
+        var bar = video.closest('.video-card').querySelector('[data-video-progress]');
+        if (!bar) return;
+        video.addEventListener('timeupdate', function () {
+            if (video.duration) bar.style.inlineSize = (video.currentTime / video.duration) * 100 + '%';
+        });
+    });
+
+    root.addEventListener('click', function (event) {
+        var button = event.target.closest('[data-video-sound]');
+        if (!button) return;
+
+        var card = button.closest('.video-card');
+        var video = card.querySelector('.video-card__media');
+        var unmute = video.muted;
+
+        videos.forEach(function (v) { v.muted = true; v.closest('.video-card').classList.remove('is-unmuted'); });
+
+        if (unmute) {
+            video.muted = false;
+            card.classList.add('is-unmuted');
+            video.play().catch(function () {});
+        }
+    });
+})();
+</script>
