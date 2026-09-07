@@ -19,7 +19,7 @@
     The tag goes on the <img>, not on .image-text__media: a wrapper's default
     binding is text, so the image URL would be written into it as a caption.
 #}
-<section class="block block--image-text" id="image-text-{{ position }}">
+<section class="block block--image-text" id="image-text-{{ position }}" {{ falak_section() }}>
     <div class="container">
         <div class="image-text{{ component.flipped ? ' image-text--flipped' : '' }}">
             <div class="image-text__media">

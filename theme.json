@@ -15,7 +15,8 @@
     "features": [
         "fonts",
         "color",
-        "breadcrumb"
+        "breadcrumb",
+        "section-styles"
     ],
     "compatibility": {
         "platform_min": "1.0.0",

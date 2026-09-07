@@ -15,7 +15,7 @@
     Both sides of the {% if item.url %} carry the tag, or half the tiles would
     be unselectable depending on whether the merchant set a link.
 #}
-<section class="block block--photo-grid" id="photo-grid-{{ position }}">
+<section class="block block--photo-grid" id="photo-grid-{{ position }}" {{ falak_section() }}>
     <div class="container">
         {% if component.title %}
             <h2 class="block__title" data-falak-field="title" data-falak-label="{{ trans('editor.field.title') }}">{{ component.title }}</h2>

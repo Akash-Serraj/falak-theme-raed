@@ -13,7 +13,7 @@
     Customizer bindings — full rules in README, "Customizer annotations".
     Collection items take bind="none": their value is a list, the panel edits it.
 #}
-<section class="block block--videos-slider" id="videos-slider-{{ position }}">
+<section class="block block--videos-slider" id="videos-slider-{{ position }}" {{ falak_section() }}>
     <div class="container">
         {% if component.title %}
             <h2 class="block__title" data-falak-field="title" data-falak-label="{{ trans('editor.field.title') }}">{{ component.title }}</h2>

@@ -18,7 +18,7 @@
     Every field is an attribute of the component, so each binds with
     `attr:<name>`; the component re-renders itself as the merchant types.
 #}
-<section class="block block--countdown" id="countdown-{{ position }}">
+<section class="block block--countdown" id="countdown-{{ position }}" {{ falak_section() }}>
     <div class="container">
         <falak-countdown date="{{ component.ends_at }}" end-of-day boxed labeled size="lg"
                          theme="{{ component.style|default('dark') }}"

@@ -5914,3 +5914,48 @@ a.photo-tile:hover img { transform: scale(1.04); }
 .product-single__size-guide { margin-block: 0.25rem 0.75rem; }
 .product-single__reviews > h2 { margin-block-end: 1rem; }
 .product-single__reviews-summary { padding: 1.25rem; margin-block-end: 1.5rem; border: 1px solid var(--color-border); border-radius: var(--radius); background: #fff; }
+
+/* ------------------------------------------------------------------ */
+/* Merchant-adjustable text roles                                      */
+/* ------------------------------------------------------------------ */
+/*
+   Each component's .schema.json lists the parts a merchant may restyle
+   (`styleable`), and the platform publishes their values as custom properties
+   on the section root — see docs/THEME_SECTION_STYLES.md in the platform repo.
+
+   The fallback in every var() below is this theme's own value, so a section
+   nobody has styled renders exactly as it did before this block existed. Keep
+   that true when you change the defaults above: the fallback and the rule it
+   mirrors have to move together.
+
+   These sit at the end of the file on purpose. The selectors match .btn on
+   specificity, so source order is what settles it. */
+
+[data-falak-field="title"] {
+    font-size: var(--falak-el-title-size, clamp(1.25rem, 1.05rem + 0.8vw, 1.6rem));
+    font-weight: var(--falak-el-title-weight, 700);
+    color: var(--falak-el-title-color, inherit);
+    text-align: var(--falak-el-title-align, inherit);
+}
+
+[data-falak-field="description"] {
+    font-size: var(--falak-el-description-size, inherit);
+    font-weight: var(--falak-el-description-weight, inherit);
+    color: var(--falak-el-description-color, inherit);
+    text-align: var(--falak-el-description-align, inherit);
+}
+
+[data-falak-field="text"] {
+    font-size: var(--falak-el-text-size, inherit);
+    font-weight: var(--falak-el-text-weight, inherit);
+    color: var(--falak-el-text-color, inherit);
+    text-align: var(--falak-el-text-align, inherit);
+}
+
+/* Size and weight only: .btn--primary and .btn--outline each set their own
+   colour against their own background, and overriding one half of that pair
+   is how a button ends up unreadable. */
+[data-falak-field="button_text"] {
+    font-size: var(--falak-el-button_text-size, inherit);
+    font-weight: var(--falak-el-button_text-weight, 600);
+}

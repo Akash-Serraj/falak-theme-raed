@@ -8,6 +8,9 @@
     "icon": "chat-smile-line",
     "is_default": true,
     "areas": ["home", "pages"],
+    "styleable": [
+        { "id": "title", "label": { "ar": "العنوان", "en": "Title" } }
+    ],
     "fields": [
         {
             "id": "title",

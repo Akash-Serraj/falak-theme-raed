@@ -12,7 +12,7 @@
     | component.product_id| ?string| product used by the live examples  |
     | position            | int    |                                    |
 #}
-<section class="block block--showcase" id="showcase-{{ position }}">
+<section class="block block--showcase" id="showcase-{{ position }}" {{ falak_section() }}>
     <div class="container">
         <h2 class="block__title" data-falak-field="title" data-falak-label="{{ trans('editor.field.title') }}">
             {{ component.title|default('Component showcase') }}

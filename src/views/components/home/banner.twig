@@ -18,7 +18,7 @@
     A text binding replaces the element's content, so it belongs on the element
     that holds that value and nothing else — never on a wrapper.
 #}
-<section class="block block--banner" id="banner-{{ position }}">
+<section class="block block--banner" id="banner-{{ position }}" {{ falak_section() }}>
     <div class="container">
         <div class="banner" data-falak-field="image" data-falak-label="{{ trans('editor.field.image') }}" data-falak-bind="background" style="background-image: url({{ component.image }});">
             <div class="banner__content">
