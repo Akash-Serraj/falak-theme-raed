@@ -8,6 +8,9 @@
     "icon": "layout-grid-line",
     "is_default": false,
     "areas": ["home", "pages"],
+    "styleable": [
+        { "id": "title", "label": { "ar": "العنوان", "en": "Title" } }
+    ],
     "fields": [
         {
             "id": "title",

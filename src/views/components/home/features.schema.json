@@ -9,6 +9,9 @@
     "is_default": true,
     "default_sort": 20,
     "areas": ["home", "pages"],
+    "styleable": [
+        { "id": "title", "label": { "ar": "العنوان", "en": "Title" } }
+    ],
     "fields": [
         {
             "id": "title",

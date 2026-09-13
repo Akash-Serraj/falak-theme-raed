@@ -8,6 +8,11 @@
     "icon": "image-line",
     "is_default": false,
     "areas": ["home", "pages"],
+    "styleable": [
+        { "id": "title", "label": { "ar": "العنوان", "en": "Title" } },
+        { "id": "description", "label": { "ar": "الوصف", "en": "Description" } },
+        { "id": "button_text", "label": { "ar": "نص الزر", "en": "Button label" }, "properties": ["font_size", "font_weight"] }
+    ],
     "fields": [
         {
             "id": "image",

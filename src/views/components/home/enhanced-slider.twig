@@ -17,7 +17,7 @@
     the panel; without it the customizer would write the whole list into the
     slide as text the first time the merchant touched that field.
 #}
-<section class="block block--hero-slider" id="hero-slider-{{ position }}">
+<section class="block block--hero-slider" id="hero-slider-{{ position }}" {{ falak_section() }}>
     <div class="hero-slider">
         {% for slide in component.slides %}
             <div class="hero-slider__slide{{ loop.first ? ' is-active' : '' }}" data-falak-field="slides" data-falak-label="{{ trans('editor.field.slides') }}" data-falak-bind="none">
