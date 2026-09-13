@@ -6,7 +6,8 @@
         "en": "Products Grid"
     },
     "icon": "shopping-bag-line",
-    "is_default": false,
+    "is_default": true,
+    "default_sort": 30,
     "areas": ["home", "pages"],
     "fields": [
         {
