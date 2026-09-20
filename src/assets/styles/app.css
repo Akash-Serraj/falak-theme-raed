@@ -459,6 +459,31 @@ falak-rating-stars[data-busy] { opacity: 0.5; }
     font-weight: 700;
 }
 
+/*
+ * The special-offer ribbon. Opposite corner to .f-card__badge, because a
+ * discounted product that is ALSO in an offer carries both and they must not
+ * stack on top of each other.
+ *
+ * It names the offer; it never carries its value. See loadOffer() in
+ * product-card.js for why.
+ */
+.f-card__offer {
+    position: absolute;
+    inset-block-start: 0.5rem;
+    inset-inline-end: 0.5rem;
+    max-inline-size: 65%;
+    padding: 0.125rem 0.5rem;
+    border-radius: 0.25rem;
+    background: var(--f-danger, #c0392b);
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    line-height: 1.5;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .f-card__body {
     display: flex;
     flex-direction: column;
@@ -1396,6 +1421,156 @@ body.f-drawer-open { overflow: hidden; }
 .f-add-toast__actions { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
 .f-add-toast__actions .f-btn { justify-content: center; text-align: center; }
 @media (prefers-reduced-motion: reduce) { .f-add-toast { transition: none; } }
+
+/* ===== contact form ===== */
+/* Every colour goes through the --f-* tokens, which fall back to the theme's
+   --color-* names, so a theme restyles this form by setting the variables it
+   already sets rather than by overriding selectors here. */
+
+.f-contact {
+    display: grid;
+    gap: 1rem;
+}
+
+.f-contact__row {
+    display: grid;
+    /* Two up where there is room, stacked where there is not — the phone and
+       email pair is the only row that shares a line. */
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+    gap: 1rem;
+}
+
+.f-contact__field { display: grid; gap: 0.5rem; min-inline-size: 0; }
+
+.f-contact__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--f-text);
+}
+.f-contact__label-icon {
+    display: inline-flex;
+    color: var(--f-text-soft);
+}
+.f-contact__required { color: var(--f-danger); line-height: 1; }
+
+.f-contact__input {
+    inline-size: 100%;
+    padding: 0.8rem 1rem;
+    border: 1px solid transparent;
+    border-radius: var(--f-radius);
+    /* The field is the light plate in the reference, sitting on a tinted
+       panel the theme paints — hence a background of its own rather than a
+       border alone. */
+    background: var(--f-input-bg, #ffffff);
+    color: var(--f-text);
+    font: inherit;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+}
+.f-contact__input::placeholder { color: var(--f-text-faint); }
+.f-contact__input:focus {
+    outline: none;
+    border-color: var(--color-primary, #b08658);
+}
+
+.f-contact__input--area {
+    min-block-size: 8rem;
+    resize: vertical;
+}
+
+/* File inputs cannot be styled through the input box itself in every engine,
+   so the plate is kept and only the button part is toned down. */
+.f-contact__input[type="file"] { padding: 0.6rem 0.75rem; cursor: pointer; }
+.f-contact__input[type="file"]::file-selector-button {
+    margin-inline-end: 0.75rem;
+    padding: 0.4rem 0.9rem;
+    border: 0;
+    border-radius: calc(var(--f-radius) - 2px);
+    background: var(--f-border);
+    color: var(--f-text);
+    font: inherit;
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+
+.f-contact__error {
+    margin: 0;
+    color: var(--f-danger);
+    font-size: 0.875rem;
+}
+.f-contact__error[hidden] { display: none; }
+
+.f-contact falak-button { margin-block-start: 0.25rem; }
+
+/* The confirmation sits WITH the form, under the button — a banner on the
+   row, not a panel in the form's place. */
+.f-contact__done {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem;
+    border-radius: var(--f-radius);
+    background: var(--f-success-bg, rgba(22, 163, 74, 0.1));
+    color: var(--f-text);
+}
+.f-contact__done[hidden] { display: none; }
+.f-contact__done p { margin: 0; font-size: 0.9375rem; line-height: 1.6; }
+.f-contact__done-icon {
+    display: grid;
+    place-items: center;
+    flex: none;
+    inline-size: 2rem;
+    block-size: 2rem;
+    border-radius: 50%;
+    background: var(--f-success, #16a34a);
+    color: #fff;
+}
+
+/* ===== contact links ===== */
+/* The footer's "how to reach us" row: outlined chips, icon then label. Sits
+   above <falak-social>, which is the same shop's profiles as bare icons. */
+
+.f-contact-links { display: block; }
+.f-contact-links[hidden] { display: none; }
+
+.f-contact-links__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.6rem;
+}
+
+.f-contact-links__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.5rem 0.9rem;
+    border: 1px solid currentColor;
+    border-radius: var(--f-radius);
+    color: inherit;
+    font-size: 0.875rem;
+    line-height: 1.4;
+    text-decoration: none;
+    /* The chip borrows the footer's ink at 65% so the outline reads as a
+       hairline on a dark ground without needing a second colour token. */
+    opacity: 0.65;
+    transition: opacity 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+.f-contact-links__chip:hover,
+.f-contact-links__chip:focus-visible {
+    opacity: 1;
+    color: var(--color-primary, #b08658);
+    text-decoration: none;
+}
+
+.f-contact-links__icon { display: inline-flex; flex: none; }
+.f-contact-links__label { white-space: nowrap; }
 
 /* ---- from packages/falak-components/src/components.chrome.css ---- */
 
@@ -3272,7 +3447,6 @@ body.f-modal-open { overflow: hidden; }
     min-inline-size: 14rem;
     padding: 0.4rem;
     background: var(--f-surface);
-    color: var(--f-text);
     border: 1px solid var(--f-border);
     border-radius: calc(var(--f-radius) * 1.2);
     box-shadow: 0 14px 36px rgba(8, 14, 12, 0.16);
@@ -4230,12 +4404,24 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
 /* ------------------------------------------------------------- main menu */
 
 .main-menu ul {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
     list-style: none;
     margin: 0;
     padding: 0;
+}
+
+/*
+    Row layout stays on the root list only.
+
+    As a descendant selector `.main-menu ul` (0,1,1) outranks the single-class
+    `.main-menu__submenu` (0,1,0), so a `display: flex` up here would beat the
+    submenu's `display: none` and leave every dropdown open before <falak-menu>
+    ever toggles .is-open. The child combinator keeps the shared list resets
+    above without touching submenu display.
+*/
+.main-menu > ul {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
 }
 
 .main-menu a {

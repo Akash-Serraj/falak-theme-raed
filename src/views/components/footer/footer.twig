@@ -70,9 +70,6 @@
            there are none, so no switch is needed. #}
         <falak-payments hide-title></falak-payments>
 
-        {# Regulatory badges — renders nothing when the store has none on file. #}
-        <falak-trust-badges {{ theme.settings.get('footer_is_dark') ? 'dark' : '' }}></falak-trust-badges>
-
         {% if store.settings.show_copyright %}
             <p class="site-footer__copyright">{{ trans('footer.powered_by') }}</p>
         {% endif %}
