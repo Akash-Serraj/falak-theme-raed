@@ -7,16 +7,28 @@
     },
     "icon": "grid-line",
     "is_default": false,
-    "areas": ["home", "pages"],
+    "areas": [
+        "home",
+        "pages"
+    ],
     "styleable": [
-        { "id": "title", "label": { "ar": "العنوان", "en": "Title" } }
+        {
+            "id": "title",
+            "label": {
+                "ar": "العنوان",
+                "en": "Title"
+            }
+        }
     ],
     "fields": [
         {
             "id": "title",
             "type": "string",
             "format": "text",
-            "label": { "ar": "عنوان القسم", "en": "Section title" },
+            "label": {
+                "ar": "عنوان القسم",
+                "en": "Section title"
+            },
             "multilanguage": true,
             "required": false,
             "maxLength": 100
@@ -25,8 +37,14 @@
             "id": "items",
             "type": "collection",
             "format": "collection",
-            "label": { "ar": "الصور", "en": "Photos" },
-            "item_label": { "ar": "صورة", "en": "Photo" },
+            "label": {
+                "ar": "الصور",
+                "en": "Photos"
+            },
+            "item_label": {
+                "ar": "صورة",
+                "en": "Photo"
+            },
             "required": true,
             "minLength": 2,
             "maxLength": 8,
@@ -36,26 +54,50 @@
                     "id": "items.image",
                     "type": "string",
                     "format": "image",
-                    "label": { "ar": "الصورة", "en": "Image" },
-                    "description": { "ar": "المقاس المناسب 600×600 بكسل", "en": "Recommended size 600x600 px" },
+                    "label": {
+                        "ar": "الصورة",
+                        "en": "Image"
+                    },
+                    "description": {
+                        "ar": "المقاس المناسب 600×600 بكسل",
+                        "en": "Recommended size 600x600 px"
+                    },
                     "required": true
                 },
                 {
                     "id": "items.title",
                     "type": "string",
                     "format": "text",
-                    "label": { "ar": "العنوان", "en": "Caption" },
+                    "label": {
+                        "ar": "العنوان",
+                        "en": "Caption"
+                    },
                     "multilanguage": true,
                     "required": false,
-                    "maxLength": 60
+                    "maxLength": 60,
+                    "conditions": [
+                        {
+                            "id": "items.image",
+                            "operation": "not_empty"
+                        }
+                    ]
                 },
                 {
                     "id": "items.url",
                     "type": "string",
                     "format": "text",
-                    "label": { "ar": "الرابط", "en": "Link" },
+                    "label": {
+                        "ar": "الرابط",
+                        "en": "Link"
+                    },
                     "required": false,
-                    "maxLength": 255
+                    "maxLength": 255,
+                    "conditions": [
+                        {
+                            "id": "items.image",
+                            "operation": "not_empty"
+                        }
+                    ]
                 }
             ]
         }

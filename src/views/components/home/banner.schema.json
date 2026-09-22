@@ -7,26 +7,60 @@
     },
     "icon": "image-line",
     "is_default": false,
-    "areas": ["home", "pages"],
+    "areas": [
+        "home",
+        "pages"
+    ],
     "styleable": [
-        { "id": "title", "label": { "ar": "العنوان", "en": "Title" } },
-        { "id": "description", "label": { "ar": "الوصف", "en": "Description" } },
-        { "id": "button_text", "label": { "ar": "نص الزر", "en": "Button label" }, "properties": ["font_size", "font_weight"] }
+        {
+            "id": "title",
+            "label": {
+                "ar": "العنوان",
+                "en": "Title"
+            }
+        },
+        {
+            "id": "description",
+            "label": {
+                "ar": "الوصف",
+                "en": "Description"
+            }
+        },
+        {
+            "id": "button_text",
+            "label": {
+                "ar": "نص الزر",
+                "en": "Button label"
+            },
+            "properties": [
+                "font_size",
+                "font_weight"
+            ]
+        }
     ],
     "fields": [
         {
             "id": "image",
             "type": "string",
             "format": "image",
-            "label": { "ar": "صورة الخلفية", "en": "Background image" },
-            "description": { "ar": "المقاس المناسب 1200×340 بكسل", "en": "Recommended size 1200x340 px" },
+            "label": {
+                "ar": "صورة الخلفية",
+                "en": "Background image"
+            },
+            "description": {
+                "ar": "المقاس المناسب 1200×340 بكسل",
+                "en": "Recommended size 1200x340 px"
+            },
             "required": true
         },
         {
             "id": "title",
             "type": "string",
             "format": "text",
-            "label": { "ar": "العنوان", "en": "Title" },
+            "label": {
+                "ar": "العنوان",
+                "en": "Title"
+            },
             "multilanguage": true,
             "required": false,
             "maxLength": 100
@@ -35,7 +69,10 @@
             "id": "description",
             "type": "string",
             "format": "textarea",
-            "label": { "ar": "الوصف", "en": "Description" },
+            "label": {
+                "ar": "الوصف",
+                "en": "Description"
+            },
             "multilanguage": true,
             "required": false,
             "maxLength": 255
@@ -44,7 +81,10 @@
             "id": "button_text",
             "type": "string",
             "format": "text",
-            "label": { "ar": "نص الزر", "en": "Button label" },
+            "label": {
+                "ar": "نص الزر",
+                "en": "Button label"
+            },
             "multilanguage": true,
             "required": false,
             "maxLength": 40
@@ -53,9 +93,18 @@
             "id": "button_url",
             "type": "string",
             "format": "text",
-            "label": { "ar": "رابط الزر", "en": "Button link" },
+            "label": {
+                "ar": "رابط الزر",
+                "en": "Button link"
+            },
             "required": false,
-            "maxLength": 255
+            "maxLength": 255,
+            "conditions": [
+                {
+                    "id": "button_text",
+                    "operation": "not_empty"
+                }
+            ]
         }
     ]
 }

@@ -10,6 +10,7 @@
     | component.end_text    | ?string | shown once the moment passes                 |
     | component.image       | ?string | background image URL                         |
     | component.style       | string  | dark | light | primary                       |
+    | component.show_button | bool    | whether the CTA is offered at all            |
     | component.button_text | ?string | CTA label, localized server-side             |
     | component.button_url  | ?string | CTA target                                   |
     | position              | int     |                                              |
@@ -17,7 +18,25 @@
     Customizer bindings — full rules in README, "Customizer annotations".
     Every field is an attribute of the component, so each binds with
     `attr:<name>`; the component re-renders itself as the merchant types.
+
+    `show_button` is the exception, and the reason is worth knowing. A field's
+    `conditions` only decide whether the CUSTOMIZER OFFERS it — hiding the two
+    button fields from the panel. Nothing about that reaches the storefront, so
+    without the `{% if %}` below the button kept rendering after the switch was
+    turned off. Visibility in the editor and visibility on the page are two
+    separate decisions, and a theme has to make the second one itself.
+
+    It carries no `data-falak-bind` because toggling it adds and removes
+    attributes rather than changing one, which the attribute binder cannot
+    express — so the preview reloads on save instead of updating as you type.
 #}
+{#
+    Absent means shown: a countdown placed before this switch existed has no
+    `show_button` in its saved settings, and it should keep the button it
+    already had rather than lose it silently on the next deploy.
+#}
+{% set show_button = component.show_button is defined ? component.show_button : true %}
+
 <section class="block block--countdown" id="countdown-{{ position }}" {{ falak_section() }}>
     <div class="container">
         <falak-countdown date="{{ component.ends_at }}" end-of-day boxed labeled size="lg"
@@ -26,15 +45,15 @@
                          description="{{ component.description }}"
                          image="{{ component.image }}"
                          end-text="{{ component.end_text }}"
-                         button-text="{{ component.button_text }}"
+                         {% if show_button %}button-text="{{ component.button_text }}"
                          button-href="{{ component.button_url }}"
+                         data-falak-bind-attr-button-text="button_text"
+                         data-falak-bind-attr-button-href="button_url"{% endif %}
                          data-falak-field="title" data-falak-label="{{ trans('editor.field.title') }}" data-falak-bind="attr:title"
                          data-falak-bind-attr-description="description"
                          data-falak-bind-attr-date="ends_at"
                          data-falak-bind-attr-end-text="end_text"
                          data-falak-bind-attr-image="image"
-                         data-falak-bind-attr-theme="style"
-                         data-falak-bind-attr-button-text="button_text"
-                         data-falak-bind-attr-button-href="button_url"></falak-countdown>
+                         data-falak-bind-attr-theme="style"></falak-countdown>
     </div>
 </section>

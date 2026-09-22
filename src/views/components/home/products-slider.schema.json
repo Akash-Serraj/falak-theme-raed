@@ -180,6 +180,12 @@
                     },
                     "value": "8000"
                 }
+            ],
+            "conditions": [
+                {
+                    "id": "autoplay",
+                    "value": true
+                }
             ]
         }
     ]

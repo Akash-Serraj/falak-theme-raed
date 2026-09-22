@@ -133,7 +133,13 @@
             },
             "multilanguage": true,
             "required": false,
-            "maxLength": 40
+            "maxLength": 40,
+            "conditions": [
+                {
+                    "id": "show_button",
+                    "value": true
+                }
+            ]
         },
         {
             "id": "button_url",
@@ -144,7 +150,13 @@
                 "en": "Button link"
             },
             "required": false,
-            "maxLength": 255
+            "maxLength": 255,
+            "conditions": [
+                {
+                    "id": "show_button",
+                    "value": true
+                }
+            ]
         }
     ]
 }
