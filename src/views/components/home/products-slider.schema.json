@@ -12,7 +12,13 @@
         "pages"
     ],
     "styleable": [
-        { "id": "title", "label": { "ar": "العنوان", "en": "Title" } }
+        {
+            "id": "title",
+            "label": {
+                "ar": "العنوان",
+                "en": "Title"
+            }
+        }
     ],
     "fields": [
         {
@@ -174,6 +180,12 @@
                         "en": "Calm — every 8 seconds"
                     },
                     "value": "8000"
+                }
+            ],
+            "conditions": [
+                {
+                    "id": "autoplay",
+                    "value": true
                 }
             ]
         }

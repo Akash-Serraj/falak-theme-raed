@@ -3,6 +3,7 @@
     | Variable                  | Type    | Description                         |
     | component.title           | ?string | section title, localized server-side |
     | component.items[].name    | string  |                                     |
+    | component.show_stars      | ?bool   | whether the star row renders at all |
     | component.items[].stars   | int     | 1..5                                |
     | component.items[].text    | string  | localized server-side               |
     | position                  | int     |                                     |
@@ -20,12 +21,26 @@
             <h2 class="block__title" data-falak-field="title" data-falak-label="{{ trans('editor.field.title') }}">{{ component.title }}</h2>
         {% endif %}
 
+        {#
+            Absent means shown: a testimonials block placed before this switch
+            existed has no `show_stars` saved, and should keep the stars it had.
+        #}
+        {% set show_stars = component.show_stars is defined ? component.show_stars : true %}
+
         <div class="testimonials-grid">
             {% for item in component.items %}
                 <figure class="testimonial-card" data-falak-field="items" data-falak-label="{{ trans('editor.field.items') }}" data-falak-bind="none">
-                    <div class="testimonial-card__stars" aria-label="{{ item.stars }}/5">
-                        {% for i in range(1, item.stars) %}★{% endfor %}
-                    </div>
+                    {#
+                        The switch governs the whole grid, so it is read here
+                        rather than per row. `range(1, 0)` counts DOWN to 1 and
+                        would print a star for a rating of zero, which is why
+                        the count is guarded as well as the switch.
+                    #}
+                    {% if show_stars and item.stars > 0 %}
+                        <div class="testimonial-card__stars" aria-label="{{ item.stars }}/5">
+                            {% for i in range(1, item.stars) %}★{% endfor %}
+                        </div>
+                    {% endif %}
                     <blockquote>{{ item.text }}</blockquote>
                     <figcaption>{{ item.name }}</figcaption>
                 </figure>
