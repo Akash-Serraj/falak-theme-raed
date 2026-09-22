@@ -18,6 +18,9 @@
 
     The tag goes on the <img>, not on .image-text__media: a wrapper's default
     binding is text, so the image URL would be written into it as a caption.
+
+    Styleable parts: `body` on .image-text__body. The title, text, button and
+    image are styled through their existing data-falak-field tags.
 #}
 <section class="block block--image-text" id="image-text-{{ position }}" {{ falak_section() }}>
     <div class="container">
@@ -25,7 +28,7 @@
             <div class="image-text__media">
                 <img data-falak-field="image" data-falak-label="{{ trans('editor.field.image') }}" src="{{ component.image }}" alt="{{ component.title|default('') }}" loading="lazy">
             </div>
-            <div class="image-text__body">
+            <div class="image-text__body" data-falak-part="body">
                 {% if component.title %}<h2 data-falak-field="title" data-falak-label="{{ trans('editor.field.title') }}">{{ component.title }}</h2>{% endif %}
                 {% if component.text %}<p data-falak-field="text" data-falak-label="{{ trans('editor.field.text') }}">{{ component.text }}</p>{% endif %}
                 {% if component.button_text and component.button_url %}

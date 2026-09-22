@@ -16,6 +16,13 @@
     bind="none" keeps it selectable in the preview while leaving the editing to
     the panel; without it the customizer would write the whole list into the
     slide as text the first time the merchant touched that field.
+
+    Styleable parts — every slide shares one rule, so styling the title styles
+    all of them, which is what "the slide titles" means.
+    | slide_content | .hero-slider__content |
+    | slide_title   | each slide's h2       |
+    | slide_text    | each slide's p        |
+    | slide_button  | each slide's a.btn    |
 #}
 <section class="block block--hero-slider" id="hero-slider-{{ position }}" {{ falak_section() }}>
     <div class="hero-slider">
@@ -23,11 +30,11 @@
             <div class="hero-slider__slide{{ loop.first ? ' is-active' : '' }}" data-falak-field="slides" data-falak-label="{{ trans('editor.field.slides') }}" data-falak-bind="none">
                 <img class="hero-slider__img" src="{{ slide.image }}"
                      alt="{{ slide.title|default('') }}"{{ loop.first ? '' : ' loading="lazy"' }}>
-                <div class="hero-slider__content container">
-                    {% if slide.title %}<h2>{{ slide.title }}</h2>{% endif %}
-                    {% if slide.description %}<p>{{ slide.description }}</p>{% endif %}
+                <div class="hero-slider__content container" data-falak-part="slide_content">
+                    {% if slide.title %}<h2 data-falak-part="slide_title">{{ slide.title }}</h2>{% endif %}
+                    {% if slide.description %}<p data-falak-part="slide_text">{{ slide.description }}</p>{% endif %}
                     {% if slide.button_text|default(null) and slide.button_url|default(null) %}
-                        <a class="btn btn--primary" href="{{ slide.button_url }}">{{ slide.button_text }}</a>
+                        <a class="btn btn--primary" data-falak-part="slide_button" href="{{ slide.button_url }}">{{ slide.button_text }}</a>
                     {% endif %}
                 </div>
             </div>

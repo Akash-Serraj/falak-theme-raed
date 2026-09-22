@@ -13,6 +13,9 @@
     | .feature-card   | data-falak-field="items" data-falak-bind="none" |
 
     `items` is a collection — see bind="none" in the README.
+
+    Styleable parts: `card_icon`, `card_title`, `card_text` inside each card;
+    the card itself is styled through its data-falak-field="items" tag.
 #}
 <section class="block block--features" id="features-{{ position }}" {{ falak_section() }}>
     <div class="container">
@@ -23,11 +26,11 @@
         <div class="features-grid">
             {% for item in component.items %}
                 <div class="feature-card" data-falak-field="items" data-falak-label="{{ trans('editor.field.items') }}" data-falak-bind="none">
-                    <div class="feature-card__icon" aria-hidden="true">
+                    <div class="feature-card__icon" data-falak-part="card_icon" aria-hidden="true">
                         {% if item.icon %}<img src="{{ item.icon }}" alt="">{% else %}✦{% endif %}
                     </div>
-                    <h3>{{ item.title }}</h3>
-                    {% if item.text %}<p>{{ item.text }}</p>{% endif %}
+                    <h3 data-falak-part="card_title">{{ item.title }}</h3>
+                    {% if item.text %}<p data-falak-part="card_text">{{ item.text }}</p>{% endif %}
                 </div>
             {% endfor %}
         </div>

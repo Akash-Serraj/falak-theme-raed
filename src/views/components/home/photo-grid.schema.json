@@ -15,8 +15,29 @@
         {
             "id": "title",
             "label": {
-                "ar": "العنوان",
-                "en": "Title"
+                "ar": "عنوان القسم",
+                "en": "Section title"
+            }
+        },
+        {
+            "id": "items",
+            "label": {
+                "ar": "البلاطة",
+                "en": "Tile"
+            },
+            "properties": [
+                "border_radius",
+                "border_width",
+                "border_color",
+                "max_width",
+                "align_self"
+            ]
+        },
+        {
+            "id": "caption",
+            "label": {
+                "ar": "التعليق",
+                "en": "Caption"
             }
         }
     ],

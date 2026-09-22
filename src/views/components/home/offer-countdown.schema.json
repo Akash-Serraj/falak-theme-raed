@@ -13,11 +13,42 @@
     ],
     "styleable": [
         {
-            "id": "title",
+            "id": "heading",
             "label": {
                 "ar": "العنوان",
-                "en": "Title"
-            }
+                "en": "Headline"
+            },
+            "properties": [
+                "font_size",
+                "font_weight",
+                "color"
+            ]
+        },
+        {
+            "id": "copy",
+            "label": {
+                "ar": "الوصف",
+                "en": "Description"
+            },
+            "properties": [
+                "font_size",
+                "font_weight",
+                "color"
+            ]
+        },
+        {
+            "id": "cta",
+            "label": {
+                "ar": "الزر",
+                "en": "Button"
+            },
+            "properties": [
+                "font_size",
+                "font_weight",
+                "color",
+                "background_color",
+                "border_radius"
+            ]
         }
     ],
     "fields": [

@@ -7,27 +7,76 @@
     },
     "icon": "mail-send-line",
     "is_default": false,
-    "areas": ["home", "pages"],
+    "areas": [
+        "home",
+        "pages"
+    ],
     "styleable": [
-        { "id": "title", "label": { "ar": "العنوان", "en": "Title" } },
-        { "id": "subtitle", "label": { "ar": "العنوان الفرعي", "en": "Subtitle" } }
+        {
+            "id": "box",
+            "label": {
+                "ar": "صندوق المحتوى",
+                "en": "Content box"
+            },
+            "properties": [
+                "max_width",
+                "align_self",
+                "text_align",
+                "padding_block",
+                "padding_inline",
+                "background_color",
+                "border_radius",
+                "border_width",
+                "border_color"
+            ]
+        },
+        {
+            "id": "title",
+            "label": {
+                "ar": "العنوان",
+                "en": "Title"
+            }
+        },
+        {
+            "id": "subtitle",
+            "label": {
+                "ar": "العنوان الفرعي",
+                "en": "Subtitle"
+            }
+        },
+        {
+            "id": "note",
+            "label": {
+                "ar": "الملاحظة",
+                "en": "Note"
+            }
+        }
     ],
     "fields": [
         {
             "id": "title",
             "type": "string",
             "format": "text",
-            "label": { "ar": "عنوان القسم", "en": "Section title" },
+            "label": {
+                "ar": "عنوان القسم",
+                "en": "Section title"
+            },
             "multilanguage": true,
             "required": false,
             "maxLength": 100,
-            "value": { "ar": "النشرة البريدية", "en": "Join our newsletter" }
+            "value": {
+                "ar": "النشرة البريدية",
+                "en": "Join our newsletter"
+            }
         },
         {
             "id": "subtitle",
             "type": "string",
             "format": "text",
-            "label": { "ar": "نص فرعي", "en": "Subtitle" },
+            "label": {
+                "ar": "نص فرعي",
+                "en": "Subtitle"
+            },
             "multilanguage": true,
             "required": false,
             "maxLength": 160,
@@ -40,7 +89,10 @@
             "id": "button_text",
             "type": "string",
             "format": "text",
-            "label": { "ar": "نص الزر", "en": "Button label" },
+            "label": {
+                "ar": "نص الزر",
+                "en": "Button label"
+            },
             "description": {
                 "ar": "اتركه فارغاً لاستخدام النص الافتراضي للقالب",
                 "en": "Leave empty to use the theme's default label"
@@ -53,7 +105,10 @@
             "id": "note",
             "type": "string",
             "format": "text",
-            "label": { "ar": "ملاحظة صغيرة", "en": "Small print" },
+            "label": {
+                "ar": "ملاحظة صغيرة",
+                "en": "Small print"
+            },
             "description": {
                 "ar": "يظهر أسفل النموذج، مثل: لن نرسل لك رسائل مزعجة",
                 "en": "Shown under the form, e.g. \"No spam. Unsubscribe anytime.\""

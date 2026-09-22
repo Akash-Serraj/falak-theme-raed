@@ -8,22 +8,36 @@
     "icon": "image-carousel-line",
     "is_default": true,
     "default_sort": 10,
-    "areas": ["home"],
+    "areas": [
+        "home"
+    ],
     "fields": [
         {
             "id": "slides",
             "type": "collection",
             "format": "collection",
-            "label": { "ar": "الصور", "en": "Slides" },
-            "item_label": { "ar": "صورة", "en": "Slide" },
+            "label": {
+                "ar": "الصور",
+                "en": "Slides"
+            },
+            "item_label": {
+                "ar": "صورة",
+                "en": "Slide"
+            },
             "required": true,
             "minLength": 1,
             "maxLength": 10,
             "value": [
                 {
                     "slides.image": "https://falakcart-bucket.s3.ap-south-1.amazonaws.com/basic_settings/store_images/c9oLVffMPv78SwYejBHLdWZWl8gt2zhkaIQgld3S.png",
-                    "slides.title": { "ar": "روِّج لمنتجاتك هنا", "en": "Promote your products here" },
-                    "slides.description": { "ar": "اعرض المنتجات التي تود إبرازها لزوّار متجرك", "en": "Showcase the products you want your visitors to see" }
+                    "slides.title": {
+                        "ar": "روِّج لمنتجاتك هنا",
+                        "en": "Promote your products here"
+                    },
+                    "slides.description": {
+                        "ar": "اعرض المنتجات التي تود إبرازها لزوّار متجرك",
+                        "en": "Showcase the products you want your visitors to see"
+                    }
                 }
             ],
             "fields": [
@@ -31,15 +45,24 @@
                     "id": "slides.image",
                     "type": "string",
                     "format": "image",
-                    "label": { "ar": "صورة البنر", "en": "Banner image" },
-                    "description": { "ar": "المقاس المناسب 1400×580 بكسل", "en": "Recommended size 1400x580 px" },
+                    "label": {
+                        "ar": "صورة البنر",
+                        "en": "Banner image"
+                    },
+                    "description": {
+                        "ar": "المقاس المناسب 1400×580 بكسل",
+                        "en": "Recommended size 1400x580 px"
+                    },
                     "required": true
                 },
                 {
                     "id": "slides.title",
                     "type": "string",
                     "format": "text",
-                    "label": { "ar": "عنوان رئيسي", "en": "Main title" },
+                    "label": {
+                        "ar": "عنوان رئيسي",
+                        "en": "Main title"
+                    },
                     "multilanguage": true,
                     "required": false,
                     "maxLength": 100
@@ -48,7 +71,10 @@
                     "id": "slides.description",
                     "type": "string",
                     "format": "textarea",
-                    "label": { "ar": "نص إضافي", "en": "Description" },
+                    "label": {
+                        "ar": "نص إضافي",
+                        "en": "Description"
+                    },
                     "multilanguage": true,
                     "required": false,
                     "maxLength": 255
@@ -57,7 +83,10 @@
                     "id": "slides.button_text",
                     "type": "string",
                     "format": "text",
-                    "label": { "ar": "نص الزر", "en": "Button label" },
+                    "label": {
+                        "ar": "نص الزر",
+                        "en": "Button label"
+                    },
                     "multilanguage": true,
                     "required": false,
                     "maxLength": 40
@@ -66,10 +95,66 @@
                     "id": "slides.button_url",
                     "type": "string",
                     "format": "text",
-                    "label": { "ar": "رابط الزر", "en": "Button link" },
+                    "label": {
+                        "ar": "رابط الزر",
+                        "en": "Button link"
+                    },
                     "required": false,
                     "maxLength": 255
                 }
+            ]
+        }
+    ],
+    "styleable": [
+        {
+            "id": "slide_content",
+            "label": {
+                "ar": "صندوق محتوى الشريحة",
+                "en": "Slide content box"
+            },
+            "properties": [
+                "max_width",
+                "align_self",
+                "text_align",
+                "padding_block",
+                "padding_inline",
+                "background_color",
+                "border_radius",
+                "border_width",
+                "border_color"
+            ]
+        },
+        {
+            "id": "slide_title",
+            "label": {
+                "ar": "عنوان الشريحة",
+                "en": "Slide title"
+            }
+        },
+        {
+            "id": "slide_text",
+            "label": {
+                "ar": "نص الشريحة",
+                "en": "Slide text"
+            }
+        },
+        {
+            "id": "slide_button",
+            "label": {
+                "ar": "زر الشريحة",
+                "en": "Slide button"
+            },
+            "properties": [
+                "font_size",
+                "font_weight",
+                "color",
+                "background_color",
+                "border_radius",
+                "border_width",
+                "border_color",
+                "padding_block",
+                "padding_inline",
+                "align_self"
             ]
         }
     ]

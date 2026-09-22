@@ -16,8 +16,52 @@
         {
             "id": "title",
             "label": {
-                "ar": "العنوان",
-                "en": "Title"
+                "ar": "عنوان القسم",
+                "en": "Section title"
+            }
+        },
+        {
+            "id": "items",
+            "label": {
+                "ar": "البطاقة",
+                "en": "Card"
+            },
+            "properties": [
+                "max_width",
+                "align_self",
+                "text_align",
+                "padding_block",
+                "padding_inline",
+                "background_color",
+                "border_radius",
+                "border_width",
+                "border_color"
+            ]
+        },
+        {
+            "id": "stars",
+            "label": {
+                "ar": "النجوم",
+                "en": "Stars"
+            },
+            "properties": [
+                "font_size",
+                "color",
+                "text_align"
+            ]
+        },
+        {
+            "id": "quote",
+            "label": {
+                "ar": "الاقتباس",
+                "en": "Quote"
+            }
+        },
+        {
+            "id": "author",
+            "label": {
+                "ar": "الكاتب",
+                "en": "Author"
             }
         }
     ],

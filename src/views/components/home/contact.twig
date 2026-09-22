@@ -23,6 +23,8 @@
     a theme that says nothing gets the common form. Emitting `show-subject`
     when the merchant switch is ON would leave the field showing when it is
     OFF, because the absence of that attribute is not "hidden".
+
+    Styleable parts: `form` on .contact__form.
 #}
 <section class="block block--contact" id="contact-{{ position }}" {{ falak_section() }}>
     <div class="container">
@@ -41,7 +43,7 @@
                 </div>
             {% endif %}
 
-            <div class="contact__form">
+            <div class="contact__form" data-falak-part="form">
                 <falak-contact-form {{ component.show_subject is defined and not component.show_subject ? 'hide-subject' : '' }}></falak-contact-form>
             </div>
         </div>

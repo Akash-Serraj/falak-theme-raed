@@ -7,16 +7,42 @@
     },
     "icon": "video-line",
     "is_default": false,
-    "areas": ["home", "pages"],
+    "areas": [
+        "home",
+        "pages"
+    ],
     "styleable": [
-        { "id": "title", "label": { "ar": "العنوان", "en": "Title" } }
+        {
+            "id": "title",
+            "label": {
+                "ar": "عنوان القسم",
+                "en": "Section title"
+            }
+        },
+        {
+            "id": "embed_url",
+            "label": {
+                "ar": "إطار الفيديو",
+                "en": "Video frame"
+            },
+            "properties": [
+                "max_width",
+                "align_self",
+                "border_radius",
+                "border_width",
+                "border_color"
+            ]
+        }
     ],
     "fields": [
         {
             "id": "title",
             "type": "string",
             "format": "text",
-            "label": { "ar": "عنوان القسم", "en": "Section title" },
+            "label": {
+                "ar": "عنوان القسم",
+                "en": "Section title"
+            },
             "multilanguage": true,
             "required": false,
             "maxLength": 100
@@ -25,8 +51,14 @@
             "id": "embed_url",
             "type": "string",
             "format": "text",
-            "label": { "ar": "رابط الفيديو", "en": "Video URL" },
-            "description": { "ar": "الصق أي رابط يوتيوب أو فيميو — يُحوَّل تلقائيًا لصيغة العرض.", "en": "Paste any YouTube or Vimeo link — it is converted to the embeddable form automatically." },
+            "label": {
+                "ar": "رابط الفيديو",
+                "en": "Video URL"
+            },
+            "description": {
+                "ar": "الصق أي رابط يوتيوب أو فيميو — يُحوَّل تلقائيًا لصيغة العرض.",
+                "en": "Paste any YouTube or Vimeo link — it is converted to the embeddable form automatically."
+            },
             "required": true,
             "maxLength": 255
         }

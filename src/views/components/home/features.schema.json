@@ -8,16 +8,74 @@
     "icon": "star-line",
     "is_default": true,
     "default_sort": 20,
-    "areas": ["home", "pages"],
+    "areas": [
+        "home",
+        "pages"
+    ],
     "styleable": [
-        { "id": "title", "label": { "ar": "العنوان", "en": "Title" } }
+        {
+            "id": "title",
+            "label": {
+                "ar": "عنوان القسم",
+                "en": "Section title"
+            }
+        },
+        {
+            "id": "items",
+            "label": {
+                "ar": "البطاقة",
+                "en": "Card"
+            },
+            "properties": [
+                "max_width",
+                "align_self",
+                "text_align",
+                "padding_block",
+                "padding_inline",
+                "background_color",
+                "border_radius",
+                "border_width",
+                "border_color"
+            ]
+        },
+        {
+            "id": "card_icon",
+            "label": {
+                "ar": "أيقونة البطاقة",
+                "en": "Card icon"
+            },
+            "properties": [
+                "max_width",
+                "align_self",
+                "border_radius",
+                "border_width",
+                "border_color"
+            ]
+        },
+        {
+            "id": "card_title",
+            "label": {
+                "ar": "عنوان البطاقة",
+                "en": "Card title"
+            }
+        },
+        {
+            "id": "card_text",
+            "label": {
+                "ar": "نص البطاقة",
+                "en": "Card text"
+            }
+        }
     ],
     "fields": [
         {
             "id": "title",
             "type": "string",
             "format": "text",
-            "label": { "ar": "عنوان القسم", "en": "Section title" },
+            "label": {
+                "ar": "عنوان القسم",
+                "en": "Section title"
+            },
             "multilanguage": true,
             "required": false,
             "maxLength": 100
@@ -26,26 +84,50 @@
             "id": "items",
             "type": "collection",
             "format": "collection",
-            "label": { "ar": "المميزات", "en": "Features" },
-            "item_label": { "ar": "ميزة", "en": "Feature" },
+            "label": {
+                "ar": "المميزات",
+                "en": "Features"
+            },
+            "item_label": {
+                "ar": "ميزة",
+                "en": "Feature"
+            },
             "required": true,
             "minLength": 1,
             "maxLength": 6,
             "value": [
                 {
                     "items.icon": null,
-                    "items.title": { "ar": "شحن سريع", "en": "Fast shipping" },
-                    "items.text": { "ar": "توصيل لجميع مدن المملكة", "en": "Delivery to every city" }
+                    "items.title": {
+                        "ar": "شحن سريع",
+                        "en": "Fast shipping"
+                    },
+                    "items.text": {
+                        "ar": "توصيل لجميع مدن المملكة",
+                        "en": "Delivery to every city"
+                    }
                 },
                 {
                     "items.icon": null,
-                    "items.title": { "ar": "دفع آمن", "en": "Secure payment" },
-                    "items.text": { "ar": "جميع وسائل الدفع مدعومة", "en": "All payment methods supported" }
+                    "items.title": {
+                        "ar": "دفع آمن",
+                        "en": "Secure payment"
+                    },
+                    "items.text": {
+                        "ar": "جميع وسائل الدفع مدعومة",
+                        "en": "All payment methods supported"
+                    }
                 },
                 {
                     "items.icon": null,
-                    "items.title": { "ar": "دعم متواصل", "en": "Always-on support" },
-                    "items.text": { "ar": "فريقنا جاهز لمساعدتك", "en": "Our team is ready to help" }
+                    "items.title": {
+                        "ar": "دعم متواصل",
+                        "en": "Always-on support"
+                    },
+                    "items.text": {
+                        "ar": "فريقنا جاهز لمساعدتك",
+                        "en": "Our team is ready to help"
+                    }
                 }
             ],
             "fields": [
@@ -53,14 +135,20 @@
                     "id": "items.icon",
                     "type": "string",
                     "format": "image",
-                    "label": { "ar": "أيقونة", "en": "Icon" },
+                    "label": {
+                        "ar": "أيقونة",
+                        "en": "Icon"
+                    },
                     "required": false
                 },
                 {
                     "id": "items.title",
                     "type": "string",
                     "format": "text",
-                    "label": { "ar": "العنوان", "en": "Title" },
+                    "label": {
+                        "ar": "العنوان",
+                        "en": "Title"
+                    },
                     "multilanguage": true,
                     "required": true,
                     "maxLength": 60
@@ -69,7 +157,10 @@
                     "id": "items.text",
                     "type": "string",
                     "format": "textarea",
-                    "label": { "ar": "النص", "en": "Text" },
+                    "label": {
+                        "ar": "النص",
+                        "en": "Text"
+                    },
                     "multilanguage": true,
                     "required": false,
                     "maxLength": 160

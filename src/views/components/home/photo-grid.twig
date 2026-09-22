@@ -14,6 +14,9 @@
 
     Both sides of the {% if item.url %} carry the tag, or half the tiles would
     be unselectable depending on whether the merchant set a link.
+
+    Styleable parts: `caption` on the tile caption, in both the linked and the
+    plain branch. The tile is styled through its data-falak-field="items" tag.
 #}
 <section class="block block--photo-grid" id="photo-grid-{{ position }}" {{ falak_section() }}>
     <div class="container">
@@ -26,12 +29,12 @@
                 {% if item.url|default(null) %}
                     <a class="photo-tile" data-falak-field="items" data-falak-label="{{ trans('editor.field.items') }}" data-falak-bind="none" href="{{ item.url }}">
                         <img src="{{ item.image }}" alt="{{ item.title|default('') }}" loading="lazy">
-                        {% if item.title %}<span class="photo-tile__caption">{{ item.title }}</span>{% endif %}
+                        {% if item.title %}<span class="photo-tile__caption" data-falak-part="caption">{{ item.title }}</span>{% endif %}
                     </a>
                 {% else %}
                     <div class="photo-tile" data-falak-field="items" data-falak-label="{{ trans('editor.field.items') }}" data-falak-bind="none">
                         <img src="{{ item.image }}" alt="{{ item.title|default('') }}" loading="lazy">
-                        {% if item.title %}<span class="photo-tile__caption">{{ item.title }}</span>{% endif %}
+                        {% if item.title %}<span class="photo-tile__caption" data-falak-part="caption">{{ item.title }}</span>{% endif %}
                     </div>
                 {% endif %}
             {% endfor %}

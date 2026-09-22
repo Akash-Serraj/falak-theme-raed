@@ -6474,3 +6474,66 @@ a.photo-tile:hover img { transform: scale(1.04); }
 .product-single__size-guide { margin-block: 0.25rem 0.75rem; }
 .product-single__reviews > h2 { margin-block-end: 1rem; }
 .product-single__reviews-summary { padding: 1.25rem; margin-block-end: 1.5rem; border: 1px solid var(--color-border); border-radius: var(--radius); background: #fff; }
+
+/* ========================================================================
+   Customizer style hooks
+   ========================================================================
+   Two jobs, both of them the theme's half of the styling contract.
+
+   1. "Element alignment" moves a box with auto margins, and an inline box
+      ignores those. Every styleable button here is inline-flex, so it is made
+      block-level with a fit-content width — visually identical, since each
+      already sits on its own line — which gives those margins something to
+      push against.
+
+   2. SDK components render their own markup, so the theme cannot tag a node
+      inside them. Those roles are declared with no element at all and reach
+      their target through the custom properties the platform publishes on the
+      section root. Each fallback below is the value that rule had before, so a
+      control the merchant has not touched changes nothing.
+
+      `revert` is the fallback where the theme never set the property itself:
+      it hands the declaration back to the browser's own value, which is what
+      was rendering before this rule existed.
+   ======================================================================== */
+
+.hero-slider__content .btn,
+.image-text__body .btn,
+.video-card__caption .btn {
+    display: flex;
+    inline-size: fit-content;
+}
+
+/* offer-countdown — <falak-countdown> */
+.block--countdown .f-countdown__title {
+    font-size: var(--falak-el-heading-size, clamp(1.4rem, 3vw, 2rem));
+    font-weight: var(--falak-el-heading-weight, revert);
+    color: var(--falak-el-heading-color, inherit);
+}
+
+.block--countdown .f-countdown__description {
+    font-size: var(--falak-el-copy-size, revert);
+    font-weight: var(--falak-el-copy-weight, revert);
+    color: var(--falak-el-copy-color, inherit);
+}
+
+.block--countdown .f-countdown__button {
+    font-size: var(--falak-el-cta-size, revert);
+    font-weight: var(--falak-el-cta-weight, revert);
+    color: var(--falak-el-cta-color, revert);
+    background-color: var(--falak-el-cta-bg, revert);
+    border-radius: var(--falak-el-cta-radius, revert);
+}
+
+/* products-slider — <falak-products-slider> */
+.block--products-slider .f-slider__title {
+    font-size: var(--falak-el-heading-size, 1.25rem);
+    font-weight: var(--falak-el-heading-weight, 700);
+    color: var(--falak-el-heading-color, revert);
+}
+
+/* products — the cards inside <falak-products-list> */
+.block--products .f-card__inner {
+    border-radius: var(--falak-el-card-radius, revert);
+    background-color: var(--falak-el-card-bg, revert);
+}

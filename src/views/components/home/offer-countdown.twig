@@ -29,6 +29,11 @@
     It carries no `data-falak-bind` because toggling it adds and removes
     attributes rather than changing one, which the attribute binder cannot
     express — so the preview reloads on save instead of updating as you type.
+
+    Styleable roles have NO element here: <falak-countdown> renders its own
+    markup, so `heading`, `copy` and `cta` reach it through the
+    --falak-el-* custom properties, read back in app.css under
+    "Customizer style hooks".
 #}
 {#
     Absent means shown: a countdown placed before this switch existed has no

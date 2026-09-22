@@ -13,11 +13,16 @@
     ],
     "styleable": [
         {
-            "id": "title",
+            "id": "heading",
             "label": {
-                "ar": "العنوان",
-                "en": "Title"
-            }
+                "ar": "عنوان الشريط",
+                "en": "Slider title"
+            },
+            "properties": [
+                "font_size",
+                "font_weight",
+                "color"
+            ]
         }
     ],
     "fields": [

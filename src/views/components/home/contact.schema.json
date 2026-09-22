@@ -7,44 +7,109 @@
     },
     "icon": "mail-line",
     "is_default": false,
-    "areas": ["home", "pages"],
+    "areas": [
+        "home",
+        "pages"
+    ],
     "styleable": [
-        { "id": "title", "label": { "ar": "العنوان", "en": "Title" } },
-        { "id": "subtitle", "label": { "ar": "العنوان الفرعي", "en": "Subtitle" } }
+        {
+            "id": "title",
+            "label": {
+                "ar": "عنوان القسم",
+                "en": "Section title"
+            }
+        },
+        {
+            "id": "subtitle",
+            "label": {
+                "ar": "العنوان الفرعي",
+                "en": "Subtitle"
+            }
+        },
+        {
+            "id": "image",
+            "label": {
+                "ar": "الصورة",
+                "en": "Image"
+            },
+            "properties": [
+                "max_width",
+                "align_self",
+                "border_radius",
+                "border_width",
+                "border_color"
+            ]
+        },
+        {
+            "id": "form",
+            "label": {
+                "ar": "صندوق النموذج",
+                "en": "Form box"
+            },
+            "properties": [
+                "max_width",
+                "align_self",
+                "text_align",
+                "padding_block",
+                "padding_inline",
+                "background_color",
+                "border_radius",
+                "border_width",
+                "border_color"
+            ]
+        }
     ],
     "fields": [
         {
             "id": "title",
             "type": "string",
             "format": "text",
-            "label": { "ar": "عنوان القسم", "en": "Section title" },
+            "label": {
+                "ar": "عنوان القسم",
+                "en": "Section title"
+            },
             "multilanguage": true,
             "required": false,
             "maxLength": 100,
-            "value": { "ar": "تواصل معنا", "en": "Get in touch" }
+            "value": {
+                "ar": "تواصل معنا",
+                "en": "Get in touch"
+            }
         },
         {
             "id": "subtitle",
             "type": "string",
             "format": "text",
-            "label": { "ar": "نص فرعي", "en": "Subtitle" },
+            "label": {
+                "ar": "نص فرعي",
+                "en": "Subtitle"
+            },
             "multilanguage": true,
             "required": false,
             "maxLength": 140,
-            "value": { "ar": "سنرد عليك في أقرب وقت", "en": "We will get back to you shortly" }
+            "value": {
+                "ar": "سنرد عليك في أقرب وقت",
+                "en": "We will get back to you shortly"
+            }
         },
         {
             "id": "image",
             "type": "string",
             "format": "image",
-            "label": { "ar": "صورة جانبية", "en": "Side image" },
+            "label": {
+                "ar": "صورة جانبية",
+                "en": "Side image"
+            },
             "required": false
         },
         {
             "id": "show_subject",
             "type": "boolean",
             "format": "switch",
-            "label": { "ar": "إظهار حقل الموضوع", "en": "Show the subject field" },
+            "label": {
+                "ar": "إظهار حقل الموضوع",
+                "en": "Show the subject field"
+            },
             "value": true
         }
     ]

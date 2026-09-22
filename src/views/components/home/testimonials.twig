@@ -14,6 +14,9 @@
     | figure.testimonial-card | data-falak-field="items" data-falak-bind="none" |
 
     `items` is a collection — see bind="none" in the README.
+
+    Styleable parts: `stars`, `quote`, `author` inside each card; the card
+    itself is styled through its data-falak-field="items" tag.
 #}
 <section class="block block--testimonials" id="testimonials-{{ position }}" {{ falak_section() }}>
     <div class="container">
@@ -37,12 +40,12 @@
                         the count is guarded as well as the switch.
                     #}
                     {% if show_stars and item.stars > 0 %}
-                        <div class="testimonial-card__stars" aria-label="{{ item.stars }}/5">
+                        <div class="testimonial-card__stars" data-falak-part="stars" aria-label="{{ item.stars }}/5">
                             {% for i in range(1, item.stars) %}★{% endfor %}
                         </div>
                     {% endif %}
-                    <blockquote>{{ item.text }}</blockquote>
-                    <figcaption>{{ item.name }}</figcaption>
+                    <blockquote data-falak-part="quote">{{ item.text }}</blockquote>
+                    <figcaption data-falak-part="author">{{ item.name }}</figcaption>
                 </figure>
             {% endfor %}
         </div>

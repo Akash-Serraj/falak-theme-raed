@@ -16,9 +16,20 @@
         {
             "id": "title",
             "label": {
-                "ar": "العنوان",
-                "en": "Title"
+                "ar": "عنوان القسم",
+                "en": "Section title"
             }
+        },
+        {
+            "id": "card",
+            "label": {
+                "ar": "بطاقة المنتج",
+                "en": "Product card"
+            },
+            "properties": [
+                "border_radius",
+                "background_color"
+            ]
         }
     ],
     "fields": [

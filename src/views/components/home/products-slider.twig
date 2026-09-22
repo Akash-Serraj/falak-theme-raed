@@ -22,6 +22,10 @@
     The title lives on the component rather than in this template, because the
     slider renders its own header row alongside the arrows. It is tagged for the
     customizer all the same.
+
+    The `heading` styleable role has no element: <falak-products-slider>
+    renders its own title, so the role reaches it through the --falak-el-*
+    custom properties, read back in app.css under "Customizer style hooks".
 #}
 <section class="block block--products-slider" id="products-slider-{{ position }}" {{ falak_section() }}>
     <div class="container">

@@ -12,6 +12,8 @@
 
     Customizer bindings — full rules in README, "Customizer annotations".
     Collection items take bind="none": their value is a list, the panel edits it.
+
+    Styleable parts: `card`, `card_title`, `card_button` inside each video card.
 #}
 <section class="block block--videos-slider" id="videos-slider-{{ position }}" {{ falak_section() }}>
     <div class="container">
@@ -23,7 +25,7 @@
                       data-falak-field="items" data-falak-label="{{ trans('editor.field.items') }}" data-falak-bind="none">
             <div slot="items">
                 {% for item in component.items|default([]) %}
-                    <div class="video-card">
+                    <div class="video-card" data-falak-part="card">
                         <video class="video-card__media" src="{{ item.video }}"
                                {% if item.poster %}poster="{{ item.poster }}"{% endif %}
                                muted loop playsinline preload="metadata"
@@ -37,9 +39,9 @@
 
                         {% if item.title or item.url %}
                             <div class="video-card__caption">
-                                {% if item.title %}<span class="video-card__title">{{ item.title }}</span>{% endif %}
+                                {% if item.title %}<span class="video-card__title" data-falak-part="card_title">{{ item.title }}</span>{% endif %}
                                 {% if item.url %}
-                                    <a class="video-card__link btn btn--primary" href="{{ item.url }}">{{ item.button_text|default(trans('offer.shop_now')) }}</a>
+                                    <a class="video-card__link btn btn--primary" data-falak-part="card_button" href="{{ item.url }}">{{ item.button_text|default(trans('offer.shop_now')) }}</a>
                                 {% endif %}
                             </div>
                         {% endif %}

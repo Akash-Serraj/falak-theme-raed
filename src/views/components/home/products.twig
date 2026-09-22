@@ -26,6 +26,10 @@
 
     The grid itself carries no binding: its fields are settings rather than
     text, and the platform already makes the whole component selectable.
+
+    The `card` styleable role has no element: <falak-products-list> renders
+    its own cards, so the role reaches them through the --falak-el-* custom
+    properties, read back in app.css under "Customizer style hooks".
 #}
 <section class="block block--products" id="products-{{ position }}" {{ falak_section() }}>
     <div class="container">

@@ -24,10 +24,12 @@
     an element with only bind-attr-* bindings needs it, or the customizer has
     nothing to re-render as the merchant types. Left empty the component falls
     back to footer.newsletter_submit, which is what most stores want.
+
+    Styleable parts: `box` on .newsletter.
 #}
 <section class="block block--newsletter" id="newsletter-{{ position }}" {{ falak_section() }}>
     <div class="container">
-        <div class="newsletter">
+        <div class="newsletter" data-falak-part="box">
             {% if component.title %}
                 <h2 class="block__title" data-falak-field="title" data-falak-label="{{ trans('editor.field.title') }}">{{ component.title }}</h2>
             {% endif %}
