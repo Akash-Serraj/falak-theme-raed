@@ -13,6 +13,22 @@
     ],
     "styleable": [
         {
+            "id": "content",
+            "label": {
+                "ar": "صندوق المحتوى",
+                "en": "Content box"
+            },
+            "properties": [
+                "max_width",
+                "align_self",
+                "text_align",
+                "padding_block",
+                "padding_inline",
+                "background_color",
+                "border_radius"
+            ]
+        },
+        {
             "id": "title",
             "label": {
                 "ar": "العنوان",
@@ -29,12 +45,20 @@
         {
             "id": "button_text",
             "label": {
-                "ar": "نص الزر",
-                "en": "Button label"
+                "ar": "الزر",
+                "en": "Button"
             },
             "properties": [
                 "font_size",
-                "font_weight"
+                "font_weight",
+                "color",
+                "background_color",
+                "border_radius",
+                "border_width",
+                "border_color",
+                "padding_block",
+                "padding_inline",
+                "align_self"
             ]
         }
     ],

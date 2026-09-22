@@ -91,8 +91,13 @@ a { color: var(--color-primary); }
     background: color-mix(in srgb, var(--color-primary) 22%, var(--color-bg));
 }
 
+/* The customizer's section-level "Content width" publishes --falak-container on
+   the section root; every .container inside one inherits it. Without this line
+   the control is in the panel and changes nothing, which is worse than not
+   offering it. The fallback is the theme's own width, so an unstyled section is
+   exactly as it was. */
 .container {
-    max-width: var(--container);
+    max-width: var(--falak-container, var(--container));
     margin-inline: auto;
     padding-inline: 1rem;
 }
@@ -4744,12 +4749,16 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
     object-fit: cover;
 }
 
-/* Scrim anchored to the reading side, so text stays legible on any photo. */
+/* Scrim anchored to the reading side, so text stays legible on any photo.
+   Dimmable from the customizer — see .banner::before for the contract. Worth
+   knowing before you drag it to 0: this scrim is what keeps the slide's text
+   readable over a bright photo. */
 .hero-slider__slide::after {
     content: '';
     position: absolute;
     inset: 0;
     background: linear-gradient(90deg, rgba(12, 14, 18, 0.66) 8%, rgba(12, 14, 18, 0.25) 55%, rgba(12, 14, 18, 0.05));
+    opacity: var(--falak-overlay, 100%);
 }
 
 [dir="rtl"] .hero-slider__slide::after {
@@ -4906,6 +4915,11 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
     position: absolute;
     inset: 0;
     background: linear-gradient(90deg, rgba(10, 12, 16, 0.55), rgba(10, 12, 16, 0.1));
+    /* The customizer's section-level "Background dimming" publishes
+       --falak-overlay on the section root; this scrim inherits it. 0 turns the
+       scrim off, and unset is 100% — the theme's own look, unchanged. `opacity`
+       takes a percentage directly, which is what the platform emits. */
+    opacity: var(--falak-overlay, 100%);
 }
 
 [dir="rtl"] .banner::before {
@@ -4920,6 +4934,15 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
 
 .banner__content h2 { margin-bottom: 0.5rem; }
 .banner__content p { margin: 0 0 1.25rem; opacity: 0.92; }
+
+/* The button is styleable, and "Element alignment" moves it with auto margins —
+   which an inline box ignores. Block-level with a fit-content width renders
+   identically to the inline-flex it replaces (it is already on its own line),
+   and gives those margins something to push against. */
+.banner__content .btn {
+    display: flex;
+    inline-size: fit-content;
+}
 
 /* offer countdown block — the band itself is <falak-countdown theme="…">, SDK-styled */
 .block--countdown falak-countdown { display: flex; }
