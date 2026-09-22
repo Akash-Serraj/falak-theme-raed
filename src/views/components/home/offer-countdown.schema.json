@@ -52,17 +52,16 @@
         {
             "id": "ends_at",
             "type": "string",
-            "format": "text",
+            "format": "datetime",
             "label": {
                 "ar": "ينتهي العرض في",
                 "en": "Offer ends at"
             },
             "description": {
-                "ar": "بالصيغة 2026-12-31 أو 2026-12-31 23:59 بتوقيت المتجر",
-                "en": "Format 2026-12-31 or 2026-12-31 23:59, in the store's time"
+                "ar": "بتوقيت المتجر",
+                "en": "In the store's time"
             },
             "required": true,
-            "maxLength": 25,
             "value": "2026-12-31 23:59"
         },
         {
@@ -121,39 +120,6 @@
                         "en": "Store colour"
                     },
                     "value": "primary"
-                }
-            ]
-        },
-        {
-            "id": "show_button",
-            "type": "boolean",
-            "format": "switch",
-            "label": {
-                "ar": "إظهار زر",
-                "en": "Show a button"
-            },
-            "description": {
-                "ar": "زر يظهر أسفل العداد.",
-                "en": "A button below the countdown."
-            },
-            "value": true
-        },
-        {
-            "id": "button_note",
-            "type": "static",
-            "format": "description",
-            "label": {
-                "ar": "عن الزر",
-                "en": "About the button"
-            },
-            "description": {
-                "ar": "اتركه فارغاً ليأخذ الزر نص القالب الافتراضي.",
-                "en": "Leave the label empty to use the theme default."
-            },
-            "conditions": [
-                {
-                    "id": "show_button",
-                    "value": true
                 }
             ]
         },

@@ -268,7 +268,8 @@
     /* ------------------------------------------------------ price filter */
     // <falak-price-range> only picks a range and emits it; reloading the
     // listing with it applied is the theme's job. Query-string only, so it
-    // works unchanged on both /products and /category/{id}.
+    // composes with every other filter, the category included — a category
+    // page is this same URL with category_id[] on it.
 
     /* ------------------------------------------------ listing: sort + filters drawer */
 

@@ -8,6 +8,26 @@
     blueprint's fields, so there is nothing to tag here.
 #}
 <footer class="site-footer{{ theme.settings.get('footer_is_dark') ? ' site-footer--dark' : '' }}">
+    {# Newsletter opt-in — a band across the top of the footer, switched from
+       the "Header & footer" panel (footer_newsletter_enabled).
+
+       <falak-newsletter> is an SDK component: it renders its own field,
+       button and aria-live status line, validates in the STORE'S language
+       rather than the browser's, and posts through
+       falak.newsletter.subscribe(). The theme only skins it — there is no
+       form to write here and nothing to wire up in app.js. #}
+    {% if theme.settings.get('footer_newsletter_enabled', true) %}
+        <div class="site-footer__newsletter">
+            <div class="container site-footer__newsletter-inner">
+                <h2 class="site-footer__newsletter-title">
+                    {{ theme.settings.get('footer_newsletter_title')|default(trans('footer.newsletter')) }}
+                </h2>
+
+                <falak-newsletter class="site-footer__newsletter-form"></falak-newsletter>
+            </div>
+        </div>
+    {% endif %}
+
     <div class="container">
         <div class="site-footer__inner">
             <div class="site-footer__brand">

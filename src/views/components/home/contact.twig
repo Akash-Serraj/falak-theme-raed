@@ -1,0 +1,49 @@
+{#
+    Contact form — merchant-placeable content block (home + builder pages).
+    | Variable               | Type    | Description                          |
+    | component.title        | ?string | section title, localized server-side |
+    | component.subtitle     | ?string | line under the title                 |
+    | component.image        | ?string | optional side image                  |
+    | component.show_subject | ?bool   | whether the subject field appears    |
+    | position               | int     |                                      |
+
+    Customizer bindings — full rules in README, "Customizer annotations".
+    | Element            | Tag                                  |
+    | h2.block__title    | data-falak-field="title"             |
+    | p.block__subtitle  | data-falak-field="subtitle"          |
+    | img.contact__image | data-falak-field="image"             |
+
+    <falak-contact-form> is an SDK component: it owns the fields, the
+    validation, the busy state and the success panel, and posts through
+    falak.contact.send() to /api/storefront/contact. This template only frames
+    it — every `contact.*` string it prints comes from src/locales/.
+
+    hide-subject, NOT show-subject. The component renders name, email, message,
+    phone and subject by default and takes hide-* to drop the optional two, so
+    a theme that says nothing gets the common form. Emitting `show-subject`
+    when the merchant switch is ON would leave the field showing when it is
+    OFF, because the absence of that attribute is not "hidden".
+#}
+<section class="block block--contact" id="contact-{{ position }}" {{ falak_section() }}>
+    <div class="container">
+        {% if component.title %}
+            <h2 class="block__title" data-falak-field="title" data-falak-label="{{ trans('editor.field.title') }}">{{ component.title }}</h2>
+        {% endif %}
+
+        {% if component.subtitle %}
+            <p class="block__subtitle" data-falak-field="subtitle" data-falak-label="{{ trans('editor.field.description') }}">{{ component.subtitle }}</p>
+        {% endif %}
+
+        <div class="contact{{ component.image ? '' : ' contact--single' }}">
+            {% if component.image %}
+                <div class="contact__media">
+                    <img class="contact__image" data-falak-field="image" data-falak-label="{{ trans('editor.field.image') }}" src="{{ component.image }}" alt="" loading="lazy">
+                </div>
+            {% endif %}
+
+            <div class="contact__form">
+                <falak-contact-form {{ component.show_subject is defined and not component.show_subject ? 'hide-subject' : '' }}></falak-contact-form>
+            </div>
+        </div>
+    </div>
+</section>
