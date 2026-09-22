@@ -219,6 +219,36 @@
                     "maxLength": 200
                 },
                 {
+                    "id": "footer_newsletter_enabled",
+                    "type": "boolean",
+                    "format": "switch",
+                    "label": {
+                        "ar": "إظهار نموذج النشرة البريدية",
+                        "en": "Show the newsletter sign-up"
+                    },
+                    "description": {
+                        "ar": "صف في أعلى الفوتر لجمع البريد الإلكتروني",
+                        "en": "A row at the top of the footer for collecting email addresses"
+                    },
+                    "value": true
+                },
+                {
+                    "id": "footer_newsletter_title",
+                    "type": "string",
+                    "format": "text",
+                    "label": {
+                        "ar": "عنوان النشرة البريدية",
+                        "en": "Newsletter heading"
+                    },
+                    "description": {
+                        "ar": "اتركه فارغاً لاستخدام النص الافتراضي للقالب",
+                        "en": "Leave empty to use the theme default"
+                    },
+                    "multilanguage": true,
+                    "required": false,
+                    "maxLength": 120
+                },
+                {
                     "id": "footer_phone",
                     "type": "string",
                     "format": "text",
@@ -379,6 +409,39 @@
                     "description": {
                         "ar": "مثال: https://wa.me/9665xxxxxxxx",
                         "en": "Example: https://wa.me/9665xxxxxxxx"
+                    },
+                    "required": false,
+                    "maxLength": 255
+                },
+                {
+                    "id": "social_facebook",
+                    "type": "string",
+                    "format": "text",
+                    "label": {
+                        "ar": "فيسبوك",
+                        "en": "Facebook"
+                    },
+                    "required": false,
+                    "maxLength": 255
+                },
+                {
+                    "id": "social_telegram",
+                    "type": "string",
+                    "format": "text",
+                    "label": {
+                        "ar": "تيليجرام",
+                        "en": "Telegram"
+                    },
+                    "required": false,
+                    "maxLength": 255
+                },
+                {
+                    "id": "social_linkedin",
+                    "type": "string",
+                    "format": "text",
+                    "label": {
+                        "ar": "لينكد إن",
+                        "en": "LinkedIn"
                     },
                     "required": false,
                     "maxLength": 255

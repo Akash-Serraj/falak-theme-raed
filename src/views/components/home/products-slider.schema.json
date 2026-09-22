@@ -12,7 +12,13 @@
         "pages"
     ],
     "styleable": [
-        { "id": "title", "label": { "ar": "العنوان", "en": "Title" } }
+        {
+            "id": "title",
+            "label": {
+                "ar": "العنوان",
+                "en": "Title"
+            }
+        }
     ],
     "fields": [
         {
@@ -99,17 +105,16 @@
         {
             "id": "category",
             "type": "string",
-            "format": "text",
+            "format": "category",
             "label": {
-                "ar": "رقم التصنيف",
-                "en": "Category ID"
+                "ar": "التصنيف",
+                "en": "Category"
             },
             "description": {
                 "ar": "اتركه فارغاً لعرض أحدث المنتجات",
                 "en": "Leave empty to show the latest products"
             },
-            "required": false,
-            "maxLength": 20
+            "required": false
         },
         {
             "id": "all_url",

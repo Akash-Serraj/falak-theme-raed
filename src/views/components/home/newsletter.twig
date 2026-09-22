@@ -1,0 +1,51 @@
+{#
+    Newsletter sign-up — merchant-placeable content block (home + builder pages).
+    | Variable                | Type    | Description                          |
+    | component.title         | ?string | section title, localized server-side |
+    | component.subtitle      | ?string | line under the title                 |
+    | component.button_text   | ?string | overrides the SDK's submit label     |
+    | component.note          | ?string | small print under the form           |
+    | position                | int     |                                      |
+
+    Customizer bindings — full rules in README, "Customizer annotations".
+    | Element             | Tag                                                          |
+    | h2.block__title     | data-falak-field="title"                                     |
+    | p.block__subtitle   | data-falak-field="subtitle"                                  |
+    | falak-newsletter    | data-falak-field="button_text" data-falak-bind="attr:button-text" |
+    | p.newsletter__note  | data-falak-field="note"                                      |
+
+    <falak-newsletter> is an SDK component: it owns the field, the validation,
+    the busy state and the status line, and posts through
+    falak.newsletter.subscribe(). This template only frames it — every
+    `footer.newsletter_*` string it prints comes from src/locales/.
+
+    button_text reaches the component as an ATTRIBUTE, so the binding is
+    `bind="attr:button-text"` and the element also carries data-falak-bound —
+    an element with only bind-attr-* bindings needs it, or the customizer has
+    nothing to re-render as the merchant types. Left empty the component falls
+    back to footer.newsletter_submit, which is what most stores want.
+#}
+<section class="block block--newsletter" id="newsletter-{{ position }}" {{ falak_section() }}>
+    <div class="container">
+        <div class="newsletter">
+            {% if component.title %}
+                <h2 class="block__title" data-falak-field="title" data-falak-label="{{ trans('editor.field.title') }}">{{ component.title }}</h2>
+            {% endif %}
+
+            {% if component.subtitle %}
+                <p class="block__subtitle" data-falak-field="subtitle" data-falak-label="{{ trans('editor.field.description') }}">{{ component.subtitle }}</p>
+            {% endif %}
+
+            <falak-newsletter class="newsletter__form"
+                              {% if component.button_text %}button-text="{{ component.button_text }}"{% endif %}
+                              data-falak-field="button_text"
+                              data-falak-label="{{ trans('editor.field.button') }}"
+                              data-falak-bind="attr:button-text"
+                              data-falak-bound></falak-newsletter>
+
+            {% if component.note %}
+                <p class="newsletter__note" data-falak-field="note" data-falak-label="{{ trans('editor.field.text') }}">{{ component.note }}</p>
+            {% endif %}
+        </div>
+    </div>
+</section>

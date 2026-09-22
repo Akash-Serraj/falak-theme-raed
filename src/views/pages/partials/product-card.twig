@@ -19,13 +19,27 @@
        reports success/failure; button-class keeps this card's skin, and the
        stretched name link stays underneath (.product-card .btn--card is
        z-indexed above it). Definedness test on in_stock — `|default(true)`
-       would turn an explicit false back into true. #}
+       would turn an explicit false back into true.
+
+       The product-* attributes past the name are what the "choose options"
+       dialog shows for a variant product: the card's own price plus the
+       numbers behind it (price_amount, compare_at) so the dialog can print
+       the struck-through "was" and work out the saving, the URL for its
+       title and details link, and the stock line. Every one is optional —
+       the dialog leaves out the row for anything a card cannot supply. #}
     <falak-add-product-button product-id="{{ product.id }}"
                               product-status="{{ (product.in_stock is defined and not product.in_stock) ? 'out' : 'sale' }}"
                               {{ product.has_variations|default(false) ? 'has-options' : '' }}
                               product-name="{{ product.name }}"
                               product-image="{{ product.image }}"
                               product-price="{{ product.price }}"
+                              {% if product.price_amount is defined %}product-price-amount="{{ product.price_amount }}"{% endif %}
+                              {% if product.compare_at_amount is defined and product.compare_at_amount %}product-compare-price="{{ product.compare_at_amount }}"
+                              {% elseif product.compare_at %}product-compare-price="{{ product.compare_at }}"{% endif %}
+                              {% if product.currency %}product-currency="{{ product.currency }}"{% endif %}
+                              product-url="{{ product.url }}"
+                              {% if product.in_stock is defined %}product-in-stock="{{ product.in_stock ? 'true' : 'false' }}"{% endif %}
+                              {% if product.category %}product-subtitle="{{ product.category.name }}"{% endif %}
                               quantity-selector=""
                               button-class="btn btn--card"
                               source="listing"></falak-add-product-button>

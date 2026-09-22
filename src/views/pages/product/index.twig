@@ -2,12 +2,19 @@
     Product listing — category, search results, and tag listing all share this shape.
     | Variable    | Type   | Description                                                      |
     | products    | array  | list of product cards                                             |
-    | category    | ?array | present when listing a category                                  |
+    | category    | ?array | id, name, url — set when ONE category is selected, which
+                             is what a category page is now that /category/{id} is gone |
     | filters     | array  | sidebar options for <falak-filters> (categories, price, rating…) |
     | sort        | string | the active sort key                                              |
     | sorts       | array  | every sort key the listing accepts                               |
     | is_filtered | bool   | true when the shopper narrowed the list                          |
     | priceFilter | array  | min, max (current selection), bounds_min, bounds_max — legacy    |
+    | pagination  | array  | page, last_page, per_page, total, from, to                        |
+    | query_base  | string | the current query minus `page`, with its own trailing separator  |
+
+    Paging is SERVER-side and lives in the query string beside the filters, so
+    page 3 of a filtered listing is one shareable URL. The pager is links, not
+    buttons — it keeps working with JavaScript off, and a crawler follows links.
 #}
 {% extends "layouts.master" %}
 
@@ -25,9 +32,6 @@
 
         <header class="page-head">
             <h1>{{ category ? category.name : trans('common.products') }}</h1>
-            {% if products|length > 0 %}
-                <p class="page-head__meta">{{ products|length }} {{ trans('common.products_count') }}</p>
-            {% endif %}
         </header>
 
         <div class="product-listing__layout">
@@ -56,6 +60,30 @@
                         </button>
                     {% endif %}
 
+                    {#
+                        The count sits at the start of the toolbar, opposite the
+                        sort — which is pushed to the end by its own auto margin,
+                        so no order/flex rules are needed here and the pair
+                        swaps sides on its own under RTL.
+
+                        `products` is ONE page, so its length stopped being the
+                        answer the moment the listing was paged — say which
+                        slice of how many is on screen instead. The bare count
+                        stays as a fallback for a render that arrives without
+                        `pagination`.
+                    #}
+                    {% if pagination.total|default(0) > 0 %}
+                        <p class="product-listing__count">
+                            {{ trans('listing.showing', {
+                                from: pagination.from,
+                                to: pagination.to,
+                                total: pagination.total
+                            }) }}
+                        </p>
+                    {% elseif products|length > 0 %}
+                        <p class="product-listing__count">{{ products|length }} {{ trans('common.products_count') }}</p>
+                    {% endif %}
+
                     <label class="product-listing__sort">
                         <span>{{ trans('common.sort') }}</span>
                         <select class="f-input" data-sort>
@@ -72,12 +100,69 @@
                             {% include 'pages.partials.product-card' %}
                         {% endfor %}
                     </div>
+
+                    {# ----------------------------------------------- pager #}
+                    {% if pagination.last_page|default(1) > 1 %}
+                        <nav class="pager" aria-label="{{ trans('listing.pagination') }}">
+                            {% if pagination.page > 1 %}
+                                <a class="pager__step" href="?{{ query_base }}page={{ pagination.page - 1 }}"
+                                   rel="prev" data-page-link>{{ trans('common.previous') }}</a>
+                            {% else %}
+                                <span class="pager__step is-disabled">{{ trans('common.previous') }}</span>
+                            {% endif %}
+
+                            {#
+                                A window around the current page, not every page:
+                                a 40-page catalogue would otherwise render 40
+                                links. max()/min() are NOT in the Twig sandbox's
+                                function allowlist (range, trans, hook,
+                                falak_currency) — calling them throws — so the
+                                bounds are clamped with ternaries instead.
+                            #}
+                            {% set window_start = pagination.page - 2 < 1 ? 1 : pagination.page - 2 %}
+                            {% set window_end = pagination.page + 2 > pagination.last_page ? pagination.last_page : pagination.page + 2 %}
+
+                            {% if window_start > 1 %}
+                                <a class="pager__page" href="?{{ query_base }}page=1" data-page-link>1</a>
+                                {% if window_start > 2 %}<span class="pager__gap">…</span>{% endif %}
+                            {% endif %}
+
+                            {% for n in range(window_start, window_end) %}
+                                {% if n == pagination.page %}
+                                    <span class="pager__page is-current" aria-current="page">{{ n }}</span>
+                                {% else %}
+                                    <a class="pager__page" href="?{{ query_base }}page={{ n }}" data-page-link>{{ n }}</a>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if window_end < pagination.last_page %}
+                                {% if window_end < pagination.last_page - 1 %}<span class="pager__gap">…</span>{% endif %}
+                                <a class="pager__page" href="?{{ query_base }}page={{ pagination.last_page }}"
+                                   data-page-link>{{ pagination.last_page }}</a>
+                            {% endif %}
+
+                            {% if pagination.page < pagination.last_page %}
+                                <a class="pager__step" href="?{{ query_base }}page={{ pagination.page + 1 }}"
+                                   rel="next" data-page-link>{{ trans('common.next') }}</a>
+                            {% else %}
+                                <span class="pager__step is-disabled">{{ trans('common.next') }}</span>
+                            {% endif %}
+                        </nav>
+                    {% endif %}
                 {% else %}
-                    {# A filtered-out list offers "reset" (the bare path drops
-                       every query param); an empty store offers the way home. #}
+                    {#
+                        A filtered-out list offers "reset"; an empty store offers
+                        the way home.
+
+                        Reset returns to the CATEGORY when there is one, not to
+                        the bare path. A category now lives in the query string
+                        (`category_id[]`, since /category/{id} is gone), so `?`
+                        would drop the category along with the filters and
+                        answer "no dresses under 50" with the whole catalogue.
+                    #}
                     <falak-placeholder icon="🛒" text="{{ trans('common.no_products') }}"
                                        action-text="{{ filtered ? trans('filters.reset') : trans('common.back_home') }}"
-                                       action-href="{{ filtered ? '?' : store.url }}"
+                                       action-href="{{ filtered ? (category ? category.url : '?') : store.url }}"
                                        action-class="btn btn--outline"></falak-placeholder>
 
                     {#

@@ -1,0 +1,70 @@
+{
+    "key": "falak-newsletter",
+    "path": "home.newsletter",
+    "title": {
+        "ar": "النشرة البريدية",
+        "en": "Newsletter"
+    },
+    "icon": "mail-send-line",
+    "is_default": false,
+    "areas": ["home", "pages"],
+    "styleable": [
+        { "id": "title", "label": { "ar": "العنوان", "en": "Title" } },
+        { "id": "subtitle", "label": { "ar": "العنوان الفرعي", "en": "Subtitle" } }
+    ],
+    "fields": [
+        {
+            "id": "title",
+            "type": "string",
+            "format": "text",
+            "label": { "ar": "عنوان القسم", "en": "Section title" },
+            "multilanguage": true,
+            "required": false,
+            "maxLength": 100,
+            "value": { "ar": "النشرة البريدية", "en": "Join our newsletter" }
+        },
+        {
+            "id": "subtitle",
+            "type": "string",
+            "format": "text",
+            "label": { "ar": "نص فرعي", "en": "Subtitle" },
+            "multilanguage": true,
+            "required": false,
+            "maxLength": 160,
+            "value": {
+                "ar": "اشترك لتصلك أحدث المنتجات والعروض",
+                "en": "Subscribe for new arrivals and offers"
+            }
+        },
+        {
+            "id": "button_text",
+            "type": "string",
+            "format": "text",
+            "label": { "ar": "نص الزر", "en": "Button label" },
+            "description": {
+                "ar": "اتركه فارغاً لاستخدام النص الافتراضي للقالب",
+                "en": "Leave empty to use the theme's default label"
+            },
+            "multilanguage": true,
+            "required": false,
+            "maxLength": 40
+        },
+        {
+            "id": "note",
+            "type": "string",
+            "format": "text",
+            "label": { "ar": "ملاحظة صغيرة", "en": "Small print" },
+            "description": {
+                "ar": "يظهر أسفل النموذج، مثل: لن نرسل لك رسائل مزعجة",
+                "en": "Shown under the form, e.g. \"No spam. Unsubscribe anytime.\""
+            },
+            "multilanguage": true,
+            "required": false,
+            "maxLength": 140,
+            "value": {
+                "ar": "لن نرسل لك رسائل مزعجة، ويمكنك إلغاء الاشتراك في أي وقت.",
+                "en": "No spam. Unsubscribe at any time."
+            }
+        }
+    ]
+}
