@@ -150,7 +150,13 @@
                     },
                     "multilanguage": true,
                     "required": false,
-                    "maxLength": 30
+                    "maxLength": 30,
+                    "conditions": [
+                        {
+                            "id": "items.url",
+                            "operation": "not_empty"
+                        }
+                    ]
                 }
             ]
         }

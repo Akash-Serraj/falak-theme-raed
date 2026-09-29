@@ -155,6 +155,39 @@
             ]
         },
         {
+            "id": "show_button",
+            "type": "boolean",
+            "format": "switch",
+            "label": {
+                "ar": "إظهار زر",
+                "en": "Show a button"
+            },
+            "description": {
+                "ar": "زر يظهر أسفل العداد.",
+                "en": "A button below the countdown."
+            },
+            "value": true
+        },
+        {
+            "id": "button_note",
+            "type": "static",
+            "format": "description",
+            "label": {
+                "ar": "عن الزر",
+                "en": "About the button"
+            },
+            "description": {
+                "ar": "اتركه فارغاً ليأخذ الزر نص القالب الافتراضي.",
+                "en": "Leave the label empty to use the theme default."
+            },
+            "conditions": [
+                {
+                    "id": "show_button",
+                    "value": true
+                }
+            ]
+        },
+        {
             "id": "button_text",
             "type": "string",
             "format": "text",

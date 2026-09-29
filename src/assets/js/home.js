@@ -43,10 +43,27 @@
             });
         });
 
+        /*
+         * How fast the carousel advances, in milliseconds, or 0 for not at all.
+         *
+         * Read off the element rather than hard-coded, so the merchant's
+         * "Advance slides automatically" switch and its speed actually reach
+         * the behaviour. Missing attribute falls back to the old 5s, which is
+         * what a slide placed before those settings existed should keep doing.
+         *
+         * A missing or empty attribute is NOT zero. Number(null) and Number('')
+         * are both 0, which would read as "never advance" and silently stop any
+         * slider that predates these settings.
+         */
+        var raw = slider.getAttribute('data-autoplay');
+        var delay = raw === null || raw === '' ? 5000 : Number(raw);
+        if (!Number.isFinite(delay) || delay < 0) delay = 5000;
+
         function restart() {
             if (timer) window.clearInterval(timer);
+            if (delay === 0) return;
             if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-            timer = window.setInterval(function () { show(current + 1); }, 5000);
+            timer = window.setInterval(function () { show(current + 1); }, delay);
         }
 
         restart();

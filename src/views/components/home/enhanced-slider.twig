@@ -24,8 +24,18 @@
     | slide_text    | each slide's p        |
     | slide_button  | each slide's a.btn    |
 #}
+{% set show_arrows = component.show_arrows is defined ? component.show_arrows : true %}
+{% set show_dots = component.show_dots is defined ? component.show_dots : true %}
+{% set autoplay = component.autoplay is defined ? component.autoplay : true %}
+
 <section class="block block--hero-slider" id="hero-slider-{{ position }}" {{ falak_section() }}>
-    <div class="hero-slider">
+    {#
+        The slider's JS reads its behaviour off these attributes rather than
+        hard-coding it, so a merchant can stop the carousel or slow it down.
+        A speed of 0 is how "do not advance" reaches the script.
+    #}
+    <div class="hero-slider"
+         data-autoplay="{{ autoplay ? (component.autoplay_speed|default('5000')) : '0' }}">
         {% for slide in component.slides %}
             <div class="hero-slider__slide{{ loop.first ? ' is-active' : '' }}" data-falak-field="slides" data-falak-label="{{ trans('editor.field.slides') }}" data-falak-bind="none">
                 <img class="hero-slider__img" src="{{ slide.image }}"
@@ -40,12 +50,15 @@
             </div>
         {% endfor %}
 
-        {% if component.slides|length > 1 %}
+        {% if component.slides|length > 1 and show_arrows %}
             <button type="button" class="hero-slider__arrow hero-slider__arrow--prev"
                     data-slide-dir="-1" aria-label="{{ trans('common.previous') }}"><span>‹</span></button>
             <button type="button" class="hero-slider__arrow hero-slider__arrow--next"
                     data-slide-dir="1" aria-label="{{ trans('common.next') }}"><span>›</span></button>
 
+        {% endif %}
+
+        {% if component.slides|length > 1 and show_dots %}
             <div class="hero-slider__dots" role="tablist">
                 {% for slide in component.slides %}
                     <button type="button"

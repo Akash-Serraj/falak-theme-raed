@@ -100,9 +100,95 @@
                         "en": "Button link"
                     },
                     "required": false,
-                    "maxLength": 255
+                    "maxLength": 255,
+                    "conditions": [
+                        {
+                            "id": "slides.button_text",
+                            "operation": "not_empty"
+                        }
+                    ]
                 }
             ]
+        },
+        {
+            "id": "autoplay",
+            "type": "boolean",
+            "format": "switch",
+            "label": {
+                "ar": "تقديم الشرائح تلقائياً",
+                "en": "Advance slides automatically"
+            },
+            "description": {
+                "ar": "توقف الحركة عند تفاعل المتسوق مع الشريط، وتُعطّل تماماً لمن فعّل تقليل الحركة في نظامه.",
+                "en": "A shopper who interacts with the slider stops it. Motion is disabled entirely for anyone who has asked their system to reduce it."
+            },
+            "value": true
+        },
+        {
+            "id": "autoplay_speed",
+            "type": "string",
+            "format": "dropdown-list",
+            "label": {
+                "ar": "مدة عرض الشريحة",
+                "en": "Seconds per slide"
+            },
+            "value": "5000",
+            "options": [
+                {
+                    "value": "3000",
+                    "label": {
+                        "ar": "٣ ثوانٍ",
+                        "en": "3 seconds"
+                    }
+                },
+                {
+                    "value": "5000",
+                    "label": {
+                        "ar": "٥ ثوانٍ",
+                        "en": "5 seconds"
+                    }
+                },
+                {
+                    "value": "8000",
+                    "label": {
+                        "ar": "٨ ثوانٍ",
+                        "en": "8 seconds"
+                    }
+                },
+                {
+                    "value": "12000",
+                    "label": {
+                        "ar": "١٢ ثانية",
+                        "en": "12 seconds"
+                    }
+                }
+            ],
+            "conditions": [
+                {
+                    "id": "autoplay",
+                    "value": true
+                }
+            ]
+        },
+        {
+            "id": "show_arrows",
+            "type": "boolean",
+            "format": "switch",
+            "label": {
+                "ar": "إظهار الأسهم",
+                "en": "Show arrows"
+            },
+            "value": true
+        },
+        {
+            "id": "show_dots",
+            "type": "boolean",
+            "format": "switch",
+            "label": {
+                "ar": "إظهار النقاط",
+                "en": "Show dots"
+            },
+            "value": true
         }
     ],
     "styleable": [
