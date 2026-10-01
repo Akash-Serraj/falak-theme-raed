@@ -50,8 +50,16 @@
                     Platform component. `fetch` is opt-in per element — here it
                     is on because the product page is one product and one extra
                     request; the listing grid below leaves it off.
+
+                    Only rendered once the product HAS a review: empty stars and
+                    a "0" under the name read as a bad score rather than as no
+                    score yet, and the guard also saves the fetch on a product
+                    nobody has reviewed. The reviews section further down still
+                    shows, so a shopper can be the first to write one.
                 #}
-                <falak-rating-stars product-id="{{ product.id }}" fetch show-value></falak-rating-stars>
+                {% if product.reviews_count > 0 %}
+                    <falak-rating-stars product-id="{{ product.id }}" fetch show-value></falak-rating-stars>
+                {% endif %}
 
                 {# data-product-price: app.js rewrites it when a variant is chosen. #}
                 <p class="product-single__price" data-product-price>
@@ -69,10 +77,14 @@
                                           class="product-single__size-guide"></falak-product-size-guide>
 
                 {% if product.variations|length > 0 %}
-                    {# Variant chooser — the platform component. One pill group per
-                       attribute; the add button below consults it before adding. #}
+                    {# Variant chooser — the platform component. One group per
+                       attribute; the add button below consults it before adding.
+                       `options` carries the merchant's display config for those
+                       groups — order, labels, colour swatches. Empty when they
+                       configured none, and the element then draws plain pills. #}
                     <falak-product-options product-id="{{ product.id }}"
                                            variations="{{ product.variations|json_encode|escape('html_attr') }}"
+                                           options="{{ product.options|default([])|json_encode|escape('html_attr') }}"
                                            class="product-single__options"></falak-product-options>
                 {% endif %}
 

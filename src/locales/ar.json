@@ -344,5 +344,9 @@
     "footer.newsletter_success": "شكراً لك، تم تسجيلك في القائمة البريدية.",
     "footer.newsletter_invalid": "الرجاء إدخال بريد إلكتروني صحيح.",
     "footer.newsletter_failed": "تعذّر إتمام الاشتراك. حاول مرة أخرى.",
-    "footer.newsletter_sending": "جارٍ الإرسال…"
+    "footer.newsletter_sending": "جارٍ الإرسال…",
+    "videos.failed": "تعذّر تشغيل الفيديو.",
+    "product.quick_view": "عرض سريع",
+    "product.quick_view_failed": "تعذّر تحميل هذا المنتج.",
+    "product.full_details": "عرض التفاصيل الكاملة"
 }

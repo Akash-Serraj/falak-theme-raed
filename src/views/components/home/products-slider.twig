@@ -8,9 +8,10 @@
 
     | Variable              | Type    | Description                          |
     | component.title       | ?string | section title, localized server-side |
+    | component.source      | ?string | which products, and in what order    |
     | component.limit       | ?int    | how many products to fetch           |
     | component.slides      | ?string | slides visible on desktop            |
-    | component.category    | ?string | category id; empty means all         |
+    | component.category    | ?string | category id, when the source is one  |
     | component.autoplay    | ?bool   | advance on a timer                   |
     | component.all_url     | ?string | optional "view all" link             |
     | position              | int     |                                      |
@@ -27,6 +28,11 @@
     renders its own title, so the role reaches it through the --falak-el-*
     custom properties, read back in app.css under "Customizer style hooks".
 #}
+{# "A specific category" is only meaningful with a category behind it: the
+   component warns and renders nothing when the value is missing, so a source
+   left half-filled falls back to the latest products rather than an empty row. #}
+{% set source = component.source|default('latest') %}
+{% set source = source == 'category' and not component.category ? 'latest' : source %}
 <section class="block block--products-slider" id="products-slider-{{ position }}" {{ falak_section() }}>
     <div class="container">
         <falak-products-slider
@@ -34,8 +40,8 @@
             data-falak-label="{{ trans('editor.field.title') }}"
             data-falak-bind="none"
             block-title="{{ component.title }}"
-            source="{{ component.category ? 'category' : 'latest' }}"
-            {% if component.category %}source-value="{{ component.category }}"{% endif %}
+            source="{{ source }}"
+            {% if source == 'category' %}source-value="{{ component.category }}"{% endif %}
             limit="{{ component.limit|default(10) }}"
             slides-per-view="{{ component.slides|default(4) }}"
             {% if component.all_url %}display-all-url="{{ component.all_url }}"{% endif %}

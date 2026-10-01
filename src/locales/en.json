@@ -344,5 +344,9 @@
     "footer.newsletter_success": "Thanks — you're on the list.",
     "footer.newsletter_invalid": "Please enter a valid email address.",
     "footer.newsletter_failed": "That didn't go through. Please try again.",
-    "footer.newsletter_sending": "Sending…"
+    "footer.newsletter_sending": "Sending…",
+    "videos.failed": "The video could not be played.",
+    "product.quick_view": "Quick view",
+    "product.quick_view_failed": "Could not load this product.",
+    "product.full_details": "View full details"
 }
