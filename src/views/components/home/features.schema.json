@@ -7,7 +7,7 @@
     },
     "icon": "star-line",
     "is_default": true,
-    "default_sort": 20,
+    "default_sort": 40,
     "areas": ["home", "pages"],
     "styleable": [
         { "id": "title", "label": { "ar": "العنوان", "en": "Title" } }

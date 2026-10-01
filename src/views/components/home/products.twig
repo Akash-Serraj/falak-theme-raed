@@ -14,6 +14,7 @@
 
     | Variable            | Type    | Description                             |
     | component.title     | ?string | section title, localized server-side    |
+    | component.source    | ?string | which products, and in what order       |
     | component.limit     | ?int    | how many products to show               |
     | component.columns   | ?string | grid density on desktop                 |
     | component.category  | ?string | category id; empty means all products   |
@@ -27,6 +28,9 @@
     The grid itself carries no binding: its fields are settings rather than
     text, and the platform already makes the whole component selectable.
 #}
+{# `latest` is the endpoint’s own order, which it gives when no sort is sent —
+   so the attribute is omitted rather than set to a value the API does not know. #}
+{% set source = component.source|default('latest') %}
 <section class="block block--products" id="products-{{ position }}" {{ falak_section() }}>
     <div class="container">
         {% if component.title %}
@@ -34,6 +38,7 @@
         {% endif %}
 
         <falak-products-list
+            {% if source != 'latest' %}sort="{{ source }}"{% endif %}
             limit="{{ component.limit|default(8) }}"
             columns="{{ component.columns|default(4) }}"
             {% if component.category %}category="{{ component.category }}"{% endif %}

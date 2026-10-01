@@ -7,7 +7,7 @@
     },
     "icon": "chat-smile-line",
     "is_default": true,
-    "default_sort": 40,
+    "default_sort": 50,
     "areas": [
         "home",
         "pages"

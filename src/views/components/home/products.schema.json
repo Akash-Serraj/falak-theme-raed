@@ -43,6 +43,50 @@
             }
         },
         {
+            "id": "source",
+            "type": "items",
+            "format": "dropdown-list",
+            "label": {
+                "ar": "مصدر المنتجات",
+                "en": "Product source"
+            },
+            "description": {
+                "ar": "يُطبّق مع التصنيف — اختر التصنيف أدناه لحصر الترتيب داخله",
+                "en": "Applies together with the category — pick one below to order within it"
+            },
+            "value": "latest",
+            "options": [
+                {
+                    "label": {
+                        "ar": "أحدث المنتجات",
+                        "en": "Latest products"
+                    },
+                    "value": "latest"
+                },
+                {
+                    "label": {
+                        "ar": "الأكثر مبيعاً",
+                        "en": "Best selling"
+                    },
+                    "value": "best_selling"
+                },
+                {
+                    "label": {
+                        "ar": "الأعلى تقييماً",
+                        "en": "Top rated"
+                    },
+                    "value": "top_rated"
+                },
+                {
+                    "label": {
+                        "ar": "العروض",
+                        "en": "On offer"
+                    },
+                    "value": "on_offer"
+                }
+            ]
+        },
+        {
             "id": "limit",
             "type": "number",
             "format": "integer",

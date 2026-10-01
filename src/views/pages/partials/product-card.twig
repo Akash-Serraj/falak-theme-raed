@@ -1,48 +1,27 @@
 {#
-    Product card — shared by listing, search, brand and wishlist pages.
-    Expects `product`: id, name, price (formatted), image, url.
-    The name link stretches over the card; the buy button sits above it.
+    THE product card — one definition for the whole theme.
+
+    The card is the platform's own <falak-product-card>, which is what the home
+    rows already render through <falak-products-list> and
+    <falak-products-slider>. This partial exists so the server-rendered pages
+    (listing, search, brand, wishlist) render the SAME element rather than a
+    second copy of the markup — the theme had two cards before, and the same
+    product wore a different one depending on where a shopper found it.
+
+    The record is handed over as a JSON attribute because these pages already
+    have it from the server; the element therefore paints without a fetch.
+
+        {% include 'pages.partials.product-card' %}
+
+    | product | object | a record already in hand (listing, search, brand…) |
+    | source  | string | analytics label; defaults to the enclosing page     |
 #}
-<div class="product-card">
-    <span class="product-card__media">
-        {% if product.image %}
-            <img src="{{ product.image }}" alt="{{ product.name }}" loading="lazy">
-        {% else %}
-            <span class="product-card__placeholder" aria-hidden="true">🛍</span>
-        {% endif %}
-    </span>
-
-    <h3><a class="product-card__link" href="{{ product.url }}">{{ product.name }}</a></h3>
-    <p class="product-card__price">{{ product.price }}</p>
-
-    {# The SDK's add button performs the add itself (guest or customer) and
-       reports success/failure; button-class keeps this card's skin, and the
-       stretched name link stays underneath (.product-card .btn--card is
-       z-indexed above it). Definedness test on in_stock — `|default(true)`
-       would turn an explicit false back into true.
-
-       The product-* attributes past the name are what the "choose options"
-       dialog shows for a variant product: the card's own price plus the
-       numbers behind it (price_amount, compare_at) so the dialog can print
-       the struck-through "was" and work out the saving, the URL for its
-       title and details link, and the stock line. Every one is optional —
-       the dialog leaves out the row for anything a card cannot supply. #}
-    <falak-add-product-button product-id="{{ product.id }}"
-                              product-status="{{ (product.in_stock is defined and not product.in_stock) ? 'out' : 'sale' }}"
-                              {{ product.has_variations|default(false) ? 'has-options' : '' }}
-                              product-name="{{ product.name }}"
-                              product-image="{{ product.image }}"
-                              product-price="{{ product.price }}"
-                              {% if product.price_amount is defined %}product-price-amount="{{ product.price_amount }}"{% endif %}
-                              {% if product.compare_at_amount is defined and product.compare_at_amount %}product-compare-price="{{ product.compare_at_amount }}"
-                              {% elseif product.compare_at %}product-compare-price="{{ product.compare_at }}"{% endif %}
-                              {% if product.currency %}product-currency="{{ product.currency }}"{% endif %}
-                              product-url="{{ product.url }}"
-                              {% if product.in_stock is defined %}product-in-stock="{{ product.in_stock ? 'true' : 'false' }}"{% endif %}
-                              {% if product.category %}product-subtitle="{{ product.category.name }}"{% endif %}
-                              quantity-selector=""
-                              button-class="btn btn--card"
-                              source="listing"></falak-add-product-button>
-    {# The heart, beside the buy button — guest or customer. #}
-    <falak-wishlist-button product-id="{{ product.id }}" button-class="btn btn--card btn--card-icon"></falak-wishlist-button>
-</div>
+{# show-add-button / show-wishlist are opt-in on the component: the home
+   rows switch them on through <falak-products-list card-button card-wishlist>,
+   so a card placed here has to ask for them too or it renders with no way to
+   buy and no heart. #}
+<falak-product-card
+    product="{{ product|json_encode|escape('html_attr') }}"
+    show-add-button
+    show-wishlist
+    source="{{ source|default('listing') }}"></falak-product-card>

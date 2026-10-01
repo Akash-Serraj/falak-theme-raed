@@ -32,7 +32,7 @@
         <div class="site-footer__inner">
             <div class="site-footer__brand">
                 {% if store.logo %}
-                    <img src="{{ store.logo }}" alt="{{ store.name }}" width="48" height="48">
+                    <img src="{{ store.logo }}" alt="{{ store.name }}" width="220" height="88">
                 {% endif %}
                 <span class="site-footer__brand-name">{{ store.name }}</span>
                 {% if theme.settings.get('footer_about') %}
@@ -58,7 +58,7 @@
                         </a>
                     {% endif %}
                     {% if theme.settings.get('footer_email') %}
-                        <a href="mailto:{{ theme.settings.get('footer_email') }}">
+                        <a href="mailto:{{ theme.settings.get('footer_email') }}" dir="ltr">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>
                             <span>{{ theme.settings.get('footer_email') }}</span>
                         </a>

@@ -159,6 +159,20 @@
             "icon": "layout-top-line",
             "fields": [
                 {
+                    "id": "page_loader_enabled",
+                    "type": "boolean",
+                    "format": "switch",
+                    "label": {
+                        "ar": "شاشة التحميل",
+                        "en": "Loading screen"
+                    },
+                    "description": {
+                        "ar": "تُعرض علامة المتجر أثناء تحميل الصفحة بدل شاشة بيضاء. تختفي تلقائيًا خلال ثانيتين ونصف كحد أقصى.",
+                        "en": "Shows the store mark while a page loads instead of a blank screen. Clears itself within 2.5 seconds at the latest."
+                    },
+                    "value": true
+                },
+                {
                     "id": "header_is_sticky",
                     "type": "boolean",
                     "format": "switch",
@@ -181,6 +195,60 @@
                         "en": "Dark top bar"
                     },
                     "value": false
+                },
+                {
+                    "id": "topnav_links",
+                    "type": "collection",
+                    "format": "collection",
+                    "label": {
+                        "ar": "روابط القائمة الافتراضية",
+                        "en": "Starter menu links"
+                    },
+                    "description": {
+                        "ar": "تظهر في القائمة الرئيسية حتى تنشئ قائمة من شاشة القوائم، عندها تحل قائمتك محلها",
+                        "en": "Shown in the main menu until you build a menu on the Menus screen, which then replaces them"
+                    },
+                    "item_label": { "ar": "رابط", "en": "Link" },
+                    "maxLength": 5,
+                    "fields": [
+                        {
+                            "id": "topnav_links.label",
+                            "type": "string",
+                            "format": "text",
+                            "label": { "ar": "الاسم", "en": "Label" },
+                            "multilanguage": true,
+                            "required": true,
+                            "maxLength": 40
+                        },
+                        {
+                            "id": "topnav_links.url",
+                            "type": "string",
+                            "format": "text",
+                            "label": { "ar": "الرابط", "en": "Link" },
+                            "description": { "ar": "مثال: /products أو /about", "en": "Example: /products or /about" },
+                            "required": true,
+                            "maxLength": 255
+                        },
+                        {
+                            "id": "topnav_links.visible",
+                            "type": "boolean",
+                            "format": "switch",
+                            "label": { "ar": "إظهار الرابط", "en": "Show this link" },
+                            "value": true
+                        }
+                    ],
+                    "value": [
+                        {
+                            "topnav_links.label": { "ar": "الرئيسية", "en": "Home" },
+                            "topnav_links.url": "/",
+                            "topnav_links.visible": true
+                        },
+                        {
+                            "topnav_links.label": { "ar": "المنتجات", "en": "Products" },
+                            "topnav_links.url": "/products",
+                            "topnav_links.visible": true
+                        }
+                    ]
                 }
             ]
         },

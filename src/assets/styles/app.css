@@ -27,6 +27,21 @@
     --color-danger: #c0392b;
     --color-on-primary: #ffffff;
 
+    /*
+     * Ink for a surface that is a FIXED white whatever the colour scheme — the
+     * round controls the video viewer floats over a clip. Those discs stay
+     * white on purpose (white-on-photograph is legible over any frame), so
+     * their ink must NOT follow --color-text: under the dark blocks further
+     * down that flips pale and paints a near-white glyph on a white disc.
+     * Deliberately not redefined there.
+     */
+    --color-on-white: #1f2430;
+
+    /* One step up from body copy — the product name in the video viewer's
+       foot. Named so that block can be the same in every theme that carries
+       it. */
+    --fs-lead: 1.125rem;
+
     /* rhythm */
     --radius-sm: 0.5rem;
     --radius: 0.75rem;
@@ -34,7 +49,7 @@
     --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06);
     --shadow: 0 4px 16px rgba(16, 24, 40, 0.08);
     --container: 1200px;
-    --header-h: 4rem;
+    --header-h: 4.75rem;
 
     --transition: 160ms ease;
 }
@@ -446,6 +461,34 @@ falak-rating-stars[data-busy] { opacity: 0.5; }
 }
 
 .f-card__placeholder { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.05); }
+
+/*
+ * Video commerce. Every rule here is keyed on .f-card__video, an element that
+ * only exists when a card was explicitly asked for a clip (its own `video`
+ * attribute, or a [data-video-commerce] ancestor) AND the product has one. A
+ * card that is not showing video matches none of this, so adding it changes
+ * nothing about how any existing card in any theme renders.
+ */
+.f-card__video {
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.f-card__video-badge {
+    position: absolute;
+    inset-block-end: 0.5rem;
+    inset-inline-start: 0.5rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    background: rgb(0 0 0 / 55%);
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.6;
+    pointer-events: none;
+}
 
 .f-card__badge {
     position: absolute;
@@ -947,6 +990,74 @@ falak-rating-stars[data-busy] { opacity: 0.5; }
 .f-options__error { margin: 0; font-size: 0.82rem; color: var(--f-danger); }
 .f-options__error[hidden] { display: none; }
 
+/*
+ * A `color` or `image` option's pill: the swatch IS the label, so the pill
+ * shrinks to it and the selected state becomes a ring rather than the solid
+ * primary fill the text pills use — that fill would paint over the very
+ * colour the shopper is choosing.
+ */
+.f-options__pill--swatch {
+    min-inline-size: 0;
+    min-block-size: 0;
+    padding: 0.2rem;
+    border-radius: 50%;
+}
+.f-options__pill--swatch.is-selected {
+    background: var(--f-surface);
+    color: var(--f-text);
+    box-shadow: 0 0 0 2px var(--color-primary, #1d9e75) inset;
+}
+.f-options__pill--image { border-radius: var(--f-radius); }
+
+/*
+ * The swatch carries its OWN shape rather than inheriting the pill's. Themes
+ * reshape `.f-options__pill` freely — every one of them squares it off on the
+ * product page — and an inherited radius would turn each colour circle into a
+ * rounded rectangle wherever they did.
+ */
+.f-options__swatch {
+    display: block;
+    inline-size: 1.75rem;
+    block-size: 1.75rem;
+    border-radius: 50%;
+    /* A white or near-white swatch would otherwise vanish into the pill. */
+    box-shadow: 0 0 0 1px rgb(0 0 0 / 12%) inset;
+}
+.f-options__pill--image .f-options__swatch {
+    inline-size: 2.75rem;
+    block-size: 2.75rem;
+    border-radius: var(--f-radius);
+}
+.f-options__swatch--image { object-fit: cover; }
+
+/* The strike-through marking an unbuyable value has to sit ABOVE the swatch. */
+.f-options__pill--swatch.f-options__pill--out_of_stock::after,
+.f-options__pill--swatch.f-options__pill--impossible::after {
+    inset-inline: 0;
+    z-index: 1;
+    border-block-start-color: var(--f-danger);
+    border-block-start-width: 2px;
+    opacity: 0.9;
+}
+.f-options__pill--swatch:disabled { opacity: 0.45; }
+
+/* A group with more values than pills can carry. */
+.f-options__select {
+    inline-size: 100%;
+    max-inline-size: 22rem;
+    padding: 0.5rem 0.65rem;
+    border: 1px solid var(--f-border);
+    border-radius: var(--f-radius);
+    background: var(--f-surface);
+    color: var(--f-text);
+    font: inherit;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+.f-options__select:focus-visible { outline: 2px solid var(--color-primary, #1d9e75); outline-offset: 2px; }
+.f-options__select option:disabled { color: var(--f-text-faint); }
+.f-options__group--invalid .f-options__select { border-color: var(--f-danger); }
+
 /* ========================================================================
    Quick add — variant chooser dialog for cards
    ======================================================================== */
@@ -961,12 +1072,39 @@ falak-rating-stars[data-busy] { opacity: 0.5; }
     background: rgba(0, 0, 0, 0.05);
 }
 .f-quick-add__meta { display: flex; flex-direction: column; gap: 0.25rem; min-inline-size: 0; }
+.f-quick-add__eyebrow { font-size: 0.78rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--f-text-soft); }
 .f-quick-add__name { font-weight: 600; color: var(--f-text); text-decoration: none; }
 .f-quick-add__name:hover { color: var(--color-primary, #1d9e75); }
+.f-quick-add__prices { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.5rem; }
 .f-quick-add__price { font-size: 1rem; color: var(--f-text); }
+.f-quick-add__compare { font-size: 0.9rem; color: var(--f-text-faint); }
+.f-quick-add__save {
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+    background: rgba(192, 57, 43, 0.1);
+    color: var(--f-danger);
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+/* Every optional row is rendered hidden until it has something to say, so
+   the dialog never reserves space for a line the product has no data for. */
+.f-quick-add__compare[hidden],
+.f-quick-add__save[hidden],
+.f-quick-add__stock[hidden] { display: none; }
 .f-quick-add__form { display: flex; flex-direction: column; gap: 1rem; }
+.f-quick-add__stock { margin: 0; font-size: 0.85rem; color: var(--f-text-soft); }
+.f-quick-add__stock--out { color: var(--f-danger); }
 .f-quick-add__actions { display: flex; align-items: stretch; gap: 0.75rem; }
 .f-quick-add__actions .f-add-product__button { flex: 1 1 auto; }
+.f-quick-add__footnote {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    font-size: 0.8rem;
+    color: var(--f-text-soft);
+}
+.f-quick-add__details { color: inherit; }
 
 /* ========================================================================
    Wishlist button — the heart
@@ -1312,7 +1450,12 @@ body.f-drawer-open { overflow: hidden; }
     cursor: pointer;
 }
 .f-size-guide__body { display: flex; flex-direction: column; gap: 1rem; }
-.f-size-guide__image { max-inline-size: 100%; block-size: auto; border-radius: var(--f-radius); }
+/* A size guide is very often a phone screenshot — tall, and far bigger than
+   the dialog meant to hold it. Width was capped and height was not, so the
+   modal grew to whatever the merchant uploaded and pushed its own header off
+   the screen. The ratio survives the cap because the width stays free to
+   shrink with it. */
+.f-size-guide__image { max-inline-size: 100%; block-size: auto; max-block-size: 70vh; align-self: center; border-radius: var(--f-radius); }
 .f-size-guide__content table { inline-size: 100%; border-collapse: collapse; font-size: 0.9rem; }
 .f-size-guide__content th, .f-size-guide__content td { padding: 0.5rem 0.6rem; border: 1px solid var(--f-border); text-align: start; }
 .f-size-guide__content th { background: rgba(0, 0, 0, 0.04); font-weight: 700; }
@@ -1572,6 +1715,231 @@ body.f-drawer-open { overflow: hidden; }
 .f-contact-links__icon { display: inline-flex; flex: none; }
 .f-contact-links__label { white-space: nowrap; }
 
+/* ========================================================================
+   NEWSLETTER — <falak-newsletter>
+   ======================================================================== */
+/* Structure only: the row, the growing field, the status line. Colours and
+   shapes come from the theme, which is why every value here goes through the
+   --f-* tokens with quiet fallbacks. */
+
+.f-newsletter { display: block; }
+
+.f-newsletter__form { margin: 0; }
+
+.f-newsletter__label {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.f-newsletter__row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: stretch;
+}
+
+.f-newsletter__input {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 0.6rem 0.9rem;
+    border: 1px solid var(--f-border, rgba(0, 0, 0, 0.14));
+    border-radius: var(--f-radius, 0.5rem);
+    background: var(--f-bg, #fff);
+    color: var(--f-text, inherit);
+    font: inherit;
+}
+
+.f-newsletter__submit {
+    flex: none;
+    padding: 0.6rem 1.4rem;
+    border: 1px solid transparent;
+    border-radius: var(--f-radius, 0.5rem);
+    background: var(--color-primary, #1d9e75);
+    color: var(--color-on-primary, #fff);
+    font: inherit;
+    cursor: pointer;
+}
+
+.f-newsletter__submit:disabled { opacity: 0.6; cursor: wait; }
+
+.f-newsletter__status {
+    margin: 0.5rem 0 0;
+    font-size: 0.875rem;
+}
+
+.f-newsletter__status.is-error { color: var(--f-danger, #c0392b); }
+
+@media (max-width: 479px) {
+    .f-newsletter__row { flex-wrap: wrap; }
+    .f-newsletter__submit { flex: 1 1 100%; }
+}
+
+/* ------------------------------------------------------------------ counter */
+
+/*
+ * justify-content matters more than it looks. Dropped into a grid or flex
+ * parent — a stats row, say — an inline-flex element is blockified and
+ * stretched to the full cell, and `text-align: center` on that parent cannot
+ * reach flex children: the figure ends up hard against the start edge while
+ * the label under it stays centred. Centring here costs nothing in normal
+ * flow, where the box shrink-wraps anyway, and a theme that wants the figure
+ * aligned to the edge overrides one property.
+ */
+.f-counter { display: inline-flex; align-items: baseline; justify-content: center; gap: 0.1em; font-variant-numeric: tabular-nums; }
+.f-counter[hidden] { display: none; }
+
+/* ---------------------------------------------------------- image compare */
+
+/*
+ * Built around a native range input. Everything visible reads one custom
+ * property, --f-compare-pos, so the block renders correctly at its 50% default
+ * even if the script never runs.
+ */
+.f-compare {
+    --f-compare-pos: 50%;
+    --f-compare-knob: 2.75rem;
+    position: relative;
+    display: block;
+    overflow: hidden;
+    isolation: isolate;
+    border-radius: var(--f-radius);
+}
+
+.f-compare[hidden] { display: none; }
+
+/* A fixed ratio on both photos: a comparison whose halves are different shapes
+   shows the crop rather than the difference. */
+.f-compare__photo { display: block; inline-size: 100%; aspect-ratio: 3 / 2; object-fit: cover; background: var(--f-surface); }
+
+.f-compare__before { position: absolute; inset: 0; clip-path: inset(0 calc(100% - var(--f-compare-pos)) 0 0); }
+.f-compare__before .f-compare__photo { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; aspect-ratio: auto; }
+
+/* RTL reads the handle from the right, and so does the range input's own
+   travel — clip from the opposite edge or the two move in opposite directions. */
+[dir="rtl"] .f-compare__before { clip-path: inset(0 0 0 calc(100% - var(--f-compare-pos))); }
+
+.f-compare__label {
+    position: absolute;
+    inset-block-start: 1rem;
+    padding: 0.3rem 0.85rem;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 600;
+    pointer-events: none;
+}
+
+.f-compare__label--before { inset-inline-start: 1rem; }
+.f-compare__label--after { inset-inline-end: 1rem; }
+
+/*
+ * The input covers the whole photo and draws nothing — its thumb is a
+ * hairline, and the knob below is an ordinary element. A thumb styled as the
+ * knob stops half a knob short of each edge while the divider runs the full
+ * width, and Chrome paints it straight through the overflow clip above.
+ */
+.f-compare__range {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: ew-resize;
+    touch-action: pan-y;
+}
+
+.f-compare__range:focus { outline: none; }
+.f-compare__range::-webkit-slider-runnable-track { background: transparent; border: 0; }
+.f-compare__range::-moz-range-track { background: transparent; border: 0; }
+.f-compare__range::-webkit-slider-thumb { -webkit-appearance: none; inline-size: 1px; block-size: 100%; border: 0; background: transparent; cursor: ew-resize; }
+.f-compare__range::-moz-range-thumb { inline-size: 1px; block-size: 100%; border: 0; border-radius: 0; background: transparent; cursor: ew-resize; }
+
+/* margin-inline-start rather than a translate, so both centre on the handle in
+   either writing direction without a second rule. */
+.f-compare__divider {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: var(--f-compare-pos);
+    inline-size: 2px;
+    margin-inline-start: -1px;
+    background: #fff;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12);
+    pointer-events: none;
+}
+
+.f-compare__knob {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-start: var(--f-compare-pos);
+    inline-size: var(--f-compare-knob);
+    block-size: var(--f-compare-knob);
+    margin-block-start: calc(var(--f-compare-knob) / -2);
+    margin-inline-start: calc(var(--f-compare-knob) / -2);
+    border-radius: 50%;
+    background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23111' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 6 3 12l6 6M15 6l6 6-6 6'/%3E%3C/svg%3E") center / 1.15rem no-repeat;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+    pointer-events: none;
+}
+
+/* Keyboard focus has to land on something visible, and the input draws
+   nothing — so the ring goes on the knob it moves. */
+.f-compare__range:focus-visible ~ .f-compare__knob { box-shadow: 0 0 0 3px var(--color-primary, #1d9e75), 0 6px 18px rgba(0, 0, 0, 0.28); }
+
+@media (max-width: 639px) {
+    .f-compare { --f-compare-knob: 2.25rem; }
+    .f-compare__photo { aspect-ratio: 4 / 5; }
+    .f-compare__label { inset-block-start: 0.75rem; padding: 0.25rem 0.6rem; }
+    .f-compare__label--before { inset-inline-start: 0.75rem; }
+    .f-compare__label--after { inset-inline-end: 0.75rem; }
+}
+
+/* --------------------------------------------------------------- categories */
+
+.f-categories { display: block; }
+.f-categories[hidden] { display: none; }
+.f-categories__note { margin: 0; padding-block: 2rem; text-align: center; color: var(--f-text-soft); font-size: 0.9rem; }
+
+.f-categories__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    gap: 1.25rem;
+}
+
+.f-categories__link { display: grid; gap: 0.5rem; text-align: center; color: inherit; text-decoration: none; }
+
+.f-categories__image {
+    display: block;
+    inline-size: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: var(--f-radius);
+    background: var(--f-surface);
+}
+
+.f-categories__image--empty { border: 1px dashed var(--f-border); }
+.f-categories__name { font-weight: 600; font-size: 0.92rem; }
+.f-categories__count { color: var(--f-text-soft); font-size: 0.78rem; }
+
+/* Round tiles — the "shop by category" circles most storefronts open with. */
+.f-categories--circles .f-categories__image { border-radius: 50%; }
+
+.f-categories--list .f-categories__list { grid-template-columns: minmax(0, 1fr); gap: 0.5rem; }
+.f-categories--list .f-categories__link { grid-template-columns: 3rem minmax(0, 1fr); align-items: center; text-align: start; gap: 0.75rem; }
+.f-categories--list .f-categories__image { inline-size: 3rem; }
+
 /* ---- from packages/falak-components/src/components.chrome.css ---- */
 
 /*
@@ -1692,7 +2060,18 @@ body.f-modal-open { overflow: hidden; }
     overflow-y: auto;
 }
 
-.f-modal__wrapper--middle { align-items: center; }
+/* `align-items: center` on a scroll container clips what it cannot fit, and it
+   clips at the TOP — where the title and the close button are. A modal taller
+   than the viewport put its own header at a negative offset that no scrolling
+   could reach, because a flex item centred past the start edge sits outside
+   the scrollable area entirely.
+
+   `margin-block: auto` centres identically while there is room to spare and
+   collapses to zero when there is not, so an oversized dialog starts at the
+   top and scrolls normally. Preferred over `align-items: safe center`, which
+   does the same in one line but only on newer engines. */
+.f-modal__wrapper--middle { align-items: flex-start; }
+.f-modal__wrapper--middle > .f-modal__body { margin-block: auto; }
 .f-modal__wrapper--top { align-items: flex-start; }
 .f-modal__wrapper--bottom { align-items: flex-end; }
 
@@ -4352,6 +4731,7 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
        photo beside it. */
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
@@ -4504,8 +4884,10 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
 }
 
 .site-header__logo img {
-    width: 42px;
-    height: 42px;
+    max-width: 180px;
+    max-height: 52px;
+    width: auto;
+    height: auto;
     object-fit: contain;
     border-radius: var(--radius-sm);
 }
@@ -4774,6 +5156,33 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
 
 .site-footer__brand { max-width: 32ch; }
 
+/*
+ * The footer logo.
+ *
+ * It had no rule at all, so the img's width/height attributes won: every mark
+ * was drawn 48×48, which reads as a favicon beside the store name — and a wide
+ * wordmark was squeezed into that square. Same shape of rule as the header's
+ * (cap the box, let the picture keep its own proportions inside it), one size
+ * up, because the footer has the room the header bar does not.
+ *
+ * inline-block rather than block so it still centres with the rest of the
+ * brand column when the footer stacks on a phone.
+ */
+.site-footer__brand img {
+    display: inline-block;
+    max-width: 220px;
+    max-height: 88px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    margin-bottom: 0.85rem;
+    border-radius: var(--radius-sm);
+}
+
+@media (max-width: 640px) {
+    .site-footer__brand img { max-height: 72px; }
+}
+
 .site-footer__brand-name {
     font-weight: 700;
     font-size: 1.1rem;
@@ -4912,6 +5321,29 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
     margin: 0.6rem auto 0;
 }
 
+/*
+    Merchant prose: honour typed line breaks.
+
+    Every `format: "textarea"` field in this theme's schemas lands in one of
+    the elements below. A merchant who presses Enter in one of those boxes
+    means it, so the newline is honoured in CSS rather than in markup:
+    `nl2br` is not on the sandbox's filter allowlist (ThemeRenderer::
+    securityPolicy), and building <br> out of merchant-typed text would mean
+    emitting markup from a field that is deliberately plain.
+
+    `pre-line` also makes the TEMPLATE's own whitespace visible, so each of
+    these expressions has to stay flush against its tags on one line. Do not
+    reformat `<p>{{ component.text }}</p>` onto three.
+*/
+.banner__content p,           /* banner.description                 */
+.hero-slider__content p,      /* enhanced-slider.slides.description */
+.feature-card p,              /* features.items.text                */
+.image-text__body p,          /* image-with-text.text               */
+.testimonial-card blockquote, /* testimonials.items.text            */
+.f-countdown__description {   /* offer-countdown.description        */
+    white-space: pre-line;
+}
+
 /* hero slider — full-bleed photography with a directional scrim (Al-Mahud style) */
 /* The optional line under a section heading (contact, and any block that
    wants one). Sits below the accent bar the title draws. */
@@ -5038,8 +5470,14 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
 .hero-slider__arrow--prev { inset-inline-start: 1rem; }
 .hero-slider__arrow--next { inset-inline-end: 1rem; }
 
-/* Arrow glyphs point along the reading direction; flip for RTL. */
-[dir="rtl"] .hero-slider__arrow span { display: inline-block; scale: -1 1; }
+/*
+    Deliberately no RTL flip. The prev/next glyphs are U+2039 / U+203A,
+    which are Bidi_Mirrored: under [dir="rtl"] the browser already mirrors
+    them, so prev points right and next points left, which is what RTL
+    wants. A `scale: -1 1` on top of that flips them back and leaves both
+    arrows pointing into the slide. If these are ever swapped for SVG or
+    any non-mirrored glyph, the flip has to come back.
+*/
 
 @media (max-width: 640px) {
     .hero-slider__arrow { display: none; }
@@ -5291,6 +5729,145 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
     padding-block: 1.5rem 0;
 }
 
+/* ------------------------------------------------------- video commerce */
+/* The row reuses .product-grid so its cards sit on the same rhythm as the
+   listing; only the column count is its own, because the block lets the
+   merchant choose it. */
+.vp-grid {
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+}
+
+@media (min-width: 861px) {
+    .vp-grid {
+        grid-template-columns: repeat(var(--vp-columns, 4), minmax(0, 1fr));
+    }
+}
+
+/*
+   More products than columns: one row that SCROLLS, not a second row.
+
+   app.js sets [data-scroll-rail] when the wall holds more than it can show
+   across. A merchant who asks for eight products across four columns wants
+   eight products, and stacking them two-deep turns a lean band into a block of
+   video that pushes the whole page down.
+
+   Large screens only. On a phone the wall stays the grid it already is;
+   scrolling there belongs to the viewer, which opens as a reel.
+
+   The slide width comes from --vp-columns, so the merchant's own column count
+   still decides how many are in view and the cards keep the size the static
+   grid would have given them.
+*/
+/*
+   EVERY width, not just the desk.
+
+   The attribute is only set when the wall holds MORE products than it shows
+   across, so the ordinary phone grid is untouched — with the default of four
+   products it simply never matches. What this covers is the case the raised
+   cap allows: a merchant who asks for forty used to get ten stacked rows,
+   thousands of pixels of column. One swipeable row is the right answer at
+   every size.
+*/
+.vp-grid[data-scroll-rail] {
+    /*
+       How many cards are in view, stepping up with the screen the way the
+       static grid above does: two on a phone, three on a tablet, and from
+       861px the column count the merchant chose — which is the same point
+       the grid itself starts following it.
+    */
+    --vp-visible: 2;
+
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: calc(
+        (100% - (var(--vp-visible) - 1) * var(--grid-gap, 1.25rem)) / var(--vp-visible)
+    );
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    padding-block-end: 0.25rem;
+}
+
+.vp-grid[data-scroll-rail]::-webkit-scrollbar { display: none; }
+
+.vp-grid[data-scroll-rail] > * { scroll-snap-align: start; }
+
+/*
+   The row's scroll affordance: a thin line showing how far along it is, drawn
+   by app.js under the grid. Without it a desktop shopper saw four cards, had no
+   scrollbar to drag and no wheel that moves a horizontal container — and so no
+   reason to think there were more.
+*/
+.vp-rail {
+    position: relative;
+    block-size: 2px;
+    margin-block-start: 1.5rem;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.vp-rail[hidden] { display: none; }
+
+.vp-rail__thumb {
+    position: absolute;
+    inset-block: 0;
+    border-radius: 10px;
+    background: var(--color-primary);
+    transition: inset-inline-start 0.15s linear;
+}
+
+/* While a card is being dragged, the pointer is moving the row — not hovering
+   anything — so the cursor says so and text stops selecting under it. */
+.vp-grid[data-scroll-rail] { cursor: grab; }
+.vp-grid[data-scroll-rail].is-dragging { cursor: grabbing; user-select: none; }
+
+@media (min-width: 48rem) {
+    .vp-grid[data-scroll-rail] { --vp-visible: 3; }
+}
+
+/* 861px is where this theme's grid starts following --vp-columns; the scroller
+   follows it from the same point. */
+@media (min-width: 53.8125rem) {
+    .vp-grid[data-scroll-rail] { --vp-visible: var(--vp-columns, 4); }
+}
+
+/* Placeholder tiles, sized to the card's square media so the grid is the
+   right height before the fetch lands and nothing below it jumps. */
+.vp-skeleton {
+    aspect-ratio: 1;
+    border-radius: var(--radius);
+    background: linear-gradient(
+        90deg,
+        var(--color-surface) 25%,
+        color-mix(in srgb, var(--color-surface) 60%, var(--color-bg)) 37%,
+        var(--color-surface) 63%
+    );
+    background-size: 400% 100%;
+    animation: vp-shimmer 1.4s ease infinite;
+}
+
+@keyframes vp-shimmer {
+    from { background-position: 100% 50%; }
+    to   { background-position: 0 50%; }
+}
+
+/* Motion is decoration here — the tile still reserves the space without it. */
+@media (prefers-reduced-motion: reduce) {
+    .vp-skeleton { animation: none; }
+}
+
+.block--video-products .block__subtitle {
+    margin-block: -0.25rem 0;
+    color: var(--color-text-soft);
+}
+
+.block--video-products .block__footer {
+    display: flex;
+    justify-content: center;
+    padding-block-start: 1.5rem;
+}
+
 @media (max-width: 560px) {
     .product-grid { grid-template-columns: repeat(2, 1fr); gap: 0.9rem; }
 }
@@ -5380,6 +5957,7 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
 }
 
@@ -5458,9 +6036,92 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
     margin-block: 0 1rem;
 }
 
+/*
+    Product description — clamped preview + "see more".
+
+    The clamp height lives here and nowhere else: app.js reads it back off the
+    element to animate between the two states, so changing the line count is a
+    one-line edit. `is-clampable` is set by JS only when the copy actually
+    overflows, which means a short description never fades and never grows a
+    button, and with JS off nothing is ever hidden.
+*/
 .product-single__description {
+    --description-lines: 7;
     color: var(--color-text-soft);
     margin-bottom: 1.75rem;
+}
+
+.product-single__description-body > :first-child { margin-block-start: 0; }
+.product-single__description-body > :last-child { margin-block-end: 0; }
+
+.product-single__description-body {
+    transition: max-height 320ms ease;
+}
+
+.product-single__description.is-clampable .product-single__description-body {
+    max-height: calc(var(--description-lines) * 1.65em);
+    overflow: hidden;
+}
+
+/* The fade is a mask, not a gradient overlay, so it works on whatever
+   background the merchant's palette puts behind the info column. */
+.product-single__description.is-clampable:not(.is-open) .product-single__description-body {
+    -webkit-mask-image: linear-gradient(to bottom, #000 58%, rgba(0, 0, 0, 0.15) 100%);
+            mask-image: linear-gradient(to bottom, #000 58%, rgba(0, 0, 0, 0.15) 100%);
+}
+
+/* `display: inline-flex` below would beat the UA's [hidden] rule, so the
+   button has to opt back out explicitly — otherwise a short description
+   still shows a "see more" that does nothing. */
+.product-single__description-toggle[hidden] { display: none; }
+
+.product-single__description-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-block-start: 0.85rem;
+    padding: 0.4rem 0.95rem;
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--color-primary-dark);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: color var(--transition), border-color var(--transition),
+                background var(--transition), box-shadow var(--transition);
+}
+
+.product-single__description-toggle:hover {
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-sm);
+}
+
+.product-single__description-toggle:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.product-single__description-toggle svg {
+    flex-shrink: 0;
+    transition: transform var(--transition);
+}
+
+.product-single__description.is-open .product-single__description-toggle svg {
+    transform: rotate(180deg);
+}
+
+@media (max-width: 640px) {
+    .product-single__description { --description-lines: 5; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .product-single__description-body,
+    .product-single__description-toggle,
+    .product-single__description-toggle svg { transition: none; }
 }
 
 .buy-box {
@@ -5906,6 +6567,7 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 3;
+    line-clamp: 3;
     -webkit-box-orient: vertical;
 }
 .article-card__body time { color: var(--color-text-faint); font-size: 0.8rem; }
@@ -6028,6 +6690,20 @@ a.photo-tile:hover img { transform: scale(1.04); }
 
 /* portrait video cards — the videos-slider block (reels row) */
 .block--videos-slider .f-slider__slide { min-width: 0; }
+
+/*
+    Overlay arrows, kept inside the row.
+
+    The SDK straddles them across the slider edge (`margin-inline: -0.75rem`),
+    which reads well where the row has a gutter to hang into. This slider fills
+    the container, so a third of the prev arrow landed on the page background —
+    and the arrow's fill (--f-surface #f7f8fa) is all but the page's own
+    (#fafafa), so that third disappeared and the control looked cropped in half.
+    Disabled on the first slide at opacity 0.35, it vanished completely.
+*/
+.block--videos-slider .f-slider:not(.f-slider--controls-outer) .f-slider__arrow {
+    margin-inline: 0.5rem;
+}
 
 .video-card {
     position: relative;
@@ -6164,52 +6840,6 @@ a.photo-tile:hover img { transform: scale(1.04); }
     border: 0;
 }
 
-/* ------------------------------------------------------- component showcase */
-/*
-    Layout for the review-only "Component showcase" section. Nothing here styles
-    a component — each one brings its own; this just gives them room and a label
-    so you can see which tag produced what.
-*/
-
-.showcase {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
-    gap: 1rem;
-}
-
-.showcase__item {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    align-items: flex-start;
-    padding: 1.1rem;
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius);
-}
-
-/* Lists and carousels need the full row to be judged at all. */
-.showcase__item--wide { grid-column: 1 / -1; }
-
-.showcase__tag {
-    font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
-    font-size: 0.7rem;
-    color: var(--color-text-faint);
-    letter-spacing: 0.01em;
-}
-
-.showcase__row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
-
-.showcase__note {
-    margin: 0;
-    font-size: 0.75rem;
-    color: var(--color-text-soft);
-}
-
-.showcase__item > falak-accordion,
-.showcase__item > falak-products-list,
-.showcase__item > falak-products-slider { width: 100%; }
-
 /* ---------------------------------------------------------------- toasts */
 /* The visible half of falak.notify(): bottom-centre, colour by type. */
 .toasts {
@@ -6253,10 +6883,34 @@ a.photo-tile:hover img { transform: scale(1.04); }
    base .cart-* rules above. */
 
 .cart-item__media { flex: none; }
-.cart-item__media img { width: 72px; height: 72px; object-fit: cover; border-radius: var(--radius-sm); }
+/* .cart-item__clip is the seeked first frame of a video-commerce product's clip,
+   standing in where the merchant uploaded neither a photograph nor a poster. It
+   is a thumbnail, so it fills the tile exactly as a photograph would. */
+.cart-item__media img,
+.cart-item__clip { width: 72px; height: 72px; object-fit: cover; border-radius: var(--radius-sm); }
 .cart-item__name { font-weight: 600; color: var(--color-text); text-decoration: none; display: block; }
 .cart-item__name:hover { color: var(--color-primary); }
 .cart-item__variation { display: block; font-size: 0.85rem; color: var(--color-text-soft); }
+/* The colour/image a variant was chosen by, so a cart line shows the same
+   swatch the product page did rather than only naming it. The value is
+   validated server-side (ProductOptionPresenter::safeDisplay) before it
+   reaches the style attribute. */
+.cart-item__swatch {
+    display: inline-block;
+    /* The swatch now stands in for the value's name, so it carries the
+       meaning on its own and is sized to be read rather than glanced past. */
+    inline-size: 1.05rem;
+    block-size: 1.05rem;
+    border-radius: 50%;
+    vertical-align: -3px;
+    box-shadow: 0 0 0 1px rgb(0 0 0 / 18%) inset;
+}
+.cart-item__swatch--image {
+    inline-size: 1.4rem;
+    block-size: 1.4rem;
+    border-radius: 4px;
+    object-fit: cover;
+}
 .cart-item__unit { display: block; font-size: 0.9rem; color: var(--color-text-soft); }
 .cart-item__unit del { margin-inline-start: 0.35rem; color: var(--color-text-faint); }
 
@@ -6451,3 +7105,566 @@ a.photo-tile:hover img { transform: scale(1.04); }
 .product-single__size-guide { margin-block: 0.25rem 0.75rem; }
 .product-single__reviews > h2 { margin-block-end: 1rem; }
 .product-single__reviews-summary { padding: 1.25rem; margin-block-end: 1.5rem; border: 1px solid var(--color-border); border-radius: var(--radius); background: #fff; }
+
+/* all-categories band — round tiles built by app.js from the catalogue.
+   Nova's equivalent is .cat-circles; this is the 2026 reading of it: the
+   theme's own border/radius tokens, the same lift-on-hover as .feature-card,
+   and the heading handled by .block__title's accent bar rather than a rule. */
+.cat-grid {
+    display: grid;
+    grid-template-columns: repeat(var(--cat-grid-columns, 6), minmax(0, 1fr));
+    gap: 1.5rem 1rem;
+}
+
+.cat-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.6rem;
+    color: inherit;
+    text-decoration: none;
+}
+
+.cat-tile__figure {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    max-width: 7.5rem;
+    aspect-ratio: 1;
+    overflow: hidden;
+    border-radius: 999px;
+    border: 1px solid var(--color-border);
+    background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+    transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
+}
+
+.cat-tile:hover .cat-tile__figure {
+    border-color: color-mix(in srgb, var(--color-primary) 35%, var(--color-border));
+    box-shadow: var(--shadow-sm);
+    transform: translateY(-2px);
+}
+
+.cat-tile__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cat-tile__name {
+    font-size: 0.98rem;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.cat-tile__text {
+    color: var(--color-text-soft);
+    font-size: 0.85rem;
+    line-height: 1.4;
+    /* Descriptions are merchant prose of any length; two lines keeps every
+       tile the same height so the row does not go ragged. */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+@media (max-width: 900px) {
+    .cat-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+@media (max-width: 600px) {
+    .cat-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.1rem 0.75rem; }
+    .cat-tile__text { display: none; }
+}
+
+
+/* ============================================== video-commerce viewer
+
+   The wall's own dialog, built by <custom-falak-video-view> in app.js: the clip
+   full-bleed, with the name, the price, the variant picker and the add laid
+   over its foot. The quick-view dialog above is unchanged and still serves
+   every other card in the theme.
+
+   The shape is 9:16 because the clips are — a merchant filming a garment films
+   it in portrait, and a reel letterboxed into a landscape dialog is two black
+   bars and a thin strip of product. The panel is therefore sized off the
+   VIEWPORT HEIGHT and the width derived from it, which is the only order that
+   guarantees the whole clip is on screen: sizing by width instead produces a
+   box taller than the window on any laptop, and the add-to-cart is the part
+   that falls off the bottom.
+
+   Everything is written in logical properties, so the corner controls swap
+   sides with the document's direction without a second rule.
+   ------------------------------------------------------------------------- */
+
+/* Darker than the library's default scrim. The dialog is a lit rectangle in a
+   dark room here, not a card floating over a page the shopper is still meant to
+   read. */
+.f-video-view .f-modal__overlay { background: rgba(6, 8, 10, 0.82); }
+
+.f-video-view .f-modal__body {
+    /* The one measurement everything else is derived from. 86vh leaves the
+       overlay visible at the top and bottom, so the dialog still reads as a
+       dialog; 45rem stops it growing absurdly tall on a very tall monitor. */
+    --vv-block: min(86vh, 45rem);
+
+    block-size: var(--vv-block);
+    inline-size: min(calc(var(--vv-block) * 9 / 16), 100%);
+    /* The width modifier from the `width` attribute would otherwise cap this
+       at its own value and break the ratio. */
+    max-inline-size: none;
+    padding: 0;
+    overflow: hidden;
+    background: #0a0b0d;
+    border-radius: var(--radius-lg);
+}
+
+/*
+   The header is only ever the close button here — no title. Lifted out of the
+   flow and into the corner, exactly as the quick view does it, so the clip runs
+   to the dialog's top edge instead of starting a row down.
+
+   Restyling the LIBRARY's button rather than drawing a second one is what keeps
+   Escape, the backdrop click and the focus return working: turning the
+   library's × off (is-closable="false") turns all three off with it.
+*/
+.f-video-view .f-modal__header {
+    position: absolute;
+    inset-block-start: 0.85rem;
+    /* End side, which is the quick view's corner too — the physical LEFT on
+       this theme's Arabic pages, where the reference design puts it. */
+    inset-inline-end: 0.85rem;
+    z-index: 4;
+}
+
+/*
+   A frosted white disc with dark ink, for both corner controls.
+
+   White-on-glass rather than the theme's surface token: these sit on a moving
+   photograph whose brightness is unknown and changes frame to frame, and a
+   translucent white disc is the one treatment that stays legible over both a
+   pale studio backdrop and a night shot. --color-on-white is the ink that
+   deliberately does NOT follow the dark theme, for exactly this reason.
+
+   The shadow is not decoration, it is the disc's only edge on a WHITE frame —
+   a garment shot against a studio backdrop opens with the corner over plain
+   white, and a white disc on white left the glyph floating with no control
+   around it. On a dark frame it is invisible and the disc provides its own
+   contrast, so one rule covers both.
+*/
+.f-video-view .f-modal__close,
+.vv__chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 2.4rem;
+    block-size: 2.4rem;
+    flex: none;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.88);
+    color: var(--color-on-white);
+    box-shadow: 0 2px 12px rgba(4, 6, 8, 0.35);
+    cursor: pointer;
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    transition: background var(--transition), color var(--transition);
+}
+
+.f-video-view .f-modal__close { font-size: 1.45rem; line-height: 1; }
+
+.f-video-view .f-modal__close:hover,
+.vv__chip:hover {
+    background: #fff;
+    color: var(--color-primary-dark);
+}
+
+.vv {
+    position: relative;
+    block-size: 100%;
+    overflow: hidden;
+}
+
+/* ------------------------------------------------------------------- reel */
+
+/*
+   The wall, swipeable.
+
+   On a phone the slides are a full-height vertical scroll-snap column: a swipe
+   up is the next product, exactly the gesture every product reel has trained
+   people to use, and a shopper who came to browse video never has to close the
+   dialog to see the next clip. app.js gives only the slide being watched — and
+   its two neighbours — a source, so a reel of twelve is still one download.
+
+   On a larger screen the reel collapses to the active slide (below): a
+   full-height snap column is a thumb gesture, and a pointer has the wall itself
+   behind the dialog to go back to.
+*/
+.vv__reel {
+    block-size: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scroll-snap-type: y mandatory;
+    /* The page behind must not start scrolling when the reel hits its end. */
+    overscroll-behavior-y: contain;
+    scrollbar-width: none;
+}
+
+.vv__reel::-webkit-scrollbar { display: none; }
+
+.vv__slide {
+    position: relative;
+    block-size: 100%;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+}
+
+/*
+   One at a time above the phone breakpoint.
+
+   `display: none` rather than a transform or a height of zero: a hidden slide
+   must not be reachable by the tab key, must not contribute a scroll position,
+   and — the reason it matters here — its <falak-product-options> must not be
+   found by anything looking for a picker, which is what would let one slide's
+   variant end up on another slide's add-to-cart.
+*/
+@media (min-width: 48.0625rem) {
+    .vv__reel { overflow: hidden; scroll-snap-type: none; }
+    .vv__slide { display: none; }
+    .vv__slide.is-active { display: block; }
+}
+
+
+/* ------------------------------------------------------------------- stage */
+
+/* The stage owns the dark ground. It used to sit on .vv__video, where it was an
+   OPAQUE layer painted over the poster beneath — the clip has to be transparent
+   until it has frames for the poster to be worth having at all. */
+.vv__stage {
+    position: absolute;
+    inset: 0;
+    background: #0a0b0d;
+}
+
+/*
+   `cover`, not `contain`. A merchant's clip is not reliably 9:16 — phones shoot
+   portrait, but a re-encode or a crop can arrive at 3:4 or 1:1 — and `contain`
+   answers that with pillarboxes, which read as a broken player. Cover fills the
+   panel in every case, and the foot's scrim is deep enough that what it takes
+   off the bottom is the part being covered by the buy box anyway.
+*/
+/* Stacked in the same box: the poster underneath, the clip over it. Both cover,
+   so they crop identically and the swap from one to the other is invisible. */
+.vv__poster,
+.vv__video {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Transparent on purpose — see above. A background here hides the poster. */
+.vv__video { background: transparent; }
+
+/* No clip and no photograph: a flat ground rather than a broken-image glyph. */
+.vv__placeholder {
+    position: absolute;
+    inset: 0;
+    background: #1b1d21;
+}
+
+/*
+   Buffering.
+
+   Laid over the poster, not instead of it: the shopper keeps seeing the product
+   while the file arrives, and the spinner is only saying which of the two
+   states a motionless frame is in. app.js sets `data-loading` on the stage in
+   the markup itself, so this is on screen in the frame the dialog opens, and
+   clears it on the first moving frame.
+
+   `pointer-events: none` because the speaker sits above this and has to stay
+   clickable while the clip is still loading — unmuting is often exactly what a
+   shopper does during that wait.
+*/
+.vv__loader {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    /*
+       ABOVE the scrim, which is its sibling and comes after it in the markup.
+       Without this the gradient painted straight over the spinner: the scrim
+       covers the bottom 72% of the stage and the spinner is centred inside
+       that, so it sat under about 70% black and dimmed to a grey smudge
+       nobody could see. It reads as "there is no loader".
+    */
+    z-index: 1;
+}
+
+.vv__stage[data-loading] .vv__loader { display: flex; }
+
+/*
+   The clip did not arrive.
+
+   Shown INSTEAD of the spinner, never beside it: those two say opposite things
+   and a shopper looking at both learns nothing. The buy box underneath is
+   untouched — a video that will not play is no reason to stop someone buying
+   the product — so this only covers the picture.
+*/
+.vv__lost {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.9rem;
+    padding: 1.5rem;
+    text-align: center;
+    color: #fff;
+}
+
+.vv__slide[data-vv-failed] .vv__lost { display: flex; }
+
+/* Both belong to a clip that is not coming: the frozen frame it never had, and
+   a speaker for audio that does not exist. */
+.vv__slide[data-vv-failed] .vv__video,
+.vv__slide[data-vv-failed] .vv__loader { display: none; }
+
+.vv__lost-text {
+    margin: 0;
+    font-size: var(--fs-meta);
+    color: rgba(255, 255, 255, 0.82);
+    max-inline-size: 18rem;
+}
+
+/* White on the clip's own dark ground rather than the theme's outline skin,
+   which is drawn for a light surface and reads as a smudge here. */
+.vv__lost-retry {
+    border-color: rgba(255, 255, 255, 0.55);
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.vv__lost-retry:hover {
+    border-color: #fff;
+    background: rgba(255, 255, 255, 0.18);
+    color: #fff;
+}
+
+/*
+   A ring with a dark translucent middle, rather than a bare ring: the poster
+   behind it is the merchant's photograph and may be a white studio backdrop or
+   a night shot, and a white ring alone disappears into the first of those.
+*/
+.vv__loader::after {
+    content: "";
+    inline-size: 2.75rem;
+    block-size: 2.75rem;
+    border: 3px solid rgba(255, 255, 255, 0.45);
+    border-block-start-color: #fff;
+    border-radius: 50%;
+    background: rgba(6, 8, 10, 0.45);
+    box-shadow: 0 2px 16px rgba(4, 6, 8, 0.55);
+    animation: nova-spin 0.75s linear infinite;
+}
+
+/*
+   The gradient the foot is read against.
+
+   A separate element rather than a background on .vv__foot, because the foot is
+   only as tall as its contents and the fade has to start well above them — a
+   gradient that begins at the product name puts a hard edge across the middle
+   of the clip. Two stops rather than one: a linear fade to transparent looks
+   grey over the whole lower half, while a fast rise to 72% and a slow tail is
+   read as light falling off.
+*/
+.vv__scrim {
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 0;
+    block-size: 72%;
+    background: linear-gradient(
+        to top,
+        rgba(4, 6, 8, 0.94) 0%,
+        rgba(4, 6, 8, 0.72) 30%,
+        rgba(4, 6, 8, 0) 100%
+    );
+    pointer-events: none;
+}
+
+.vv__chip { position: absolute; z-index: 4; }
+
+/* The opposite corner from the close button, so the two never collide and the
+   shopper's thumb reaching for one cannot dismiss the dialog with the other. */
+.vv__chip--sound {
+    inset-block-start: 0.85rem;
+    inset-inline-start: 0.85rem;
+}
+
+/*
+   Tinted while the sound is ON.
+
+   The clip always starts muted — a browser refuses to autoplay audio — so the
+   speaker is the one control whose state the shopper has actually chosen, and
+   it has to be readable at a glance from across the panel. aria-pressed is both
+   the accessible state and the styling hook, so there is no second copy of it
+   to fall out of step.
+*/
+.vv__chip--sound[aria-pressed="true"] {
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+}
+
+.vv__chip--sound[aria-pressed="true"]:hover {
+    background: var(--color-primary-dark);
+    color: var(--color-on-primary);
+}
+
+/* Before the record lands, when the viewer was opened from the bus with only an
+   id and has nothing to paint yet. */
+.vv__stage--empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #14161a;
+}
+
+.vv__spinner {
+    inline-size: 1.75rem;
+    block-size: 1.75rem;
+    border: 2px solid rgba(255, 255, 255, 0.25);
+    border-block-start-color: #fff;
+    border-radius: 50%;
+    animation: nova-spin 0.7s linear infinite;
+}
+
+@keyframes nova-spin { to { transform: rotate(360deg); } }
+
+.vv__failed {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    block-size: 100%;
+    padding: 2rem;
+    text-align: center;
+    color: #fff;
+}
+
+/* --------------------------------------------------------------- buy box */
+
+.vv__foot {
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 0;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 1.1rem;
+    color: #fff;
+}
+
+.vv__name {
+    font-size: var(--fs-lead);
+    font-weight: 700;
+    line-height: 1.35;
+    color: #fff;
+    text-decoration: none;
+}
+
+.vv__name:hover { text-decoration: underline; }
+
+.vv__price {
+    margin: 0;
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+}
+
+.vv__amount { font-size: 1.15rem; font-weight: 700; color: #fff; }
+.vv__was { font-size: 0.9rem; color: rgba(255, 255, 255, 0.65); }
+
+.vv__buy {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    margin-block-start: 0.5rem;
+}
+
+/*
+   The picker gets its own opaque card.
+
+   It is the one part of the foot a shopper has to READ rather than glance at —
+   labels, values, which values are sold out — and white text over a moving
+   picture is exactly the wrong surface for that. On its own ground the SDK's
+   pills, swatches and <select> skins all apply unchanged, which is the other
+   half of the reason: they are written for a page, not for a photograph.
+
+   Capped and scrollable because the number of groups is the merchant's
+   decision, not the theme's: four of them unrolled would push the add-to-cart
+   off the bottom of the panel, and the add is the one thing that must never go.
+*/
+.vv__panel {
+    background: var(--color-bg);
+    color: var(--color-text);
+    border-radius: var(--radius-lg);
+    padding: 0.9rem 1rem;
+    max-block-size: 32vh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.vv__add { display: block; }
+.vv__add-btn { inline-size: 100%; }
+
+.vv__notify { display: block; }
+.vv__notify .btn { inline-size: 100%; }
+
+/*
+   Edge to edge on a phone.
+
+   The panel's whole point is that the clip is the screen; 1rem of overlay
+   showing down each side of a 390px window is not a frame, it is a waste of the
+   only thing there is. 100dvh rather than 100vh so the browser's collapsing
+   address bar does not leave the add-to-cart under it.
+*/
+@media (max-width: 48rem) {
+    .f-video-view .f-modal__wrapper { padding: 0; }
+
+    .f-video-view .f-modal__body {
+        inline-size: 100%;
+        block-size: 100dvh;
+        border-radius: 0;
+    }
+
+    /* Clear of a notch, and of the home indicator at the foot. */
+    .f-video-view .f-modal__header {
+        inset-block-start: max(0.85rem, env(safe-area-inset-top));
+    }
+
+    .vv__chip {
+        inset-block-start: max(0.85rem, env(safe-area-inset-top));
+    }
+
+    .vv__foot {
+        padding-block-end: max(1.1rem, env(safe-area-inset-bottom));
+    }
+}
+
+/* Slowed rather than stopped. A spinner is the only thing telling the shopper
+   the clip is still coming; removing the motion removes the message with it. */
+@media (prefers-reduced-motion: reduce) {
+    .vv__spinner,
+    .vv__loader::after { animation-duration: 2s; }
+}
+

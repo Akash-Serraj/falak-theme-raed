@@ -1,0 +1,75 @@
+{
+    "key": "falak-categories",
+    "path": "home.categories-circles",
+    "title": {
+        "ar": "جميع الأقسام",
+        "en": "All Categories"
+    },
+    "icon": "grid-line",
+    "is_default": true,
+    "default_sort": 20,
+    "areas": ["home", "pages"],
+    "styleable": [
+        { "id": "title", "label": { "ar": "العنوان", "en": "Title" } },
+        { "id": "subtitle", "label": { "ar": "العنوان الفرعي", "en": "Subtitle" } }
+    ],
+    "fields": [
+        {
+            "id": "title",
+            "type": "string",
+            "format": "text",
+            "label": { "ar": "عنوان القسم", "en": "Section title" },
+            "multilanguage": true,
+            "required": false,
+            "maxLength": 100,
+            "value": { "ar": "جميع الأقسام", "en": "All categories" }
+        },
+        {
+            "id": "subtitle",
+            "type": "string",
+            "format": "text",
+            "label": { "ar": "نص فرعي", "en": "Subtitle" },
+            "multilanguage": true,
+            "required": false,
+            "maxLength": 140,
+            "value": { "ar": "لتناسب جميع الأذواق", "en": "Something for every taste" }
+        },
+        {
+            "id": "limit",
+            "type": "number",
+            "format": "integer",
+            "label": { "ar": "عدد الأقسام", "en": "How many categories" },
+            "description": {
+                "ar": "تُؤخذ من تصنيفات المتجر بصورها ووصفها",
+                "en": "Taken from the store's categories, with their own images and descriptions"
+            },
+            "required": false,
+            "min": 2,
+            "max": 24,
+            "value": 12
+        },
+        {
+            "id": "columns",
+            "type": "items",
+            "format": "dropdown-list",
+            "label": { "ar": "عدد الأعمدة", "en": "Columns" },
+            "value": "6",
+            "options": [
+                { "label": { "ar": "أربعة", "en": "Four" }, "value": "4" },
+                { "label": { "ar": "خمسة", "en": "Five" }, "value": "5" },
+                { "label": { "ar": "ستة", "en": "Six" }, "value": "6" }
+            ]
+        },
+        {
+            "id": "show_text",
+            "type": "boolean",
+            "format": "switch",
+            "label": { "ar": "إظهار وصف القسم", "en": "Show the category description" },
+            "description": {
+                "ar": "يظهر الوصف المكتوب في التصنيف نفسه",
+                "en": "Shows the description written on the category itself"
+            },
+            "value": true
+        }
+    ]
+}
