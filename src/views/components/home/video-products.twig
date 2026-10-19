@@ -1,0 +1,57 @@
+{#
+    Video commerce.
+
+    The clips are NOT typed into the customizer. The dashboard has a Video
+    Commerce section: a product is flagged there, its clip is uploaded against
+    the product, and GET /storefront/videoCommerceProducts returns exactly
+    those. This block asks for them, so the merchant curates the row where the
+    products live rather than by pasting URLs into a theme setting.
+
+    That endpoint is gated on the shop setting `enable_video_commerce`; with it
+    off it answers 404 and this section hides itself rather than leaving an
+    empty titled band.
+
+    The row is built by app.js into the grid below, one <falak-product-card>
+    per product — the same card every other section of this theme uses. The
+    card plays a clip only when it is asked to, and the [data-video-commerce]
+    attribute on this section is what asks: that is why a product with a video
+    looks no different in the listing or on the home rows.
+
+    | component.limit      | how many to show         |
+    | component.badge_text | pill laid over each clip |
+#}
+{# Twig's `default` filter fires on anything EMPTY, not just undefined, and
+   `false` is empty — so `show_badge|default(true)` hands back true the moment
+   the merchant switches the toggle off. An explicit "undefined means on" test
+   is what these switches need. #}
+{% set show_badge = component.show_badge is not defined or component.show_badge %}
+{% set show_actions = component.show_actions is not defined or component.show_actions %}
+<section class="block block--video-products" id="video-products-{{ position }}"
+         data-video-commerce
+         data-limit="{{ component.limit|default(4) }}"
+         data-badge="{{ show_badge ? component.badge_text : '' }}"
+         data-playback="{{ component.playback|default('hover') }}"
+         data-actions="{{ show_actions ? '1' : '0' }}"
+         hidden {{ falak_section() }}>
+    <div class="container">
+        {% if component.title %}
+            <h2 class="block__title" data-falak-field="title" data-falak-label="{{ trans('editor.field.title') }}">{{ component.title }}</h2>
+        {% endif %}
+        {% if component.subtitle %}
+            <p class="block__subtitle" data-falak-field="subtitle" data-falak-label="{{ trans('editor.field.description') }}">{{ component.subtitle }}</p>
+        {% endif %}
+
+        {# Shimmer tiles, replaced by the real cards once the fetch lands. The
+           count matches `limit`, so the grid is the right height before and
+           after and nothing below it jumps. app.js clears them; a store with
+           video commerce switched off hides the whole section instead, so
+           these are never left shimmering forever. #}
+        <div class="product-grid vp-grid" data-video-commerce-grid
+             style="--vp-columns: {{ component.columns|default('4') }}">
+            {% for i in range(1, component.limit|default(4)) %}
+                <div class="vp-skeleton" aria-hidden="true"></div>
+            {% endfor %}
+        </div>
+
+    </div>
+</section>

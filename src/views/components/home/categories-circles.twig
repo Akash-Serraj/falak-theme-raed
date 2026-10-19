@@ -1,0 +1,58 @@
+{#
+    All categories — the store's own categories as a row of round tiles.
+
+    Ported from Nova's block of the same name and restyled to 2026: the
+    heading is .block__title (which draws the primary accent bar) rather than
+    Nova's .block-head, and the tiles use this theme's border/radius tokens
+    instead of Nova's ornamental treatment.
+
+    Nothing is typed here. The tiles ARE the catalogue: the storefront's
+    category payload already carries `image_url` (resolved server-side —
+    the bare `image` beside it is a storage path and would 404) and
+    `description`, so the merchant maintains this section by maintaining
+    the categories, not by re-uploading pictures into the theme.
+
+    Filled by app.js rather than Twig: a home block receives no page data,
+    the sandbox exposes no categories function, and the SDK has no categories
+    component — a fetch is the only way to reach them. Same shape as Nova's
+    wireCategoryGrid.
+
+    Hidden until it has something to show, so a store with no categories
+    renders nothing here instead of a titled band with a gap under it.
+
+    | Variable             | Type    | Description                     |
+    | component.title      | ?string | section title                   |
+    | component.subtitle   | ?string | line under the title            |
+    | component.limit      | ?int    | how many categories             |
+    | component.columns    | ?string | tiles per row on desktop        |
+    | component.show_text  | ?bool   | render the description line     |
+    | position             | int     |                                 |
+
+    Customizer bindings — full rules in README, "Customizer annotations".
+    | Element            | Tag                         |
+    | h2.block__title    | data-falak-field="title"    |
+    | p.block__subtitle  | data-falak-field="subtitle" |
+
+    The grid carries no binding: it holds no merchant-typed content.
+#}
+{# `default` treats false as empty and would flip a switched-off toggle back
+   on, so "undefined means on" has to be tested explicitly. #}
+{% set show_text = component.show_text is not defined or component.show_text %}
+<section class="block block--categories" id="categories-{{ position }}"
+         data-category-grid
+         data-limit="{{ component.limit|default(12) }}"
+         data-text="{{ show_text ? '1' : '0' }}"
+         hidden {{ falak_section() }}>
+    <div class="container">
+        {% if component.title %}
+            <h2 class="block__title" data-falak-field="title" data-falak-label="{{ trans('editor.field.title') }}">{{ component.title }}</h2>
+        {% endif %}
+
+        {% if component.subtitle %}
+            <p class="block__subtitle" data-falak-field="subtitle" data-falak-label="{{ trans('editor.field.description') }}">{{ component.subtitle }}</p>
+        {% endif %}
+
+        <div class="cat-grid" data-category-grid-list
+             style="--cat-grid-columns: {{ component.columns|default('6') }}"></div>
+    </div>
+</section>

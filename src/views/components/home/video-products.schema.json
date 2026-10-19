@@ -1,0 +1,195 @@
+{
+    "key": "falak-video-products",
+    "path": "home.video-products",
+    "title": {
+        "ar": "التجارة بالفيديو",
+        "en": "Video Commerce"
+    },
+    "icon": "movie-line",
+    "is_default": false,
+    "areas": [
+        "home",
+        "pages"
+    ],
+    "styleable": [
+        {
+            "id": "title",
+            "label": {
+                "ar": "العنوان",
+                "en": "Title"
+            }
+        },
+        {
+            "id": "subtitle",
+            "label": {
+                "ar": "العنوان الفرعي",
+                "en": "Subtitle"
+            }
+        }
+    ],
+    "fields": [
+        {
+            "id": "title",
+            "type": "string",
+            "format": "text",
+            "label": {
+                "ar": "عنوان القسم",
+                "en": "Section title"
+            },
+            "multilanguage": true,
+            "required": false,
+            "maxLength": 100,
+            "value": {
+                "ar": "صُنعت خصيصاً لك",
+                "en": "Made just for you"
+            }
+        },
+        {
+            "id": "subtitle",
+            "type": "string",
+            "format": "text",
+            "label": {
+                "ar": "نص فرعي",
+                "en": "Subtitle"
+            },
+            "multilanguage": true,
+            "required": false,
+            "maxLength": 140,
+            "value": {
+                "ar": "إرث سعودي يُرتدى",
+                "en": "Saudi heritage, worn"
+            }
+        },
+        {
+            "id": "badge_text",
+            "type": "string",
+            "format": "text",
+            "label": {
+                "ar": "نص الشارة",
+                "en": "Badge text"
+            },
+            "description": {
+                "ar": "تظهر أعلى الفيديو",
+                "en": "Shown over the video"
+            },
+            "multilanguage": true,
+            "required": false,
+            "maxLength": 40,
+            "value": {
+                "ar": "فيديو المنتج",
+                "en": "Product video"
+            }
+        },
+        {
+            "id": "limit",
+            "type": "number",
+            "format": "integer",
+            "label": {
+                "ar": "عدد المنتجات",
+                "en": "How many products"
+            },
+            "description": {
+                "ar": "تُعرض منتجات التجارة عبر الفيديو المفعّلة من لوحة التحكم. إذا تجاوز العدد عدد الأعمدة يتحول الصف إلى شريط قابل للتمرير.",
+                "en": "Shows the video-commerce products enabled in the dashboard. More than the column count turns the row into a scroller."
+            },
+            "required": false,
+            "min": 1,
+            "max": 48,
+            "value": 4
+        },
+        {
+            "id": "columns",
+            "type": "items",
+            "format": "dropdown-list",
+            "label": {
+                "ar": "عدد الأعمدة",
+                "en": "Columns"
+            },
+            "description": {
+                "ar": "على الشاشات الكبيرة فقط — تتكيف الشبكة على الجوال",
+                "en": "Large screens only — the grid adapts on phones"
+            },
+            "value": "4",
+            "options": [
+                {
+                    "label": {
+                        "ar": "عمودان",
+                        "en": "Two"
+                    },
+                    "value": "2"
+                },
+                {
+                    "label": {
+                        "ar": "ثلاثة",
+                        "en": "Three"
+                    },
+                    "value": "3"
+                },
+                {
+                    "label": {
+                        "ar": "أربعة",
+                        "en": "Four"
+                    },
+                    "value": "4"
+                },
+                {
+                    "label": {
+                        "ar": "خمسة",
+                        "en": "Five"
+                    },
+                    "value": "5"
+                }
+            ]
+        },
+        {
+            "id": "show_badge",
+            "type": "boolean",
+            "format": "switch",
+            "label": {
+                "ar": "إظهار شارة الفيديو",
+                "en": "Show the video badge"
+            },
+            "value": true
+        },
+        {
+            "id": "playback",
+            "type": "items",
+            "format": "dropdown-list",
+            "label": {
+                "ar": "طريقة التشغيل",
+                "en": "How clips play"
+            },
+            "description": {
+                "ar": "الجوال يعمل دائماً عند الظهور — لا يوجد مؤشر للتمرير عليه",
+                "en": "Phones always use on-view — there is no pointer to hover with"
+            },
+            "value": "hover",
+            "options": [
+                {
+                    "label": {
+                        "ar": "عند مرور المؤشر",
+                        "en": "On hover"
+                    },
+                    "value": "hover"
+                },
+                {
+                    "label": {
+                        "ar": "عند ظهوره في الشاشة",
+                        "en": "When scrolled into view"
+                    },
+                    "value": "inview"
+                }
+            ]
+        },
+        {
+            "id": "show_actions",
+            "type": "boolean",
+            "format": "switch",
+            "label": {
+                "ar": "إظهار أزرار السلة والمفضلة",
+                "en": "Show cart and wishlist buttons"
+            },
+            "value": true
+        }
+    ]
+}

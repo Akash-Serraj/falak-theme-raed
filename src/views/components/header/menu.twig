@@ -21,9 +21,32 @@
     which the customizer edits by group — data-falak-* addresses a component
     blueprint's fields, so there is nothing to tag here.
 #}
+{#
+    A brand new store has no menu rows at all, which left this nav rendering an
+    empty <ul> — a header with nothing to click. `topnav_links` in theme.json
+    seeds Home and Products so the strip is never blank, the same way Nova's
+    utility bar does.
+
+    A FALLBACK, not an addition: the moment the merchant creates a menu on the
+    Menus screen their items take over completely. Showing both would put a
+    second, un-deletable "Home" beside theirs.
+#}
+{% set starter_links = menus.main_menu|default([])|length == 0
+    ? theme.settings.get('topnav_links')|default([])
+    : [] %}
 <falak-menu>
     <nav class="main-menu" id="main-menu" aria-label="{{ trans('common.menu') }}">
         <ul>
+            {# `visible is not defined` rather than `|default(true)`: `default`
+               treats false as empty and would switch a hidden link back on. #}
+            {% for link in starter_links %}
+                {% if link.visible is not defined or link.visible %}
+                    <li class="main-menu__item">
+                        <a href="{{ link.url|default('/') }}">{{ link.label }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
             {% for item in menus.main_menu|default([]) %}
                 <li class="main-menu__item{{ item.children|length > 0 ? ' has-children' : '' }}">
                     <a href="{{ item.url }}"{{ item.is_new_tab ? ' target="_blank" rel="noopener"' : '' }}>

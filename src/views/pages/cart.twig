@@ -33,14 +33,50 @@
                             data-product-id="{{ item.product.id }}"
                             {% if item.variation_id %}data-variation-id="{{ item.variation_id }}"{% endif %}>
                             <a class="cart-item__media" href="{{ item.product.url }}">
+                                {# `image` already falls back to the clip's poster server-side,
+                                   so the second branch covers only the last case: a
+                                   video-commerce product whose merchant uploaded a clip and
+                                   never a poster for it. preload="metadata" plus the #t=0.1
+                                   fragment paints the first frame for a few kilobytes rather
+                                   than pulling the file — a cart of these must not cost
+                                   megabytes to draw its thumbs. #}
                                 {% if item.product.image %}
                                     <img src="{{ item.product.image }}" alt="{{ item.product.name }}" loading="lazy">
+                                {% elseif item.product.video %}
+                                    <video class="cart-item__clip" preload="metadata" muted playsinline
+                                           tabindex="-1" src="{{ item.product.video }}#t=0.1"></video>
                                 {% endif %}
                             </a>
 
                             <div class="cart-item__info">
                                 <a class="cart-item__name" href="{{ item.product.url }}">{{ item.product.name }}</a>
-                                {% if item.variation and item.variation.attributes is defined and item.variation.attributes %}
+                                {# `variation.options` names the choice the way the
+                                   product page did — the merchant's labels, in
+                                   their order. The raw attribute map is the
+                                   fallback for a cart built before it existed. #}
+                                {% if item.variation and item.variation.options is defined and item.variation.options %}
+                                    <span class="cart-item__variation">
+                                        {%- for option in item.variation.options -%}
+                                            {%- if option.display and option.type == 'color' -%}
+                                                {#- "اللون: ●" — the option is still named, but the swatch stands
+                                                    in for the value, which a colour shows better than its own
+                                                    name does. The name survives as the accessible label. -#}
+                                                {{ option.label }}: <i class="cart-item__swatch" role="img"
+                                                   aria-label="{{ option.value_label }}"
+                                                   title="{{ option.value_label }}"
+                                                   style="background: {{ option.display }}"></i>
+                                            {%- elseif option.display and option.type == 'image' -%}
+                                                {{ option.label }}: <img class="cart-item__swatch cart-item__swatch--image"
+                                                     src="{{ option.display }}" loading="lazy"
+                                                     alt="{{ option.value_label }}"
+                                                     title="{{ option.value_label }}">
+                                            {%- else -%}
+                                                {{ option.label }}: {{ option.value_label }}
+                                            {%- endif -%}
+                                            {{- not loop.last ? ' · ' : '' -}}
+                                        {%- endfor -%}
+                                    </span>
+                                {% elseif item.variation and item.variation.attributes is defined and item.variation.attributes %}
                                     <span class="cart-item__variation">
                                         {%- for key, value in item.variation.attributes -%}
                                             {{ key }}: {{ value }}{{ not loop.last ? ' · ' : '' }}
