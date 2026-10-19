@@ -4961,7 +4961,7 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
     position: absolute;
     inset: 0;
     background: linear-gradient(90deg, rgba(12, 14, 18, 0.66) 8%, rgba(12, 14, 18, 0.25) 55%, rgba(12, 14, 18, 0.05));
-    opacity: var(--falak-overlay, 100%);
+    opacity: var(--falak-overlay, 0%);
 }
 
 [dir="rtl"] .hero-slider__slide::after {
@@ -5120,9 +5120,9 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
     background: linear-gradient(90deg, rgba(10, 12, 16, 0.55), rgba(10, 12, 16, 0.1));
     /* The customizer's section-level "Background dimming" publishes
        --falak-overlay on the section root; this scrim inherits it. 0 turns the
-       scrim off, and unset is 100% — the theme's own look, unchanged. `opacity`
+       scrim off, and unset is 0% — no scrim until the merchant asks for one. `opacity`
        takes a percentage directly, which is what the platform emits. */
-    opacity: var(--falak-overlay, 100%);
+    opacity: var(--falak-overlay, 0%);
 }
 
 [dir="rtl"] .banner::before {
