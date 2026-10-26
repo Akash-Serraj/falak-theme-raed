@@ -1,7 +1,20 @@
 {#
     Customer testimonials — merchant-placeable component (home + builder pages).
+
+    Two sources, one grid — the arrangement onyx settled on. Real reviews come
+    from GET /api/storefront/reviews, the store-wide endpoint that already
+    existed and that owns both the enable_reviews switch and the per-review
+    review_visible opt-in; <custom-falak-testimonials> fetches them and builds
+    the same .testimonial-card figures this template writes, so a quote looks
+    the same whichever source it came from. Manual mode renders merchant-typed
+    items so a brand-new store still has something to show. A block saved
+    before `source` existed has nothing stored and falls into the manual
+    branch, keeping the cards it always had.
+
     | Variable                  | Type    | Description                         |
     | component.title           | ?string | section title, localized server-side |
+    | component.source          | ?string | reviews | manual (absent = manual)  |
+    | component.limit           | ?int    | reviews mode: how many to fetch     |
     | component.items[].name    | string  |                                     |
     | component.show_stars      | ?bool   | whether the star row renders at all |
     | component.items[].stars   | int     | 1..5                                |
@@ -30,6 +43,16 @@
         #}
         {% set show_stars = component.show_stars is defined ? component.show_stars : true %}
 
+        {% if component.source == 'reviews' %}
+            {# Fetched client-side: a home block gets no page data and the
+               sandbox exposes no reviews function. The element hides the whole
+               section — heading and all — when the store has nothing approved
+               to show, rather than printing "no reviews yet" on a shop's home
+               page. #}
+            <custom-falak-testimonials
+                limit="{{ component.limit|default(6) }}"
+                {% if show_stars %}show-stars{% endif %}></custom-falak-testimonials>
+        {% else %}
         <div class="testimonials-grid">
             {% for item in component.items %}
                 <figure class="testimonial-card" data-falak-field="items" data-falak-label="{{ trans('editor.field.items') }}" data-falak-bind="none">
@@ -49,5 +72,6 @@
                 </figure>
             {% endfor %}
         </div>
+        {% endif %}
     </div>
 </section>

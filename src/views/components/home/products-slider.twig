@@ -13,7 +13,10 @@
     | component.slides      | ?string | slides visible on desktop            |
     | component.category    | ?string | category id, when the source is one  |
     | component.autoplay    | ?bool   | advance on a timer                   |
-    | component.all_url     | ?string | optional "view all" link             |
+    | component.show_all    | ?bool   | "view all" link, default on — opens  |
+    |                       |         | the listing filtered/sorted to match |
+    |                       |         | the source; only shown when more     |
+    |                       |         | than 8 products match                |
     | position              | int     |                                      |
 
     Customizer bindings — full rules in README, "Customizer annotations".
@@ -36,6 +39,7 @@
 <section class="block block--products-slider" id="products-slider-{{ position }}" {{ falak_section() }}>
     <div class="container">
         <falak-products-slider
+            empty-message="{{ trans('product.none_added') }}"
             data-falak-field="title"
             data-falak-label="{{ trans('editor.field.title') }}"
             data-falak-bind="none"
@@ -44,7 +48,6 @@
             {% if source == 'category' %}source-value="{{ component.category }}"{% endif %}
             limit="{{ component.limit|default(10) }}"
             slides-per-view="{{ component.slides|default(4) }}"
-            {% if component.all_url %}display-all-url="{{ component.all_url }}"{% endif %}
             {# Autoplay implies loop: without it the carousel advances to the
                last slide and stalls there for good, which reads as broken.
                A shopper interacting still stops it permanently, and
@@ -55,5 +58,27 @@
             static-when-single
             card-button
             source-label="home.slider"></falak-products-slider>
+
+        {# The view-all sits centred UNDER the carousel. The component's own
+           display-all-url puts it in the head beside the title, a different
+           parent CSS cannot move it out of, so it is rendered here instead.
+           The link is derived, not typed: the listing filtered and ordered to
+           match the source. `show_all` is null on sections saved before the
+           switch existed; those show it.
+
+           It starts hidden: only the slider knows how many products match, so
+           app.js reveals it once `fetched` reports more than data-view-all-min
+           — with eight or fewer there is nothing more behind the link. #}
+        {% if component.show_all ?? true %}
+            <div class="products-slider__all" data-view-all-min="8" hidden>
+                <a href="/products{{ {category: '?category_id%5B%5D=' ~ component.category, sales: '?sort=best_selling', 'top-rated': '?sort=top_rated', offers: '?on_offer=1'}[source] ?? '' }}">
+                    {{ trans('common.view_all') }}
+                    <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+                         stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19.5 12h-15m0 0 6.75 6.75M4.5 12l6.75-6.75"></path>
+                    </svg>
+                </a>
+            </div>
+        {% endif %}
     </div>
 </section>

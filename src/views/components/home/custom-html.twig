@@ -1,0 +1,27 @@
+{#
+    Custom HTML — merchant-placeable.
+    | Variable             | Type    | Description                                   |
+    | component.title      | ?string | section title                                 |
+    | component.html       | ?string | merchant's own markup, printed verbatim       |
+    | component.full_width | bool    | drop the .container so the markup spans edges |
+    | position             | int     |                                               |
+
+    Customizer bindings — full rules in README, "Customizer annotations".
+    | Element             | Tag                                            |
+    | h2.block__title     | data-falak-field="title"                       |
+    | .custom-html__body  | data-falak-field="html" data-falak-bind="none" |
+
+    The body is bind="none": the default text binding would print the code as
+    plain text while the merchant types. The markup lands on save instead.
+#}
+<section class="block block--custom-html" id="custom-html-{{ position }}" {{ falak_section() }}>
+    <div class="{{ component.full_width ? 'custom-html--full' : 'container' }}">
+        {% if component.title %}
+            <h2 class="block__title" data-falak-field="title" data-falak-label="{{ trans('editor.field.title') }}">{{ component.title }}</h2>
+        {% endif %}
+
+        <div class="custom-html__body" data-falak-field="html" data-falak-label="{{ trans('editor.field.html') }}" data-falak-bind="none">
+            {{ component.html|raw }}
+        </div>
+    </div>
+</section>

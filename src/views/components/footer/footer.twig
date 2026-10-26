@@ -1,56 +1,76 @@
 {#
     Site footer — statically included from master.twig via {% component 'footer.footer' %}
 
-    Customizer: the platform wraps every {% component %} in draft renders, so
-    this block is selectable in the preview on its own and opens the "Header &
-    footer" panel. Its values come from theme.settings (theme.json groups),
-    which the customizer edits by group — data-falak-* addresses a component
-    blueprint's fields, so there is nothing to tag here.
-#}
-<footer class="site-footer{{ theme.settings.get('footer_is_dark') ? ' site-footer--dark' : '' }}">
-    {# Newsletter opt-in — a band across the top of the footer, switched from
-       the "Header & footer" panel (footer_newsletter_enabled).
+    The same footer the onyx theme carries, in this theme's own skin:
+      1  newsletter   — a band across the top, switched from the footer settings
+      2  columns      — brand (logo, about, contact, social), categories,
+                        quick links, useful links, app badges — each present
+                        only when it has something to show; the grid adapts
+      3  compliance   — Commercial Registry / Saudi Business Center / VAT badges
+                        on one side, payment marks on the other
+      4  legal        — copyright, policy links, platform credit
 
-       <falak-newsletter> is an SDK component: it renders its own field,
-       button and aria-live status line, validates in the STORE'S language
-       rather than the browser's, and posts through
-       falak.newsletter.subscribe(). The theme only skins it — there is no
-       form to write here and nothing to wire up in app.js. #}
+    Everything factual (payment methods, certificate numbers, app links, social
+    profiles) layers theme settings over store config, so a merchant who fills
+    the dashboard gets a correct footer with no theme settings at all, and one
+    who prefers the customizer edits it all in the Header & footer panel.
+
+    Customizer: data-falak-field on a static names a SETTINGS id. The bridge
+    draws a pencil on each one; a click opens the Header & footer panel at that
+    control. data-falak-bind="none" throughout — a static has no component row
+    for the live-patch channel.
+
+    Draft renders set theme.mode to 'preview' (ThemeRenderer). Empty bands use
+    it to show the merchant a shell with a pencil, and never show it to a
+    shopper.
+#}
+{% set preview = theme.mode == 'preview' %}
+
+<footer class="site-footer{{ theme.settings.get('footer_is_dark') ? ' site-footer--dark' : '' }}">
+    {# Newsletter opt-in. <falak-newsletter> renders its own field, button and
+       aria-live status line, validates in the STORE'S language, and posts
+       through falak.newsletter.subscribe(). The theme only skins it. #}
     {% if theme.settings.get('footer_newsletter_enabled', true) %}
-        <div class="site-footer__newsletter">
+        <div class="site-footer__newsletter"
+             data-falak-field="footer_newsletter_title" data-falak-label="{{ trans('footer.newsletter_short') }}" data-falak-bind="none">
             <div class="container site-footer__newsletter-inner">
-                <h2 class="site-footer__newsletter-title">
-                    {{ theme.settings.get('footer_newsletter_title')|default(trans('footer.newsletter')) }}
-                </h2>
+                <div class="site-footer__newsletter-words">
+                    <h2 class="site-footer__newsletter-title">
+                        {{ theme.settings.get('footer_newsletter_title')|default(trans('footer.newsletter')) }}
+                    </h2>
+                    {% if theme.settings.get('footer_newsletter_text') %}
+                        <p class="site-footer__newsletter-text">{{ theme.settings.get('footer_newsletter_text') }}</p>
+                    {% endif %}
+                </div>
 
                 <falak-newsletter class="site-footer__newsletter-form"></falak-newsletter>
             </div>
         </div>
     {% endif %}
 
-    <div class="container">
-        <div class="site-footer__inner">
+    <div class="container site-footer__grid">
+        {# ------------------------------------------------------------ brand #}
+        <div class="site-footer__col site-footer__col--brand">
             <div class="site-footer__brand">
                 {% if store.logo %}
-                    <img src="{{ store.logo }}" alt="{{ store.name }}" width="220" height="88">
+                    <img src="{{ store.logo }}" alt="{{ store.name }}" width="220" height="88" loading="lazy">
                 {% endif %}
                 <span class="site-footer__brand-name">{{ store.name }}</span>
+
                 {% if theme.settings.get('footer_about') %}
-                    <p class="site-footer__about">{{ theme.settings.get('footer_about') }}</p>
+                    <p class="site-footer__about"
+                       data-falak-field="footer_about" data-falak-label="{{ trans('footer.about') }}" data-falak-bind="none">{{ theme.settings.get('footer_about') }}</p>
+                {% elseif preview %}
+                    <p class="site-footer__about is-placeholder"
+                       data-falak-field="footer_about" data-falak-label="{{ trans('footer.about') }}" data-falak-bind="none">{{ trans('footer.add_about') }}</p>
                 {% endif %}
             </div>
 
-            <nav class="site-footer__menu" aria-label="{{ trans('footer.links') }}">
-                <ul>
-                    {% for item in menus.footer_menu|default([]) %}
-                        <li><a href="{{ item.url }}"{{ item.is_new_tab ? ' target="_blank" rel="noopener"' : '' }}>{{ item.title }}</a></li>
-                    {% endfor %}
-                </ul>
-            </nav>
-
-            {# Contact channels — footer group settings; each renders only when set. #}
+            {# Contact channels — this theme's own footer settings; each renders
+               only when set. #}
             {% if theme.settings.get('footer_phone') or theme.settings.get('footer_email') %}
-                <div class="site-footer__contact" aria-label="{{ trans('footer.contact') }}">
+                <div class="site-footer__contact" aria-label="{{ trans('footer.contact') }}"
+                     data-falak-field="footer_phone" data-falak-label="{{ trans('footer.contact') }}" data-falak-bind="none">
                     {% if theme.settings.get('footer_phone') %}
                         <a href="tel:{{ theme.settings.get('footer_phone') }}" dir="ltr">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.5 2.1L8.1 10a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c1 .3 1.9.5 2.9.7a2 2 0 0 1 1.6 2z"/></svg>
@@ -64,34 +84,221 @@
                         </a>
                     {% endif %}
                 </div>
+            {% elseif preview %}
+                <span class="site-footer__add site-footer__add--inline"
+                      data-falak-field="footer_phone" data-falak-label="{{ trans('footer.contact') }}" data-falak-bind="none">{{ trans('footer.add_contact') }}</span>
             {% endif %}
 
-            {#
-                Social accounts. Links stay in the theme's customizer settings;
-                <falak-social> owns the icon set and the markup, so a new
-                network is a platform change rather than a theme edit.
-            #}
-            <falak-social
-                hide-title
-                link-instagram="{{ theme.settings.get('social_instagram') }}"
-                link-x_account="{{ theme.settings.get('social_x') }}"
-                link-tiktok="{{ theme.settings.get('social_tiktok') }}"
-                link-snapchat="{{ theme.settings.get('social_snapchat') }}"
-                link-youtube="{{ theme.settings.get('social_youtube') }}"
-                link-whatsapp="{{ theme.settings.get('social_whatsapp') }}"></falak-social>
+            {# Social accounts. Links stay in this theme's Social profiles group
+               (shown in the same Header & footer panel); <falak-social> owns the
+               icon set and the markup. #}
+            <div class="site-footer__social-wrap"
+                 data-falak-field="social_instagram" data-falak-label="{{ trans('footer.social') }}" data-falak-bind="none">
+                <falak-social
+                    hide-title
+                    link-instagram="{{ theme.settings.get('social_instagram') }}"
+                    link-x_account="{{ theme.settings.get('social_x') }}"
+                    link-tiktok="{{ theme.settings.get('social_tiktok') }}"
+                    link-snapchat="{{ theme.settings.get('social_snapchat') }}"
+                    link-youtube="{{ theme.settings.get('social_youtube') }}"
+                    link-whatsapp="{{ theme.settings.get('social_whatsapp') }}"></falak-social>
+                {% if preview %}
+                    <span class="site-footer__add site-footer__add--inline">{{ trans('footer.add_social') }}</span>
+                {% endif %}
+            </div>
         </div>
 
-        {# Mobile apps — renders nothing until the store has app links on file,
-           so it costs an empty element and no layout. #}
-        <falak-apps-icons></falak-apps-icons>
-
-        {# Payment methods — ungated, Salla-style: the component reads the
-           store's enabled payment_methods rows and collapses entirely when
-           there are none, so no switch is needed. #}
-        <falak-payments hide-title></falak-payments>
-
-        {% if store.settings.show_copyright %}
-            <p class="site-footer__copyright">{{ trans('footer.powered_by') }}</p>
+        {# ------------------------------------------------------- categories #}
+        {# A long list is capped: rows past the cap ship hidden and the
+           "show more" button (wired in app.js) reveals them. No JavaScript
+           means the column simply stays at the short list. #}
+        {% set footer_categories = menus.categories_menu|default([]) %}
+        {% set footer_categories_cap = 6 %}
+        {% if footer_categories|length > 0 %}
+            <div class="site-footer__col">
+                <div class="site-footer__group">
+                    <h3 class="site-footer__heading">{{ trans('common.categories') }}</h3>
+                    <ul class="site-footer__links">
+                        {% for item in footer_categories %}
+                            <li{% if loop.index > footer_categories_cap %} data-footer-extra hidden{% endif %}><a href="{{ item.url }}"{{ item.is_new_tab ? ' target="_blank" rel="noopener"' : '' }}>{{ item.title }}</a></li>
+                        {% endfor %}
+                    </ul>
+                    {% if footer_categories|length > footer_categories_cap %}
+                        <button type="button" class="site-footer__more-btn" data-footer-more aria-expanded="false">
+                            <span data-more-label>{{ trans('filters.show_more') }}</span>
+                            <span data-less-label hidden>{{ trans('filters.show_less') }}</span>
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
         {% endif %}
+
+        {# ------------------------------------------------------ quick links #}
+        {#
+            Two sources, most deliberate first. A footer menu built in the Menus
+            panel is a curated list and wins outright. Otherwise the column is
+            the `footer_links` setting, which ships with the store's core pages
+            as defaults — so a new store has a populated column, and the merchant
+            edits it in the same panel as the rest of the footer.
+        #}
+        {% set footer_links = theme.settings.get('footer_links')|default([]) %}
+
+        {# Contact us on every store: /contact-us is a platform route
+           (pages/contact.twig). Skipped only if the merchant's own links
+           already point there. #}
+        {% set contact_url = '/contact-us' %}
+        {% set contact_title = theme.is_rtl ? 'تواصل معنا' : 'Contact us' %}
+        {% set own_urls = menus.footer_menu|default([])|length > 0
+            ? menus.footer_menu|map(i => i.url)|join('|')
+            : footer_links|map(i => i.url)|join('|') %}
+        {% set show_contact = ('|' ~ contact_url ~ '|') not in ('|' ~ own_urls ~ '|') %}
+
+        {% if menus.footer_menu|default([])|length > 0 %}
+            <div class="site-footer__col"
+                 data-falak-field="footer_links_menu" data-falak-label="{{ trans('footer.quick_links') }}" data-falak-bind="none">
+                <div class="site-footer__group">
+                    <h3 class="site-footer__heading">{{ trans('footer.quick_links') }}</h3>
+                    <ul class="site-footer__links">
+                        {% for item in menus.footer_menu %}
+                            <li><a href="{{ item.url }}"{{ item.is_new_tab ? ' target="_blank" rel="noopener"' : '' }}>{{ item.title }}</a></li>
+                        {% endfor %}
+                        {% if show_contact %}<li><a href="{{ contact_url }}">{{ contact_title }}</a></li>{% endif %}
+                    </ul>
+                </div>
+            </div>
+        {% elseif footer_links|length > 0 or show_contact %}
+            <div class="site-footer__col"
+                 data-falak-field="footer_links" data-falak-label="{{ trans('footer.quick_links') }}" data-falak-bind="none">
+                <div class="site-footer__group">
+                    <h3 class="site-footer__heading">{{ trans('footer.quick_links') }}</h3>
+                    <ul class="site-footer__links">
+                        {% for item in footer_links %}
+                            {% if item.url and item.label %}
+                                <li><a href="{{ item.url }}">{{ item.label }}</a></li>
+                            {% endif %}
+                        {% endfor %}
+                        {% if show_contact %}<li><a href="{{ contact_url }}">{{ contact_title }}</a></li>{% endif %}
+                    </ul>
+                </div>
+            </div>
+        {% endif %}
+
+        {# ----------------------------------------------------- useful links #}
+        {% set more_links = theme.settings.get('footer_more_links')|default([]) %}
+        {% set more_links_title = theme.settings.get('footer_more_links_title')|default(trans('footer.more_links')) %}
+
+        {% if more_links|length > 0 %}
+            <div class="site-footer__col"
+                 data-falak-field="footer_more_links" data-falak-label="{{ more_links_title }}" data-falak-bind="none">
+                <div class="site-footer__group">
+                    <h3 class="site-footer__heading">{{ more_links_title }}</h3>
+                    <ul class="site-footer__links">
+                        {% for item in more_links %}
+                            {% if item.url and item.label %}
+                                <li><a href="{{ item.url }}">{{ item.label }}</a></li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        {% elseif preview %}
+            <div class="site-footer__col"
+                 data-falak-field="footer_more_links" data-falak-label="{{ more_links_title }}" data-falak-bind="none">
+                <div class="site-footer__group is-placeholder">
+                    <h3 class="site-footer__heading">{{ more_links_title }}</h3>
+                    <p class="site-footer__add">{{ trans('footer.add_more_links') }}</p>
+                </div>
+            </div>
+        {% endif %}
+
+        {# ------------------------------------------------------------- apps #}
+        {# Built as one literal rather than merged in: `merge` is not on the
+           sandbox's filter allowlist. Empty keys are harmless — the component
+           drops any store whose url is falsy. #}
+        {% set app_ios = theme.settings.get('footer_app_ios') %}
+        {% set app_android = theme.settings.get('footer_app_android') %}
+
+        {% if app_ios or app_android %}
+            <div class="site-footer__col site-footer__col--apps"
+                 data-falak-field="footer_app_ios" data-falak-label="{{ trans('footer.get_our_app') }}" data-falak-bind="none">
+                <div class="site-footer__group">
+                    <h3 class="site-footer__heading">{{ trans('footer.get_our_app') }}</h3>
+                    {% if theme.settings.get('footer_apps_text') %}
+                        <p class="site-footer__apps-text">{{ theme.settings.get('footer_apps_text') }}</p>
+                    {% endif %}
+                    <falak-apps-icons class="site-footer__apps-links" hide-title
+                        apps="{{ { 'ios': app_ios, 'android': app_android }|json_encode|escape('html_attr') }}"></falak-apps-icons>
+                </div>
+            </div>
+        {% elseif preview %}
+            <div class="site-footer__col site-footer__col--apps"
+                 data-falak-field="footer_app_ios" data-falak-label="{{ trans('footer.get_our_app') }}" data-falak-bind="none">
+                <div class="site-footer__group is-placeholder">
+                    <h3 class="site-footer__heading">{{ trans('footer.get_our_app') }}</h3>
+                    <p class="site-footer__add">{{ trans('footer.add_apps') }}</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="site-footer__bottom">
+        {# Compliance on one side, payment on the other — both are certificates
+           of a sort, and both belong to the store rather than to any column. #}
+        <div class="container site-footer__bottom-inner">
+            <div class="site-footer__marks"
+                 data-falak-field="footer_commercial_registry" data-falak-label="{{ trans('footer.compliance') }}" data-falak-bind="none">
+                {# The numbers: this theme's footer settings first, Basic settings
+                   underneath — the component layers them, so a blank field here
+                   never hides a number the merchant entered in the dashboard.
+                   The marks are platform-hosted (S3), the same four files for
+                   every theme, so a theme carries no images of its own. #}
+                <falak-trust-badges {{ theme.settings.get('footer_is_dark') ? 'dark' : '' }}
+                    documents="{{ {
+                        'company_registration_number': theme.settings.get('footer_commercial_registry'),
+                        'business_center_certificate': theme.settings.get('footer_business_center'),
+                        'freelance_number': theme.settings.get('footer_freelance_licence'),
+                        'vat_number': theme.settings.get('footer_vat_certificate')
+                    }|json_encode|escape('html_attr') }}"
+                    logo-company_registration_number="https://falakcart-bucket.s3.ap-south-1.amazonaws.com/tenants/commerce.jpg"
+                    logo-business_center_certificate="https://falakcart-bucket.s3.ap-south-1.amazonaws.com/tenants/saudi-business-center.png"
+                    logo-freelance_number="https://falakcart-bucket.s3.ap-south-1.amazonaws.com/tenants/WhatsApp+Image+2026-10-06+at+4.18.36+PM.jpeg"
+                    logo-vat_number="https://falakcart-bucket.s3.ap-south-1.amazonaws.com/tenants/vat.png"></falak-trust-badges>
+
+                {# Customizer only, and only while the component has nothing to
+                   show (it sets `hidden` on itself then — sibling rule in CSS). #}
+                {% if preview %}
+                    <span class="site-footer__add site-footer__add--inline site-footer__add--docs">{{ trans('footer.add_documents') }}</span>
+                {% endif %}
+            </div>
+
+            {# Ungated: the component reads the store's enabled payment methods
+               and collapses entirely when there are none. #}
+            <falak-payments class="site-footer__payments" hide-title></falak-payments>
+        </div>
+
+        <div class="container site-footer__legal">
+            <p class="site-footer__copyright">
+                &copy; {{ 'now'|date('Y') }} {{ store.name }}. {{ trans('footer.rights') }}
+            </p>
+
+            {% set legal_links = theme.settings.get('footer_legal_links')|default([]) %}
+            {% if legal_links|length > 0 %}
+                <ul class="site-footer__legal-links"
+                    data-falak-field="footer_legal_links" data-falak-label="{{ trans('footer.legal_links') }}" data-falak-bind="none">
+                    {% for link in legal_links %}
+                        {% if link.url %}
+                            <li><a href="{{ link.url }}">{{ link.label }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+            {% elseif preview %}
+                <span class="site-footer__add site-footer__add--inline"
+                      data-falak-field="footer_legal_links" data-falak-label="{{ trans('footer.legal_links') }}" data-falak-bind="none">{{ trans('footer.add_legal') }}</span>
+            {% endif %}
+
+            {% if store.settings.show_copyright %}
+                <p class="site-footer__powered">{{ trans('footer.powered_by') }}</p>
+            {% endif %}
+        </div>
     </div>
 </footer>

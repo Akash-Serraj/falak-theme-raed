@@ -164,20 +164,6 @@
                                        action-text="{{ filtered ? trans('filters.reset') : trans('common.back_home') }}"
                                        action-href="{{ filtered ? (category ? category.url : '?') : store.url }}"
                                        action-class="btn btn--outline"></falak-placeholder>
-
-                    {#
-                        An empty CATEGORY is not an empty store, so offer a way onward
-                        rather than a dead end. Guarded on `category` on purpose: with
-                        no filter the listing is empty because the store itself is, and
-                        the component would render a second empty message under the
-                        first one.
-                    #}
-                    {% if category and not filtered %}
-                        <section class="product-listing__fallback">
-                            <h2>{{ trans('product.other_products') }}</h2>
-                            <falak-products-list limit="4" columns="4" source="listing.empty"></falak-products-list>
-                        </section>
-                    {% endif %}
                 {% endif %}
             </div>
         </div>

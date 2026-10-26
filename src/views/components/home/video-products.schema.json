@@ -6,6 +6,7 @@
         "en": "Video Commerce"
     },
     "icon": "movie-line",
+    "preview": "images/sections/video-products.png",
     "is_default": false,
     "areas": [
         "home",
@@ -163,21 +164,21 @@
                 "ar": "الجوال يعمل دائماً عند الظهور — لا يوجد مؤشر للتمرير عليه",
                 "en": "Phones always use on-view — there is no pointer to hover with"
             },
-            "value": "hover",
+            "value": "inview",
             "options": [
-                {
-                    "label": {
-                        "ar": "عند مرور المؤشر",
-                        "en": "On hover"
-                    },
-                    "value": "hover"
-                },
                 {
                     "label": {
                         "ar": "عند ظهوره في الشاشة",
                         "en": "When scrolled into view"
                     },
                     "value": "inview"
+                },
+                {
+                    "label": {
+                        "ar": "عند مرور المؤشر",
+                        "en": "On hover"
+                    },
+                    "value": "hover"
                 }
             ]
         },

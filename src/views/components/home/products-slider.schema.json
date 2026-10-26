@@ -6,6 +6,7 @@
         "en": "Products Carousel"
     },
     "icon": "carousel-view",
+    "preview": "images/sections/products-slider.png",
     "is_default": false,
     "areas": [
         "home",
@@ -169,19 +170,18 @@
             "required": false
         },
         {
-            "id": "all_url",
-            "type": "string",
-            "format": "text",
+            "id": "show_all",
+            "type": "boolean",
+            "format": "switch",
             "label": {
-                "ar": "رابط عرض الكل",
-                "en": "View all link"
+                "ar": "رابط «عرض الكل»",
+                "en": "'View all' link"
             },
             "description": {
-                "ar": "اختياري — يظهر بجانب عنوان القسم",
-                "en": "Optional — appears beside the section title"
+                "ar": "يظهر أسفل الشريط ويفتح صفحة المنتجات بنفس المصدر المختار",
+                "en": "Shown under the carousel; opens the products page matching the chosen source"
             },
-            "required": false,
-            "maxLength": 255
+            "value": true
         },
         {
             "id": "autoplay",

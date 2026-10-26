@@ -75,9 +75,20 @@ body {
 
 img { max-width: 100%; height: auto; }
 
+/*
+    The page-level guard. `overflow-x: clip` on <body> above does not reach the
+    viewport on its own: with <html> left at `visible` the body value propagates
+    up, but anything laid out wider than the screen still lets the viewport
+    scroll sideways (RTL pages are scrolled there on load). Clipping the layout
+    wrapper itself is what stops it; the fixed-position drawers and modals are
+    not its descendants in the painting sense, so they are unaffected.
+*/
+.app-inner { overflow-x: clip; }
+
 /* Content imagery shows a quiet surface, not a white flash, while loading.
    (Product cards already get this from their media box.) */
 .hero-slider__img,
+.hero-slider__video,
 .photo-tile img,
 .article-card > img {
     background: var(--color-surface);
@@ -474,11 +485,28 @@ falak-rating-stars[data-busy] { opacity: 0.5; }
  * card that is not showing video matches none of this, so adding it changes
  * nothing about how any existing card in any theme renders.
  */
-.f-card__video {
+/* The still sits UNDER the clip and fills the same box, so the swap from one to
+   the other is invisible. Absolute, because the clip must be able to lie over
+   it rather than push it out of the way. */
+.f-card__still {
+    position: absolute;
+    inset: 0;
     inline-size: 100%;
     block-size: 100%;
     object-fit: cover;
     display: block;
+}
+
+.f-card__video {
+    position: relative;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    display: block;
+    /* Transparent on purpose: a background here would paint over the still
+       while the clip is still arriving, which is the whole point of having
+       one. */
+    background: transparent;
 }
 
 .f-card__video-badge {
@@ -505,6 +533,42 @@ falak-rating-stars[data-busy] { opacity: 0.5; }
     color: var(--color-on-primary, #fff);
     font-size: 0.7rem;
     font-weight: 700;
+}
+
+/* The percentage inside the sale badge, and the two marks the legacy card
+   also carries: "hot" under the sale badge from 30% off, and the
+   merchant's free-shipping promise in the bottom corner. Each has its own
+   corner or offset so a product carrying all of them stacks nothing. */
+.f-card__badge-pct { font-size: 0.85rem; font-weight: 800; margin-inline-end: 0.15rem; }
+/* Sale and hot stack in one column at the start corner, so a theme that
+   draws the sale badge larger (Onyx's hexagon) pushes hot down with it
+   instead of under it. The badge stays a positioned box for Onyx's
+   ::after, which fills it to centre the percentage. */
+.f-card__marks { position: absolute; inset-block-start: 0.5rem; inset-inline-start: 0.5rem; display: flex; flex-direction: column; align-items: flex-start; gap: 0.3rem; }
+.f-card__marks .f-card__badge { position: relative; inset: auto; }
+.f-card__hot {
+    position: relative;
+    inset: auto;    padding: 0.125rem 0.5rem;
+    border-radius: 0.25rem;
+    background: linear-gradient(135deg, #f97316, #ea580c);
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    line-height: 1.5;
+}
+.f-card__ship {
+    position: absolute;
+    inset-block-end: 0.5rem;
+    inset-inline-end: 0.5rem;
+    padding: 0.125rem 0.5rem;
+    border-radius: 0.25rem;
+    background: var(--f-success, #059669);
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    line-height: 1.5;
 }
 
 /*
@@ -828,6 +892,25 @@ falak-rating-stars[data-busy] { opacity: 0.5; }
    ======================================================================== */
 
 .f-cart-coupons { display: block; }
+
+/* <falak-cart-offers>: the cart page's offer tracker. One card per offer the
+   cart is measured against — unlocked ones tinted and ticked, locked ones
+   neutral with a progress bar. */
+.f-cart-offers { display: block; margin-block-end: 1rem; }
+.f-offer-track { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.6rem; }
+.f-offer-track__card { border: 1.5px solid var(--f-border); border-radius: calc(var(--f-radius) * 1.4); background: var(--f-surface); padding: 0.8rem 0.9rem; transition: border-color 0.3s ease, background-color 0.3s ease; }
+.f-offer-track__card.is-unlocked { border-color: color-mix(in srgb, var(--f-success, #16a34a) 35%, transparent); background: color-mix(in srgb, var(--f-success, #16a34a) 7%, var(--f-surface)); }
+.f-offer-track__top { display: flex; align-items: center; gap: 0.65rem; }
+.f-offer-track__icon { flex: none; display: inline-flex; align-items: center; justify-content: center; inline-size: 2.25rem; block-size: 2.25rem; border-radius: 0.65rem; background: color-mix(in srgb, var(--color-primary, #1d9e75) 12%, transparent); color: var(--color-primary, #1d9e75); }
+.f-offer-track__card.is-unlocked .f-offer-track__icon { background: color-mix(in srgb, var(--f-success, #16a34a) 14%, transparent); color: var(--f-success, #16a34a); }
+.f-offer-track__text { flex: 1 1 auto; min-inline-size: 0; display: flex; flex-direction: column; gap: 0.1rem; }
+.f-offer-track__title { font-size: 0.9rem; font-weight: 700; color: var(--f-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.f-offer-track__sub { font-size: 0.8rem; color: var(--f-text-soft); }
+.f-offer-track__card.is-unlocked .f-offer-track__sub { color: var(--f-success, #16a34a); font-weight: 600; }
+.f-offer-track__state { flex: none; display: inline-flex; color: var(--f-text-faint); }
+.f-offer-track__card.is-unlocked .f-offer-track__state { color: var(--f-success, #16a34a); }
+.f-offer-track__bar { margin-block-start: 0.6rem; block-size: 6px; border-radius: 999px; background: color-mix(in srgb, var(--f-text) 8%, transparent); overflow: hidden; }
+.f-offer-track__fill { display: block; block-size: 100%; border-radius: inherit; background: var(--color-primary, #1d9e75); transition: inline-size 0.4s ease; }
 .f-cart-coupons[hidden] { display: none; }
 .f-cart-coupons__label { display: block; margin-block-end: 0.4rem; font-size: 0.85rem; font-weight: 600; color: var(--f-text); }
 .f-cart-coupons__row { display: flex; gap: 0.5rem; }
@@ -1330,6 +1413,15 @@ body.f-drawer-open { overflow: hidden; }
 .f-checkout__done-line { margin: 0.5rem 0 0 3.35rem; font-size: 0.9rem; color: var(--f-text-soft); }
 .f-checkout__body { display: flex; flex-direction: column; gap: 1rem; margin-block-start: 1rem; }
 .f-checkout__hint { margin: 0; font-size: 0.85rem; color: var(--f-text-soft); }
+/* The contact step of a digital order: phone + send-code side by side, the
+   code row beneath, and the "we found your details" note. */
+.f-checkout__phone-row { display: flex; gap: 0.5rem; align-items: stretch; }
+.f-checkout__phone-row .f-input { flex: 1 1 auto; min-inline-size: 0; }
+.f-checkout__phone-row .f-btn { flex: none; white-space: nowrap; }
+.f-checkout__recognized { margin: 0; padding: 0.6rem 0.8rem; border-radius: var(--f-radius); background: color-mix(in srgb, var(--color-primary, #1d9e75) 10%, transparent); color: var(--f-text); font-size: 0.88rem; }
+.f-checkout__otp { gap: 0.5rem; }
+.f-checkout__otp-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.f-checkout [hidden] { display: none !important; }
 .f-checkout__error { margin: 0; padding: 0.6rem 0.8rem; border-radius: var(--f-radius); background: color-mix(in srgb, var(--f-danger) 10%, transparent); color: var(--f-danger); font-size: 0.88rem; }
 .f-checkout__loading { display: flex; justify-content: center; padding: 2rem; }
 
@@ -1352,6 +1444,8 @@ body.f-drawer-open { overflow: hidden; }
 .f-checkout__method-logo--empty { display: inline-flex; align-items: center; justify-content: center; color: var(--f-text-faint); }
 .f-checkout__method-text { display: flex; flex-direction: column; gap: 0.1rem; min-inline-size: 0; }
 .f-checkout__method-text small { color: var(--f-text-soft); }
+/* "You'll be charged 12.50 USD" — only under a method that settles in another currency. */
+.f-checkout__charge-note { font-size: 0.78rem; color: var(--f-text-faint); font-variant-numeric: tabular-nums; }
 .f-checkout__tag { color: var(--color-primary, #1d9e75) !important; font-weight: 600; }
 
 .f-checkout__form { display: flex; flex-direction: column; gap: 0.9rem; }
@@ -1388,7 +1482,10 @@ body.f-drawer-open { overflow: hidden; }
 .f-checkout__lines { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.7rem; max-block-size: 18rem; overflow-y: auto; }
 .f-checkout__line { display: flex; align-items: center; gap: 0.7rem; }
 .f-checkout__line-media { position: relative; flex: none; inline-size: 3.25rem; block-size: 3.25rem; border-radius: var(--f-radius); overflow: visible; background: rgba(0, 0, 0, 0.05); }
-.f-checkout__line-media img { inline-size: 100%; block-size: 100%; object-fit: cover; border-radius: var(--f-radius); }
+/* display: block — an inline img sits on the text baseline and adds descender
+   space below itself, so the list overflowed its box by ~8px and grew a
+   scrollbar even when every line fit. */
+.f-checkout__line-media img { display: block; inline-size: 100%; block-size: 100%; object-fit: cover; border-radius: var(--f-radius); }
 .f-checkout__line-qty { position: absolute; inset-block-start: -0.35rem; inset-inline-end: -0.35rem; min-inline-size: 1.2rem; block-size: 1.2rem; padding-inline: 0.3rem; border-radius: 999px; background: var(--f-text); color: var(--f-surface); font-size: 0.68rem; line-height: 1.2rem; text-align: center; }
 .f-checkout__line-text { flex: 1 1 auto; min-inline-size: 0; display: flex; flex-direction: column; font-size: 0.85rem; }
 .f-checkout__line-name { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
@@ -1417,13 +1514,301 @@ body.f-drawer-open { overflow: hidden; }
 
 .f-checkout__progress { display: block; margin-block-end: 1.25rem; }
 
-.f-payment-status { display: block; }
-.f-payment-status__box { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; padding: 3rem 1rem; text-align: center; }
-.f-payment-status__title { margin: 0; font-size: 1.4rem; }
-.f-payment-status__icon { display: inline-flex; align-items: center; justify-content: center; inline-size: 4rem; block-size: 4rem; border-radius: 50%; font-size: 1.8rem; font-weight: 700; }
-.is-success .f-payment-status__icon { background: var(--color-primary, #1d9e75); color: var(--color-on-primary, #fff); }
-.is-failed .f-payment-status__icon { background: var(--f-danger); color: #fff; }
-.f-payment-status__actions { display: flex; flex-wrap: wrap; gap: 0.6rem; justify-content: center; }
+/* ---- payment return page: verifying / success / pending / failed / error ---- */
+.f-payment-status { display: block; inline-size: 100%; max-inline-size: 60rem; margin-inline: auto; text-align: start; }
+.f-payment-status__shell { display: flex; flex-direction: column; gap: 1.25rem; }
+
+/* The hero: one panel that says where the payment stands. Its tone (the
+   accent, the tint behind the icon, the ink of the title) is set per state
+   with custom properties, so every piece below reads the same three. */
+.f-payment-status__hero {
+    --fps-accent: var(--f-text);
+    --fps-ink: var(--f-text);
+    --fps-tint: rgba(0, 0, 0, 0.05);
+    --fps-ring: rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 2.75rem 1.5rem 2.25rem;
+    border: 1px solid var(--f-border);
+    border-radius: calc(var(--f-radius) * 2);
+    background: var(--f-surface);
+    text-align: center;
+}
+.f-payment-status__hero::before { content: ""; position: absolute; inset: 0 0 auto 0; block-size: 0.3rem; background: var(--fps-accent); }
+.f-payment-status__hero::after {
+    content: "";
+    position: absolute;
+    inset-inline: -20%;
+    inset-block-start: -45%;
+    block-size: 75%;
+    background: radial-gradient(closest-side, var(--fps-tint), transparent);
+    pointer-events: none;
+}
+.f-payment-status__hero > * { position: relative; z-index: 1; }
+.f-payment-status__hero.is-success { --fps-accent: #16a34a; --fps-ink: #14532d; --fps-tint: rgba(22, 163, 74, 0.14); --fps-ring: rgba(22, 163, 74, 0.25); }
+.f-payment-status__hero.is-pending { --fps-accent: #d97706; --fps-ink: #78350f; --fps-tint: rgba(217, 119, 6, 0.14); --fps-ring: rgba(217, 119, 6, 0.25); }
+.f-payment-status__hero.is-failed { --fps-accent: #dc2626; --fps-ink: #7f1d1d; --fps-tint: rgba(220, 38, 38, 0.12); --fps-ring: rgba(220, 38, 38, 0.25); }
+
+.f-payment-status__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 4.5rem;
+    block-size: 4.5rem;
+    margin-block-end: 0.4rem;
+    border-radius: 50%;
+    background: var(--f-surface);
+    color: var(--fps-accent);
+    box-shadow: 0 0 0 0.5rem var(--fps-tint), 0 0 0 1px var(--fps-ring);
+}
+.f-payment-status__icon .f-order__icon { inline-size: 2.1rem; block-size: 2.1rem; }
+.f-payment-status__eyebrow { margin: 0; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--fps-accent); }
+.f-payment-status__title { margin: 0; font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 800; line-height: 1.2; color: var(--fps-ink); }
+.f-payment-status__text { margin: 0; max-inline-size: 34rem; color: var(--f-text-soft); line-height: 1.6; }
+
+/* Order placed → Payment → Confirmed. The connector between two dots takes
+   the accent once the step before it is done. */
+.f-payment-status__steps {
+    display: flex;
+    align-items: flex-start;
+    inline-size: 100%;
+    max-inline-size: 30rem;
+    margin: 1.1rem 0 0.4rem;
+    padding: 0;
+    list-style: none;
+}
+.f-payment-status__step {
+    position: relative;
+    flex: 1 1 0;
+    min-inline-size: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--f-text-faint);
+}
+.f-payment-status__step + .f-payment-status__step::before {
+    content: "";
+    position: absolute;
+    inset-block-start: 0.8rem;
+    inset-inline-end: 50%;
+    inline-size: 100%;
+    block-size: 2px;
+    background: var(--f-border);
+}
+.f-payment-status__step.is-done + .f-payment-status__step::before { background: var(--fps-accent); }
+.f-payment-status__step-dot {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 1.65rem;
+    block-size: 1.65rem;
+    border: 2px solid var(--f-border);
+    border-radius: 50%;
+    background: var(--f-surface);
+    color: var(--f-text-faint);
+    font-size: 0.72rem;
+}
+.f-payment-status__step-dot i { font-style: normal; }
+.f-payment-status__step-dot .f-order__icon { inline-size: 0.9rem; block-size: 0.9rem; }
+.f-payment-status__step.is-done,
+.f-payment-status__step.is-current,
+.f-payment-status__step.is-failed { color: var(--f-text); }
+.f-payment-status__step.is-done .f-payment-status__step-dot,
+.f-payment-status__step.is-failed .f-payment-status__step-dot { border-color: var(--fps-accent); background: var(--fps-accent); color: #fff; }
+.f-payment-status__step.is-current .f-payment-status__step-dot { border-color: var(--fps-accent); color: var(--fps-accent); box-shadow: 0 0 0 0.3rem var(--fps-tint); }
+.f-payment-status__step.is-current { color: var(--fps-ink); }
+.f-payment-status__step-label { padding-inline: 0.25rem; }
+
+/* The order number is a button: tap to copy. */
+.f-payment-status__pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin-block-start: 0.5rem;
+    padding: 0.4rem 0.5rem;
+    padding-inline-start: 0.9rem;
+    border: 1px solid var(--f-border);
+    border-radius: 999px;
+    background: var(--f-surface);
+    font: inherit;
+    font-size: 0.88rem;
+    color: var(--f-text);
+    cursor: pointer;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.f-payment-status__pill:hover,
+.f-payment-status__pill:focus-visible { border-color: var(--fps-accent); box-shadow: 0 0 0 0.2rem var(--fps-tint); outline: none; }
+.f-payment-status__pill.is-copied { border-color: #16a34a; }
+.f-payment-status__pill.is-copied .f-payment-status__pill-copy { background: #dcfce7; color: #16a34a; }
+.f-payment-status__pill-label { font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--f-text-soft); }
+.f-payment-status__pill b { font-weight: 700; font-variant-numeric: tabular-nums; }
+.f-payment-status__pill-copy {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 1.6rem;
+    block-size: 1.6rem;
+    border-radius: 50%;
+    background: var(--fps-tint);
+    color: var(--fps-accent);
+}
+.f-payment-status__pill-copy .f-order__icon { inline-size: 0.85rem; block-size: 0.85rem; }
+
+/* Total · method · date, under the pill. */
+.f-payment-status__meta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.6rem 0;
+    inline-size: 100%;
+    max-inline-size: 34rem;
+    margin: 1rem 0 0;
+    padding: 0.85rem 0 0;
+    border-block-start: 1px dashed var(--f-border);
+}
+.f-payment-status__meta-item { flex: 1 1 9rem; display: flex; flex-direction: column; gap: 0.15rem; padding-inline: 0.75rem; }
+.f-payment-status__meta-item + .f-payment-status__meta-item { border-inline-start: 1px solid var(--f-border); }
+.f-payment-status__meta dt { font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--f-text-faint); }
+.f-payment-status__meta dd { margin: 0; font-size: 0.95rem; font-weight: 700; color: var(--f-text); }
+
+.f-payment-status__spinner {
+    inline-size: 2.1rem;
+    block-size: 2.1rem;
+    border-radius: 50%;
+    border: 3px solid var(--f-border);
+    border-block-start-color: var(--fps-accent, var(--f-text));
+    animation: f-payment-status-spin 0.7s linear infinite;
+}
+.f-payment-status__spinner--sm { inline-size: 0.9rem; block-size: 0.9rem; border-width: 2px; }
+@keyframes f-payment-status-spin { to { transform: rotate(360deg); } }
+.f-payment-status__polling,
+.f-payment-status__redirect {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 0.9rem 0 0;
+    font-size: 0.84rem;
+    color: var(--f-text-soft);
+}
+.f-payment-status__polling-count { padding: 0.1rem 0.55rem; border-radius: 999px; background: var(--fps-tint); color: var(--fps-ink); font-size: 0.74rem; font-weight: 700; }
+/* Fills over the moment before the thank-you page takes over. */
+.f-payment-status__progress { display: block; inline-size: 12rem; block-size: 0.3rem; margin-block-start: 0.6rem; border-radius: 999px; background: var(--fps-tint); overflow: hidden; }
+.f-payment-status__progress i { display: block; inline-size: 100%; block-size: 100%; background: var(--fps-accent); transform-origin: 0 50%; animation: f-payment-status-fill 1.8s linear forwards; }
+[dir="rtl"] .f-payment-status__progress i { transform-origin: 100% 50%; }
+@keyframes f-payment-status-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* Items beside the payment, delivery and next-steps cards. */
+.f-payment-status__grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(16rem, 1fr); gap: 1.25rem; align-items: start; }
+.f-payment-status__side { display: flex; flex-direction: column; gap: 1.25rem; }
+.f-payment-status__card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    padding: 1.35rem 1.4rem;
+    border: 1px solid var(--f-border);
+    border-radius: calc(var(--f-radius) * 1.5);
+    background: var(--f-surface);
+    text-align: start;
+}
+.f-payment-status__card-title { display: flex; align-items: center; gap: 0.5rem; margin: 0; font-size: 1rem; font-weight: 700; color: var(--f-text); }
+.f-payment-status__card-title .f-order__icon { inline-size: 1.1rem; block-size: 1.1rem; color: var(--f-text-soft); }
+.f-payment-status__card-title small { margin-inline-start: auto; font-size: 0.75rem; font-weight: 600; color: var(--f-text-faint); }
+.f-payment-status__items { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+.f-payment-status__item { display: flex; align-items: center; gap: 0.85rem; padding-block: 0.7rem; border-block-start: 1px solid var(--f-border); }
+.f-payment-status__item:first-child { padding-block-start: 0; border-block-start: 0; }
+.f-payment-status__thumb {
+    position: relative;
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 3.25rem;
+    block-size: 3.25rem;
+    border: 1px solid var(--f-border);
+    border-radius: 0.65rem;
+    background: rgba(0, 0, 0, 0.03);
+    color: var(--f-text-faint);
+}
+.f-payment-status__thumb img { inline-size: 100%; block-size: 100%; object-fit: cover; border-radius: inherit; }
+.f-payment-status__qty {
+    position: absolute;
+    inset-block-start: -0.45rem;
+    inset-inline-end: -0.45rem;
+    min-inline-size: 1.25rem;
+    block-size: 1.25rem;
+    padding-inline: 0.3rem;
+    border-radius: 999px;
+    background: var(--f-text);
+    color: var(--f-surface);
+    font-size: 0.7rem;
+    line-height: 1.25rem;
+    text-align: center;
+}
+.f-payment-status__item-body { flex: 1; min-inline-size: 0; display: flex; flex-direction: column; gap: 0.15rem; }
+.f-payment-status__item-name { font-size: 0.92rem; font-weight: 600; color: var(--f-text); overflow-wrap: anywhere; }
+.f-payment-status__item-each { font-size: 0.78rem; color: var(--f-text-faint); }
+.f-payment-status__item-total { font-size: 0.92rem; font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.f-payment-status__totals { display: flex; flex-direction: column; gap: 0.45rem; margin: 0; padding-block-start: 0.9rem; border-block-start: 1px solid var(--f-border); }
+.f-payment-status__totals-row { display: flex; justify-content: space-between; gap: 1rem; font-size: 0.9rem; color: var(--f-text-soft); }
+.f-payment-status__totals-row dd { margin: 0; color: var(--f-text); font-variant-numeric: tabular-nums; }
+.f-payment-status__totals-row--grand { margin-block-start: 0.35rem; padding-block-start: 0.7rem; border-block-start: 1px dashed var(--f-border); font-size: 1.05rem; font-weight: 800; color: var(--f-text); }
+.f-payment-status__facts { display: flex; flex-direction: column; gap: 0.55rem; margin: 0; }
+.f-payment-status__facts > div { display: flex; justify-content: space-between; align-items: center; gap: 1rem; font-size: 0.9rem; }
+.f-payment-status__facts dt { color: var(--f-text-soft); }
+.f-payment-status__facts dd { margin: 0; text-align: end; color: var(--f-text); }
+.f-payment-status__badge { display: inline-flex; align-items: center; padding: 0.2rem 0.6rem; border-radius: 999px; background: rgba(0, 0, 0, 0.06); color: var(--f-text); font-size: 0.75rem; font-weight: 700; }
+.f-payment-status__badge.is-paid,
+.f-payment-status__badge.is-completed { background: #dcfce7; color: #166534; }
+.f-payment-status__badge.is-pending,
+.f-payment-status__badge.is-unpaid { background: #fef3c7; color: #92400e; }
+.f-payment-status__badge.is-failed { background: #fee2e2; color: #991b1b; }
+.f-payment-status__note { margin: 0; font-size: 0.82rem; color: var(--f-text-soft); }
+.f-payment-status__address { display: flex; flex-direction: column; gap: 0.2rem; font-style: normal; font-size: 0.9rem; line-height: 1.5; color: var(--f-text-soft); }
+.f-payment-status__address-name { font-weight: 700; color: var(--f-text); }
+.f-payment-status__next { display: flex; flex-direction: column; gap: 0.7rem; margin: 0; padding: 0; list-style: none; counter-reset: fps-next; }
+.f-payment-status__next li { position: relative; padding-inline-start: 2.1rem; font-size: 0.88rem; line-height: 1.5; color: var(--f-text-soft); counter-increment: fps-next; }
+.f-payment-status__next li::before {
+    content: counter(fps-next);
+    position: absolute;
+    inset-inline-start: 0;
+    inset-block-start: 0.05rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 1.5rem;
+    block-size: 1.5rem;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--f-text);
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+.f-payment-status__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.65rem; }
+.f-payment-status__actions .f-btn { justify-content: center; }
+
+@media (max-width: 47.99rem) {
+    .f-payment-status__grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 36rem) {
+    .f-payment-status__hero { padding: 2.1rem 1rem 1.75rem; }
+    .f-payment-status__meta-item + .f-payment-status__meta-item { border-inline-start: 0; }
+    .f-payment-status__actions { flex-direction: column; align-items: stretch; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .f-payment-status__spinner,
+    .f-payment-status__progress i { animation-duration: 0.01ms; animation-iteration-count: 1; }
+}
 
 /* ========================================================================
    Product availability ("notify me"), size guide, reviews summary
@@ -2622,8 +3007,23 @@ body.f-modal-open { overflow: hidden; }
 .f-trust__label { font-size: 0.68rem; opacity: 0.7; }
 .f-trust__value { font-weight: 700; font-variant-numeric: tabular-nums; }
 .f-trust__glyph { flex: none; color: var(--color-primary, #1d9e75); }
+
+/* The certificate logos ship as 300–600px PNGs; without a cap they rendered
+   at full size and the footer card grew to hold them. A badge is a chip:
+   the logo is the height of two text lines, nothing more. */
+.f-trust__logo {
+    flex: none;
+    block-size: 2.25rem;
+    inline-size: auto;
+    max-inline-size: 4.5rem;
+    object-fit: contain;
+    border-radius: 0.35rem;
+}
+
 .f-trust--dark .f-trust__item { border-color: rgba(255, 255, 255, 0.22); }
 .f-trust--dark .f-trust__glyph { color: currentColor; }
+/* On a dark footer the logos keep their white plate so colour marks stay legible. */
+.f-trust--dark .f-trust__logo { background: #fff; padding: 0.15rem; }
 
 @media (prefers-reduced-motion: reduce) {
     .f-slider__track { scroll-behavior: auto; }
@@ -2673,6 +3073,52 @@ body.f-modal-open { overflow: hidden; }
 
 /* Slightly smaller than the footer set — this is a secondary action. */
 .f-social--share .f-social__link { inline-size: 2rem; block-size: 2rem; }
+
+/*
+    Product share row: the divider moves from the component to this wrapper so
+    the copy-link button sits on the same strip. Telegram is dropped in favour
+    of copying the URL.
+*/
+.product-single__share {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-block-start: 1rem;
+    padding-block-start: 1rem;
+    border-block-start: 1px solid var(--f-border);
+}
+
+.product-single__share .f-social--share { margin: 0; padding: 0; border: 0; }
+.product-single__share .f-social__item:has(.f-social__link--telegram) { display: none; }
+
+.product-single__copy-link {
+    inline-size: 2rem;
+    block-size: 2rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid var(--f-border);
+    border-radius: 50%;
+    background: none;
+    color: inherit;
+    cursor: pointer;
+    transition: background-color 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
+}
+
+.product-single__copy-link:hover,
+.product-single__copy-link.is-copied {
+    background: var(--color-primary, #1d9e75);
+    border-color: transparent;
+    color: var(--color-on-primary, #fff);
+}
+
+.product-single__copy-link:hover { transform: translateY(-1px); }
+.product-single__copy-link:focus-visible { outline: 2px solid var(--color-primary, #1d9e75); outline-offset: 2px; }
+.product-single__copied-icon,
+.product-single__copy-link.is-copied .product-single__copy-icon { display: none; }
+.product-single__copy-link.is-copied .product-single__copied-icon { display: block; }
 
 /* ========================================================================
    Announcement bar
@@ -3627,6 +4073,16 @@ body.f-modal-open { overflow: hidden; }
 .f-filters__option-name { flex: 1; min-inline-size: 0; }
 .f-filters__count { font-size: 0.8rem; color: var(--f-text-faint); font-variant-numeric: tabular-nums; }
 .f-filters__option falak-rating-stars + .f-filters__option-name { flex: none; font-size: 0.8rem; color: var(--f-text-soft); }
+/* The rating row shows stars only; the "& up" qualifier stays for screen
+   readers so "4 stars" is still announced as a minimum, not an exact match. */
+.f-filters__option-name--sr {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
 
 .f-filters__empty { margin: 0; font-size: 0.85rem; color: var(--f-text-soft); }
 
@@ -3713,26 +4169,123 @@ body.f-modal-open { overflow: hidden; }
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary, #1d9e75) 18%, transparent);
 }
 
-/* Dial-code select beside the number; the row is forced LTR so the code
-   always reads +966 5xxxxxxxx, whatever the page direction. */
+/* Country picker beside the number. The row follows the page direction so
+   the picker sits at the start edge; the code and number themselves are LTR. */
 .f-login__phone-row { display: flex; gap: 0.5rem; }
 .f-login__phone-row .f-login__input { flex: 1 1 auto; min-inline-size: 0; }
 
-.f-login__dial {
-    flex: 0 0 auto;
-    padding: 0.7rem 0.6rem;
+.f-login__dial { position: relative; flex: 0 0 auto; }
+
+.f-login__dial-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    block-size: 100%;
+    padding: 0.7rem 0.7rem;
+    border: 1px solid var(--f-border);
+    border-radius: var(--f-radius);
+    background: var(--f-surface);
+    color: var(--f-text);
+    font: inherit;
+    font-size: 0.95rem;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+}
+
+.f-login__dial-toggle:focus-visible,
+.f-login__dial-toggle[aria-expanded="true"] {
+    outline: none;
+    border-color: var(--color-primary, #1d9e75);
+}
+
+.f-login__dial-flag {
+    flex: none;
+    inline-size: 1.5rem;
+    block-size: 1.125rem;
+    object-fit: cover;
+    border-radius: 2px;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+/* A chevron drawn from two borders; it flips while the list is open. */
+.f-login__dial-chevron {
+    inline-size: 0.45em;
+    block-size: 0.45em;
+    margin-block-start: -0.25em;
+    border-inline-end: 1.5px solid currentColor;
+    border-block-end: 1.5px solid currentColor;
+    transform: rotate(45deg);
+    transition: transform 0.15s ease;
+    opacity: 0.6;
+}
+.f-login__dial-toggle[aria-expanded="true"] .f-login__dial-chevron {
+    margin-block-start: 0.25em;
+    transform: rotate(-135deg);
+}
+
+.f-login__dial-menu {
+    position: absolute;
+    inset-inline-start: 0;
+    inset-block-start: calc(100% + 0.4rem);
+    z-index: 5;
+    inline-size: 16rem;
+    max-inline-size: calc(100vw - 3rem);
+    padding: 0.5rem;
+    border: 1px solid var(--f-border);
+    border-radius: var(--f-radius);
+    background: var(--f-surface);
+    box-shadow: 0 12px 32px rgba(8, 14, 12, 0.16);
+}
+
+.f-login__dial-search { padding-block-end: 0.5rem; }
+.f-login__dial-search-input {
+    inline-size: 100%;
+    padding: 0.5rem 0.65rem;
     border: 1px solid var(--f-border);
     border-radius: var(--f-radius);
     background: var(--f-surface);
     color: var(--f-text);
     font: inherit;
     font-size: 0.9rem;
-    cursor: pointer;
 }
-
-.f-login__dial:focus {
+.f-login__dial-search-input:focus {
     outline: none;
     border-color: var(--color-primary, #1d9e75);
+}
+
+.f-login__dial-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-block-size: 15rem;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.f-login__dial-option {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.45rem 0.5rem;
+    border-radius: calc(var(--f-radius) * 0.75);
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+.f-login__dial-option[hidden] { display: none; }
+.f-login__dial-option:hover,
+.f-login__dial-option[data-active] { background: rgba(0, 0, 0, 0.05); }
+.f-login__dial-option[aria-selected="true"] {
+    background: color-mix(in srgb, var(--color-primary, #1d9e75) 12%, transparent);
+    font-weight: 600;
+}
+.f-login__dial-option-code { flex: none; direction: ltr; font-variant-numeric: tabular-nums; }
+.f-login__dial-option-name {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    opacity: 0.75;
 }
 
 /* The code field is read back digit by digit, so it gets room to breathe. */
@@ -3884,7 +4437,9 @@ body.f-modal-open { overflow: hidden; }
    Localization sheet
    ======================================================================== */
 
-.f-locale { display: inline-block; }
+.f-locale { position: relative; display: inline-block; }
+.f-locale[hidden] { display: none; }
+.f-locale__chevron { display: inline-flex; opacity: 0.6; transition: transform 0.18s ease; }
 
 .f-locale__trigger {
     display: inline-flex;
@@ -3905,45 +4460,317 @@ body.f-modal-open { overflow: hidden; }
 .f-locale__globe { display: inline-flex; opacity: 0.75; }
 .f-locale__sep { opacity: 0.45; }
 
-.f-locale__group + .f-locale__group { margin-block-start: 1.25rem; }
+/* ---- the preferences sheet -------------------------------------------
+   Two groups (language, currency) of option cards. Each card leads with a
+   small code chip (AR / EN, ر.س / $), then the name, and the chosen one
+   carries a check at its end. Cards sit two abreast: the sheet holds ten
+   currencies without becoming a scroll, and still reads as a list on a
+   phone because the names are short. */
+
+#falak-localization .f-modal__body { max-inline-size: 30rem; }
+
+.f-locale__group + .f-locale__group {
+    margin-block-start: 1.4rem;
+    padding-block-start: 1.25rem;
+    border-block-start: 1px solid var(--f-border);
+}
 
 .f-locale__heading {
-    margin: 0 0 0.6rem;
-    font-size: 0.75rem;
+    margin: 0 0 0.7rem;
+    font-size: 0.72rem;
     font-weight: 700;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--f-text-faint);
 }
 
-.f-locale__options { display: grid; gap: 0.4rem; }
+.f-locale__options,
+.f-currency__options {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+}
 
-.f-locale__option {
+.f-locale__option,
+.f-currency__option {
+    position: relative;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    padding: 0.65rem 0.85rem;
+    justify-content: flex-start;
+    gap: 0.65rem;
+    min-inline-size: 0;
+    padding: 0.6rem 0.75rem;
     border: 1px solid var(--f-border);
     border-radius: var(--f-radius);
     background: var(--f-surface);
     color: var(--f-text);
     font: inherit;
     font-size: 0.88rem;
+    line-height: 1.25;
     text-align: start;
     cursor: pointer;
-    transition: border-color 0.15s ease, background-color 0.15s ease;
+    transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
 }
 
-.f-locale__option:hover { border-color: var(--color-primary, #1d9e75); }
+.f-locale__option:hover,
+.f-currency__option:hover {
+    border-color: color-mix(in srgb, var(--color-primary, #1d9e75) 55%, var(--f-border));
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
 
-.f-locale__option.is-current {
+.f-locale__option:active,
+.f-currency__option:active { transform: scale(0.985); }
+
+.f-locale__option:focus-visible,
+.f-currency__option:focus-visible { outline: 2px solid var(--color-primary, #1d9e75); outline-offset: 2px; }
+
+.f-locale__option-label,
+.f-currency__option-label { display: flex; flex-direction: column; gap: 0.1rem; min-inline-size: 0; line-height: 1.25; }
+.f-locale__option-name,
+.f-currency__option-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.f-locale__option-sub { font-size: 0.74rem; font-weight: 400; color: var(--f-text-faint); }
+
+/* ---- currency as a select, and the Ok that applies both ------------- */
+
+.f-locale__select-wrap { position: relative; display: block; }
+
+.f-locale__select {
+    inline-size: 100%;
+    appearance: none;
+    -webkit-appearance: none;
+    padding: 0.8rem 2.6rem 0.8rem 1rem;
+    border: 1px solid var(--f-border);
+    border-radius: var(--f-radius);
+    background: var(--f-surface);
+    color: var(--f-text);
+    font: inherit;
+    font-size: 0.92rem;
+    cursor: pointer;
+}
+
+[dir="rtl"] .f-locale__select { padding: 0.8rem 1rem 0.8rem 2.6rem; }
+
+.f-locale__select:hover { border-color: color-mix(in srgb, var(--color-primary, #1d9e75) 55%, var(--f-border)); }
+.f-locale__select:focus-visible {
+    outline: none;
     border-color: var(--color-primary, #1d9e75);
-    background: color-mix(in srgb, var(--color-primary, #1d9e75) 10%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary, #1d9e75) 18%, transparent);
+}
+
+.f-locale__select-chevron {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-end: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    pointer-events: none;
+    color: var(--f-text-soft);
+}
+
+.f-locale__actions { margin-block-start: 1.5rem; }
+
+/* The code chip leads the card; it is what the eye scans down. */
+.f-locale__code,
+.f-currency__code {
+    order: -1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    min-inline-size: 2.5rem;
+    block-size: 1.7rem;
+    padding-inline: 0.45rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--f-text) 6%, transparent);
+    color: var(--f-text-soft);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    font-variant-numeric: tabular-nums;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.f-locale__option.is-current,
+.f-currency__option.is-current {
+    border-color: var(--color-primary, #1d9e75);
+    background: color-mix(in srgb, var(--color-primary, #1d9e75) 8%, var(--f-surface));
     font-weight: 600;
 }
 
-.f-locale__code { font-size: 0.72rem; color: var(--f-text-faint); font-variant-numeric: tabular-nums; }
+.f-locale__option.is-current .f-locale__code,
+.f-currency__option.is-current .f-currency__code {
+    background: var(--color-primary, #1d9e75);
+    color: var(--color-on-primary, #fff);
+}
+
+/* Check mark at the end of the chosen card. */
+.f-locale__option.is-current::after,
+.f-currency__option.is-current::after {
+    content: "";
+    flex: none;
+    margin-inline-start: auto;
+    inline-size: 1rem;
+    block-size: 1rem;
+    background: var(--color-primary, #1d9e75);
+    -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><path d='M5 12l5 5L20 7'/></svg>") center / contain no-repeat;
+    mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><path d='M5 12l5 5L20 7'/></svg>") center / contain no-repeat;
+}
+
+@media (max-width: 380px) {
+    .f-locale__options,
+    .f-currency__options { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ------------------------------------------------------------------------
+   Currency switcher — hidden entirely on a one-currency store
+   ------------------------------------------------------------------------ */
+
+.f-currency { position: relative; display: inline-block; }
+.f-currency[hidden] { display: none; }
+
+/* The trigger pill: code + chevron (+ a coin a theme may hide). */
+.f-currency__field {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.6rem;
+    border: 0;
+    border-radius: 999px;
+    background: none;
+    font: inherit;
+    font-size: 0.85rem;
+    color: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.f-currency__field:hover { background: rgba(0, 0, 0, 0.05); }
+.f-currency__field:focus-visible { outline: 2px solid var(--color-primary, #1d9e75); outline-offset: 2px; }
+.f-currency__icon { display: inline-flex; opacity: 0.75; }
+.f-currency__current { font-weight: 600; letter-spacing: 0.02em; font-variant-numeric: tabular-nums; }
+.f-currency__chevron { display: inline-flex; opacity: 0.6; transition: transform 0.18s ease; }
+.f-currency.is-open .f-currency__chevron,
+.f-locale.is-open .f-locale__chevron { transform: rotate(180deg); }
+
+/* The panel hangs from the trigger's inline-end edge and opens towards the
+   page; where that would leave the viewport the component sets
+   --f-switch-shift to slide it back in (a `translate`, so the open
+   animation's `transform` is untouched). */
+.f-switch__panel {
+    position: absolute;
+    inset-block-start: calc(100% + 0.5rem);
+    inset-inline-end: 0;
+    translate: var(--f-switch-shift, 0px) 0;
+    z-index: 900;
+    min-inline-size: 16.5rem;
+    max-inline-size: min(20rem, calc(100vw - 2rem));
+    padding: 0.5rem;
+    border: 1px solid var(--f-border);
+    border-radius: 1rem;
+    background: var(--f-surface, #fff);
+    color: var(--f-text);
+    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.14), 0 2px 8px rgba(0, 0, 0, 0.06);
+    text-align: start;
+    animation: f-switch-in 0.16s ease;
+}
+
+.f-switch__panel[hidden] { display: none; }
+
+@keyframes f-switch-in {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: none; }
+}
+
+.f-switch__title {
+    margin: 0;
+    padding: 0.55rem 0.75rem 0.4rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--f-text-faint);
+}
+
+.f-switch__list {
+    display: grid;
+    gap: 0.15rem;
+    max-block-size: min(60vh, 24rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+/* One row: chip, name + symbol, check. */
+.f-switch__item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    inline-size: 100%;
+    padding: 0.5rem 0.6rem;
+    border: 0;
+    border-radius: 0.75rem;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+    transition: background-color 0.12s ease;
+}
+
+.f-switch__item:hover,
+.f-switch__item:focus-visible { background: color-mix(in srgb, var(--f-text) 5%, transparent); outline: none; }
+.f-switch__item.is-current { background: color-mix(in srgb, var(--color-primary, #1d9e75) 10%, transparent); }
+.f-switch__item.is-current:hover,
+.f-switch__item.is-current:focus-visible { background: color-mix(in srgb, var(--color-primary, #1d9e75) 15%, transparent); }
+
+.f-switch__code {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    min-inline-size: 2.75rem;
+    block-size: 2.25rem;
+    padding-inline: 0.4rem;
+    border-radius: 0.65rem;
+    background: color-mix(in srgb, var(--f-text) 6%, transparent);
+    color: var(--f-text-soft);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    font-variant-numeric: tabular-nums;
+}
+
+.f-switch__item.is-current .f-switch__code {
+    background: var(--color-primary, #1d9e75);
+    color: var(--color-on-primary, #fff);
+}
+
+.f-switch__text { display: flex; flex-direction: column; min-inline-size: 0; gap: 0.1rem; }
+.f-switch__name { font-weight: 600; font-size: 0.9rem; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.f-switch__sub { font-size: 0.74rem; line-height: 1.2; color: var(--f-text-faint); }
+.f-switch__item.is-current .f-switch__name { font-weight: 700; }
+
+.f-switch__item.is-current::after {
+    content: "";
+    flex: none;
+    margin-inline-start: auto;
+    inline-size: 1rem;
+    block-size: 1rem;
+    background: var(--color-primary, #1d9e75);
+    -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><path d='M5 12l5 5L20 7'/></svg>") center / contain no-repeat;
+    mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><path d='M5 12l5 5L20 7'/></svg>") center / contain no-repeat;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .f-switch__panel { animation: none; }
+    .f-currency__chevron,
+    .f-locale__chevron { transition: none; }
+}
+
+/* Inside the preferences sheet the host must fill the row, or the option
+   grid shrink-wraps to one narrow column. The option cards themselves share
+   the language cards' rules above. */
+.f-locale__group > falak-currency,
+.f-currency[inline] { display: block; }
 
 /* ========================================================================
    Comments / reviews
@@ -4404,78 +5231,281 @@ body.f-modal-open { overflow: hidden; }
 .f-profile[aria-busy="true"] .f-profile__save { opacity: 0.6; pointer-events: none; }
 
 /* ========================================================================
-   Order summary — one order: status, timeline, items, totals, delivery, payment
+   Order — one order: banner, header, progress, products, downloads, payment,
+   address, tracking, actions, info. Compact mode keeps items + totals only.
    ======================================================================== */
-.f-order { display: flex; flex-direction: column; gap: 1.5rem; }
+.f-order { display: flex; flex-direction: column; gap: 1.25rem; }
 .f-order__guest, .f-order__empty, .f-order__loading { text-align: center; padding: 1.5rem 1rem; opacity: 0.85; }
 .f-order__skeleton { display: flex; flex-direction: column; gap: 1rem; }
 .f-order__guest { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; }
-.f-order__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
-.f-order__title { margin: 0; font-size: 1.35rem; }
-.f-order__date { display: block; margin-block-start: 0.25rem; font-size: 0.85rem; opacity: 0.7; }
-.f-order__status {
-    display: inline-block;
+.f-order__icon { inline-size: 1em; block-size: 1em; vertical-align: -0.15em; flex: none; }
+
+.f-order__card {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.25rem;
+    border: 1px solid var(--f-border);
+    border-radius: calc(var(--f-radius) * 1.5);
+    background: var(--f-surface);
+}
+.f-order__card-head { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; }
+.f-order__card-title { display: flex; align-items: center; gap: 0.5rem; margin: 0; font-size: 1.05rem; font-weight: 700; }
+.f-order__card-title .f-order__icon { inline-size: 1.15em; block-size: 1.15em; }
+
+/* Two columns: the order on the start side, the cards about it on the end side. */
+.f-order__grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.25rem; align-items: start; }
+.f-order__main, .f-order__side { display: flex; flex-direction: column; gap: 1.25rem; min-inline-size: 0; }
+@media (min-width: 900px) {
+    .f-order__grid { grid-template-columns: minmax(0, 1fr) 19rem; }
+}
+
+/* ---- banner: payment required / failed / cancelled ---- */
+.f-order__banner {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.9rem 1.1rem;
+    border: 1px solid;
+    border-radius: var(--f-radius);
+    font-size: 0.92rem;
+}
+.f-order__banner-icon { flex: none; display: inline-flex; }
+.f-order__banner-icon .f-order__icon { inline-size: 1.25rem; block-size: 1.25rem; }
+.f-order__banner-text { flex: 1; margin: 0; display: flex; flex-wrap: wrap; gap: 0.25rem 0.5rem; }
+.f-order__banner-cta { flex: none; }
+.f-order__banner--warn { background: #fffbeb; border-color: #fde68a; color: #92400e; }
+.f-order__banner--danger { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
+.f-order__banner--muted { background: rgba(0, 0, 0, 0.03); border-color: var(--f-border); color: var(--f-text-soft); }
+
+/* ---- header ---- */
+.f-order__head { flex-direction: row; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; }
+.f-order__head-main { display: flex; flex-direction: column; gap: 0.6rem; min-inline-size: 0; }
+.f-order__title { margin: 0; font-size: 1.35rem; font-weight: 800; overflow-wrap: anywhere; }
+.f-order__pills { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.f-order__meta { margin: 0; display: flex; flex-wrap: wrap; gap: 0.35rem; font-size: 0.85rem; color: var(--f-text-soft); }
+.f-order__meta-sep { opacity: 0.6; }
+.f-order__invoice { flex: none; }
+.f-order__status, .f-order__pay-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
     padding: 0.3rem 0.75rem;
     border-radius: 999px;
     background: rgba(0, 0, 0, 0.06);
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     font-weight: 600;
     text-transform: capitalize;
+    white-space: nowrap;
 }
 .f-order__status--pending, .f-order__status--awaiting_payment { background: #fef3c7; color: #92400e; }
-.f-order__status--processing { background: #dbeafe; color: #1e40af; }
-.f-order__status--shipped, .f-order__status--out_for_delivery { background: #e0e7ff; color: #3730a3; }
-.f-order__status--delivered, .f-order__status--completed { background: #dcfce7; color: #166534; }
-.f-order__status--cancelled, .f-order__status--refunded, .f-order__status--returned { background: #fee2e2; color: #991b1b; }
-.f-order__section { display: flex; flex-direction: column; gap: 0.75rem; }
-.f-order__section-title { margin: 0; font-size: 0.95rem; font-weight: 700; opacity: 0.85; }
-.f-order__steps { position: relative; margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 1rem; }
-.f-order__step { position: relative; display: flex; gap: 0.85rem; padding-inline-start: 0.25rem; }
-.f-order__step::before {
-    content: "";
-    position: absolute;
-    inset-inline-start: 0.75rem;
-    inset-block-start: 1.1rem;
-    inset-block-end: -1.1rem;
-    border-inline-start: 2px solid rgba(0, 0, 0, 0.1);
-}
-.f-order__step:last-child::before { display: none; }
-.f-order__step-dot {
-    flex: none;
-    inline-size: 1.05rem;
-    block-size: 1.05rem;
-    margin-block-start: 0.15rem;
-    border-radius: 50%;
-    border: 2px solid rgba(0, 0, 0, 0.2);
-    background: var(--f-surface, #fff);
-    z-index: 1;
-}
-.f-order__step.is-done .f-order__step-dot { border-color: var(--f-primary, #15803d); background: var(--f-primary, #15803d); }
-.f-order__step.is-done::before { border-color: var(--f-primary, #15803d); }
-.f-order__step.is-current .f-order__step-dot { border-color: var(--f-primary, #15803d); }
-.f-order__step:not(.is-done):not(.is-current) .f-order__step-body { opacity: 0.55; }
-.f-order__step-body { display: flex; flex-direction: column; gap: 0.1rem; }
-.f-order__step-title { font-size: 0.95rem; }
-.f-order__step-text, .f-order__step-date { font-size: 0.8rem; opacity: 0.75; }
-.f-order__items { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0.75rem; }
-.f-order__item { display: flex; align-items: center; gap: 0.85rem; }
-.f-order__item-image { flex: none; inline-size: 3.5rem; block-size: 3.5rem; object-fit: cover; border-radius: 0.5rem; background: rgba(0, 0, 0, 0.05); }
-.f-order__item-info { flex: 1; display: flex; flex-direction: column; gap: 0.15rem; min-inline-size: 0; }
-.f-order__item-name { font-weight: 600; color: inherit; text-decoration: none; }
-.f-order__item-meta { font-size: 0.85rem; opacity: 0.7; }
-.f-order__item-total { font-weight: 600; white-space: nowrap; }
-.f-order__totals { gap: 0.4rem; padding: 1rem; border-radius: 0.75rem; background: rgba(0, 0, 0, 0.03); }
-.f-order__row { display: flex; justify-content: space-between; gap: 1rem; font-size: 0.95rem; }
-.f-order__row--discount { color: var(--f-success, #15803d); }
-.f-order__row--total { margin-block-start: 0.35rem; padding-block-start: 0.6rem; border-block-start: 1px solid rgba(0, 0, 0, 0.1); font-weight: 700; font-size: 1.05rem; }
-.f-order__details { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1rem; }
-.f-order__detail { display: flex; flex-direction: column; gap: 0.35rem; padding: 1rem; border: 1px solid rgba(0, 0, 0, 0.08); border-radius: 0.75rem; }
-.f-order__detail-text { margin: 0; font-size: 0.9rem; line-height: 1.5; }
-.f-order__detail-label { opacity: 0.7; }
-.f-order__pay-status { display: inline-block; margin-inline-start: 0.5rem; padding: 0.1rem 0.55rem; border-radius: 999px; background: rgba(0, 0, 0, 0.06); font-size: 0.78rem; font-weight: 600; }
+.f-order__status--processing, .f-order__status--in_processing { background: #dbeafe; color: #1e40af; }
+.f-order__status--shipped, .f-order__status--out_for_delivery { background: #ede9fe; color: #5b21b6; }
+.f-order__status--delivered, .f-order__status--completed, .f-order__status--waiting_for_review { background: #dcfce7; color: #166534; }
+.f-order__status--cancelled, .f-order__status--returned { background: #fee2e2; color: #991b1b; }
+.f-order__status--refunded { background: #ccfbf1; color: #115e59; }
+.f-order__status--locked { background: rgba(0, 0, 0, 0.06); color: var(--f-text-soft); }
+.f-order__status--return-pending { background: #fef3c7; color: #92400e; }
+.f-order__status--return-approved, .f-order__status--return-return_received, .f-order__status--return-refunded { background: #dcfce7; color: #166534; }
+.f-order__status--return-rejected { background: #fee2e2; color: #991b1b; }
 .f-order__pay-status--paid, .f-order__pay-status--completed { background: #dcfce7; color: #166534; }
 .f-order__pay-status--pending, .f-order__pay-status--unpaid { background: #fef3c7; color: #92400e; }
 .f-order__pay-status--failed { background: #fee2e2; color: #991b1b; }
+.f-order__pay-status--refunded, .f-order__pay-status--partially_refunded { background: #ccfbf1; color: #115e59; }
+
+.f-order__tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.25rem 0.6rem;
+    border: 1px solid var(--f-border);
+    border-radius: 999px;
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: var(--f-text-soft);
+    white-space: nowrap;
+}
+.f-order__tag--sm { padding: 0.1rem 0.5rem; font-size: 0.7rem; }
+.f-order__tag--success { background: #ecfdf5; border-color: #a7f3d0; color: #047857; }
+.f-order__tag--warn { background: #fffbeb; border-color: #fde68a; color: #b45309; }
+.f-order__badge {
+    display: inline-block;
+    padding: 0.2rem 0.55rem;
+    border-radius: 0.4rem;
+    background: rgba(0, 0, 0, 0.05);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.72rem;
+    color: var(--f-text-soft);
+    white-space: nowrap;
+}
+
+/* ---- locked box: progress / tracking before payment ---- */
+.f-order__locked {
+    align-items: center;
+    text-align: center;
+    border-style: dashed;
+    padding-block: 1.75rem;
+    color: var(--f-text-soft);
+}
+.f-order__locked--inline { padding: 1.25rem 1rem; border: 1px dashed var(--f-border); border-radius: var(--f-radius); background: rgba(0, 0, 0, 0.02); gap: 0.5rem; display: flex; flex-direction: column; }
+.f-order__locked-icon { display: inline-flex; opacity: 0.6; }
+.f-order__locked-icon .f-order__icon { inline-size: 1.4rem; block-size: 1.4rem; }
+.f-order__locked-text { margin: 0; font-size: 0.9rem; }
+
+/* ---- progress stepper: a row on wide screens, a list on narrow ---- */
+.f-order__steps { position: relative; margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 1rem; }
+.f-order__step { position: relative; display: flex; gap: 0.85rem; padding-inline-start: 0.25rem; }
+.f-order__step-line { position: absolute; inset-inline-start: 0.85rem; inset-block-start: 1.35rem; inset-block-end: -1.1rem; border-inline-start: 2px solid var(--f-border); }
+.f-order__step-line.is-done { border-color: #16a34a; }
+.f-order__step-dot {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 1.35rem;
+    block-size: 1.35rem;
+    border-radius: 50%;
+    border: 2px solid var(--f-border);
+    background: var(--f-surface);
+    color: #fff;
+    z-index: 1;
+}
+.f-order__step-dot .f-order__icon { inline-size: 0.8rem; block-size: 0.8rem; }
+.f-order__step.is-done .f-order__step-dot { border-color: #16a34a; background: #16a34a; }
+.f-order__step.is-current .f-order__step-dot { border-color: var(--f-text); background: var(--f-surface); box-shadow: inset 0 0 0 3px var(--f-surface), inset 0 0 0 8px var(--f-text); }
+.f-order__step:not(.is-done):not(.is-current) .f-order__step-body { opacity: 0.5; }
+.f-order__step-body { display: flex; flex-direction: column; gap: 0.1rem; min-inline-size: 0; }
+.f-order__step-title { font-size: 0.85rem; }
+.f-order__step-text, .f-order__step-date { font-size: 0.75rem; color: var(--f-text-soft); }
+@media (min-width: 720px) {
+    .f-order__steps { flex-direction: row; align-items: flex-start; gap: 0; padding-block-start: 0.25rem; }
+    .f-order__step { flex: 1; flex-direction: column; align-items: center; text-align: center; padding: 0; gap: 0.5rem; }
+    .f-order__step-line { inset-inline-start: 50%; inset-inline-end: -50%; inset-block-start: 0.6rem; inset-block-end: auto; border-inline-start: 0; border-block-start: 2px solid var(--f-border); }
+    .f-order__step-line.is-done { border-color: #16a34a; }
+    .f-order__step-body { align-items: center; padding-inline: 0.25rem; }
+    .f-order__step-text { display: none; }
+    .f-order__step[title]:hover .f-order__step-text {
+        display: block;
+        position: absolute;
+        inset-block-end: calc(100% + 0.35rem);
+        inset-inline-start: 50%;
+        transform: translateX(-50%);
+        padding: 0.35rem 0.6rem;
+        border-radius: 0.4rem;
+        background: var(--f-text);
+        color: var(--f-surface);
+        font-size: 0.72rem;
+        white-space: nowrap;
+        z-index: 2;
+    }
+    [dir="rtl"] .f-order__step[title]:hover .f-order__step-text { transform: translateX(50%); }
+}
+
+/* ---- products ---- */
+.f-order__items { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0.75rem; }
+.f-order__item { display: flex; align-items: flex-start; gap: 0.85rem; padding: 0.85rem; border-radius: var(--f-radius); background: rgba(0, 0, 0, 0.025); }
+.f-order--compact .f-order__item, .f-order[compact] .f-order__item { padding: 0; background: none; align-items: center; }
+.f-order__item-image { flex: none; inline-size: 3.25rem; block-size: 3.25rem; object-fit: cover; border-radius: 0.5rem; background: rgba(0, 0, 0, 0.05); }
+.f-order__item-image--empty { display: inline-flex; align-items: center; justify-content: center; color: var(--f-text-faint); }
+.f-order__item-info { flex: 1; display: flex; flex-direction: column; gap: 0.3rem; min-inline-size: 0; }
+.f-order__item-name { font-weight: 600; color: inherit; text-decoration: none; overflow-wrap: anywhere; }
+.f-order__item-meta { font-size: 0.82rem; color: var(--f-text-soft); }
+.f-order__item-tags { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.f-order__item-tags:empty { display: none; }
+.f-order__item-total { font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.f-order__item-rate { align-self: flex-start; margin-block-start: 0.25rem; }
+.f-order__item-reviewed { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; color: var(--f-text-soft); }
+
+/* ---- digital downloads ---- */
+.f-order__files { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0.6rem; }
+.f-order__file { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 0.85rem; border-radius: var(--f-radius); background: rgba(0, 0, 0, 0.025); }
+.f-order__file-icon { flex: none; display: inline-flex; color: var(--f-text-soft); }
+.f-order__file-info { flex: 1; display: flex; flex-direction: column; gap: 0.15rem; min-inline-size: 0; }
+.f-order__file-name { font-weight: 600; overflow-wrap: anywhere; }
+.f-order__file-meta { font-size: 0.78rem; color: var(--f-text-soft); }
+.f-order__file-meta--warn { color: #b45309; }
+
+/* ---- the customer's review ---- */
+.f-order__review-text { margin: 0; font-size: 0.92rem; line-height: 1.55; }
+.f-order__review-reply { display: flex; flex-direction: column; gap: 0.25rem; padding: 0.85rem; border-inline-start: 3px solid var(--f-border); background: rgba(0, 0, 0, 0.025); border-radius: 0 var(--f-radius) var(--f-radius) 0; font-size: 0.88rem; }
+.f-order__review-reply time { font-size: 0.75rem; color: var(--f-text-soft); }
+.f-order__review-reply p { margin: 0; }
+
+/* ---- payment details + totals ---- */
+.f-order__pay-rows { display: flex; flex-direction: column; gap: 0.5rem; }
+.f-order__pay-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.7rem 0.85rem; border-radius: var(--f-radius); background: rgba(0, 0, 0, 0.025); }
+.f-order__pay-row-icon { flex: none; display: inline-flex; color: var(--f-text-soft); }
+.f-order__pay-row-body { flex: 1; display: flex; flex-direction: column; gap: 0.1rem; min-inline-size: 0; }
+.f-order__pay-row-label { font-size: 0.75rem; color: var(--f-text-soft); }
+.f-order__pay-row-value { font-weight: 600; font-size: 0.92rem; }
+.f-order__pay-failed { display: flex; align-items: center; gap: 0.6rem; padding: 0.7rem 0.85rem; border-radius: var(--f-radius); background: #fef2f2; color: #991b1b; font-size: 0.85rem; }
+.f-order__pay-failed span:nth-child(2) { flex: 1; }
+.f-order__section { display: flex; flex-direction: column; gap: 0.75rem; }
+.f-order__section-title { margin: 0; font-size: 0.95rem; font-weight: 700; opacity: 0.85; }
+.f-order__totals { gap: 0.45rem; padding: 0.25rem 0 0; }
+.f-order[compact] .f-order__totals { padding: 1rem; border-radius: 0.75rem; background: rgba(0, 0, 0, 0.03); }
+.f-order__row { display: flex; justify-content: space-between; gap: 1rem; font-size: 0.92rem; color: var(--f-text-soft); }
+.f-order__row > span:first-child { display: flex; flex-direction: column; gap: 0.05rem; }
+.f-order__row > span:last-child { color: var(--f-text); font-variant-numeric: tabular-nums; }
+.f-order__row-note { font-size: 0.72rem; color: var(--f-text-faint); }
+.f-order__row--discount > span:last-child { color: #15803d; }
+.f-order__row--total { margin-block-start: 0.35rem; padding-block-start: 0.7rem; border-block-start: 1px solid var(--f-border); font-weight: 700; font-size: 1.05rem; color: var(--f-text); }
+/* The gateway's own currency, when it differs from what the shopper reads. */
+.f-order__charged { margin: 0.4rem 0 0; font-size: 0.8rem; color: var(--f-text-faint); font-variant-numeric: tabular-nums; }
+
+/* ---- sidebar cards ---- */
+.f-order__detail-text { margin: 0; font-size: 0.9rem; line-height: 1.55; }
+.f-order__contact { display: flex; flex-direction: column; gap: 0.35rem; padding-block-start: 0.75rem; border-block-start: 1px solid var(--f-border); color: var(--f-text-soft); font-size: 0.85rem; }
+.f-order__contact > span { display: inline-flex; align-items: center; gap: 0.4rem; }
+.f-order__kvs { display: flex; flex-direction: column; gap: 0.35rem; }
+.f-order__kv { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.55rem 0.75rem; border-radius: var(--f-radius); background: rgba(0, 0, 0, 0.025); font-size: 0.85rem; }
+.f-order__kv-label { color: var(--f-text-soft); }
+.f-order__kv-value { font-weight: 600; text-align: end; overflow-wrap: anywhere; }
+.f-order__kv-value.is-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; }
+.f-order__kv-value.is-positive { color: #15803d; }
+.f-order__kv-value.is-negative { color: #b91c1c; }
+.f-order__tracking-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
+.f-order__link { font-size: 0.85rem; font-weight: 600; color: var(--color-primary, #1d9e75); text-decoration: none; }
+.f-order__link:hover { text-decoration: underline; }
+.f-order__action-list { display: flex; flex-direction: column; gap: 0.6rem; }
+.f-order__action-list .f-btn { justify-content: center; }
+.f-order__return-status { margin: 0; display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: var(--f-text-soft); }
+.f-order__cancel { color: #b91c1c; }
+
+/* ---- dialogs: pay, invoice, return, rate, track ---- */
+.f-order-dialog { display: flex; flex-direction: column; gap: 1rem; }
+.f-order-dialog__hint { margin: 0; font-size: 0.9rem; color: var(--f-text-soft); line-height: 1.5; }
+.f-order-dialog__subtitle { margin: 0.25rem 0 0; font-size: 0.9rem; font-weight: 700; }
+.f-order-dialog__error { margin: 0; padding: 0.6rem 0.85rem; border-radius: var(--f-radius); background: #fef2f2; color: #991b1b; font-size: 0.85rem; }
+.f-order-dialog__error[hidden] { display: none; }
+.f-order-dialog__choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr)); gap: 0.6rem; }
+.f-order-dialog__choices .f-btn { justify-content: center; }
+.f-order-dialog__summary { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.75rem 0.9rem; border-radius: var(--f-radius); background: rgba(0, 0, 0, 0.035); font-size: 0.9rem; }
+.f-order-dialog__methods { display: flex; flex-direction: column; gap: 0.5rem; min-block-size: 3rem; justify-content: center; }
+.f-order-dialog__method {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.7rem 0.85rem;
+    border: 1px solid var(--f-border);
+    border-radius: var(--f-radius);
+    background: var(--f-surface);
+    color: inherit;
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+}
+.f-order-dialog__method img { inline-size: 2.25rem; block-size: 2.25rem; object-fit: contain; border-radius: 0.4rem; }
+.f-order-dialog__method-icon { display: inline-flex; inline-size: 2.25rem; block-size: 2.25rem; align-items: center; justify-content: center; border-radius: 0.4rem; background: rgba(0, 0, 0, 0.05); color: var(--f-text-soft); }
+.f-order-dialog__method:hover { border-color: var(--f-text-faint); }
+.f-order-dialog__method.is-selected { border-color: var(--color-primary, #1d9e75); box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary, #1d9e75) 25%, transparent); }
+.f-order-dialog__form { display: flex; flex-direction: column; gap: 0.9rem; }
+.f-order-dialog__stars { display: flex; justify-content: center; padding-block: 0.25rem; font-size: 1.6rem; }
+.f-order-dialog__footer { display: flex; justify-content: flex-end; gap: 0.6rem; flex-wrap: wrap; }
+.f-order__events { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 0.6rem; max-block-size: 18rem; overflow-y: auto; }
+.f-order__event { display: flex; flex-direction: column; gap: 0.1rem; padding: 0.6rem 0.75rem; border-inline-start: 3px solid var(--f-border); background: rgba(0, 0, 0, 0.025); font-size: 0.85rem; }
+.f-order__event:first-child { border-color: #16a34a; }
+.f-order__event-meta { font-size: 0.75rem; color: var(--f-text-soft); }
 
 /* ========================================================================
    Orders list — status filter, search, paged
@@ -4609,10 +5639,15 @@ body.f-modal-open { overflow: hidden; }
          normal CSS. Class names are a stable contract across SDK releases.
 */
 
-/* 2. Announcement bar: the theme's darker primary, with the theme's close
-      affordance. */
+/* 2. Announcement bar: the brand colour itself, with the theme's close
+      affordance. --color-primary-dark is the hover shade for primary
+      buttons, not a brand token: on a store with no saved colour it is a
+      fixed teal that has nothing to do with --color-primary, so the strip
+      rendered off-palette. --color-primary follows the merchant's colour
+      when one is saved (master.twig emits it for theme.color.source ==
+      'store') and the theme's own pink otherwise. */
 falak-announcement {
-    --f-announce-bg: var(--color-primary-dark);
+    --f-announce-bg: var(--color-primary);
     --f-announce-fg: var(--color-on-primary);
 }
 falak-announcement .f-announce__close:hover { background: rgba(255, 255, 255, 0.25); }
@@ -4627,6 +5662,42 @@ falak-announcement .f-announce__close:hover { background: rgba(255, 255, 255, 0.
    text can run edge to edge. Overrides must match the copied rule's
    specificity — the copy above is unlayered, unlike the SDK's own sheet. */
 falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline: 3rem; }
+
+/* Marquee: a seamless chain rather than the SDK's two-copy loop.
+
+   The component scrolls merchant declarations whatever their length, over a
+   track holding the message twice and travelling half its width. That only
+   reads as continuous while one message is wider than the strip: a short
+   message on a wide screen left most of the bar empty and snapped when the
+   loop restarted. app.js repeats the message until the track covers the bar
+   plus one spare copy and publishes one copy's width as --announce-step, so
+   the loop travels exactly one copy and the frame it ends on is the frame it
+   began on — unbroken text, no empty stretch, nothing to snap back to.
+
+   The 50% fallback is the SDK's own distance over its two copies, so the bar
+   still loops correctly if the script never runs.
+
+   Direction follows the document, as the SDK's keyframes do: ltr drifts
+   leftward so text enters at the right, rtl mirrors it. The SDK's
+   timing-function, iteration count and :hover pause all still apply. */
+falak-announcement.f-announce--scroll .f-announce__track {
+    animation-name: announce-chain-ltr;
+    animation-duration: var(--announce-chain-duration, 9s);
+}
+falak-announcement.f-announce--scroll[dir="rtl"] .f-announce__track { animation-name: announce-chain-rtl; }
+@keyframes announce-chain-ltr {
+    from { transform: translateX(0); }
+    to   { transform: translateX(calc(-1 * var(--announce-step, 50%))); }
+}
+@keyframes announce-chain-rtl {
+    from { transform: translateX(0); }
+    to   { transform: translateX(var(--announce-step, 50%)); }
+}
+/* The SDK's own reduced-motion `animation: none` is (0,1,0) and the rules
+   above out-rank it, so it must be restated at their specificity. */
+@media (prefers-reduced-motion: reduce) {
+    falak-announcement.f-announce--scroll .f-announce__track { animation: none; }
+}
 
 /* 3. SDK buttons rendered without `button-class` (user menu, modals, the
       default add button) take this theme's .btn shape, so every button on
@@ -4665,6 +5736,15 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
       the SDK's derived ones. */
 .f-modal__body { border-radius: var(--radius-lg); box-shadow: var(--shadow); }
 .f-menu__list--sub { border-radius: var(--radius); box-shadow: var(--shadow); }
+
+/* The login dialog's country list gives ground before the window does: past
+   the SDK's 15rem cap the open picker would run under the bottom edge of a
+   short window and hand the modal wrapper a scrollbar. The floor keeps a few
+   rows visible even where the subtraction goes negative — the list scrolls
+   internally regardless. */
+#falak-login .f-login__dial-list {
+    max-block-size: clamp(8rem, 100dvh - 30rem, 15rem);
+}
 
 /* 3. Quick add — the "choose options" dialog, laid out the way the nova
       theme lays it out: the picture down one side, the name, price and
@@ -4877,6 +5957,79 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
 
 .cat-bar img { border-radius: 4px; object-fit: cover; }
 
+/* ---------------------------------- categories strip: More (priority+) */
+
+/* app.js sets the attribute while it owns the desktop row. The strip's own
+   overflow-x:auto would clip the dropdown; once the fold has run nothing
+   overflows the row, so visible is safe. */
+@media (min-width: 861px) {
+    .cat-bar ul[data-cat-overflow] { overflow: visible; }
+}
+
+/* A chip the row could not fit, folded into the dropdown. */
+.cat-bar li.is-collapsed { display: none; }
+
+.cat-bar__more { position: relative; }
+
+/* A control, not a destination: an outlined pill with the count, set off a
+   touch from the last chip. Overrides the chip's underline-hover border. */
+.cat-bar__more > a {
+    gap: 0.4rem;
+    margin-inline-start: 0.5rem;
+    padding: 0.4rem 0.9rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+}
+
+.cat-bar__more > a:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.cat-bar__more-count { font-weight: 700; }
+
+.cat-bar__more > a svg { transition: transform var(--transition); }
+.cat-bar__more.is-open > a svg { transform: rotate(180deg); }
+
+/* Pinned to the inline end — the More pill is the row's last item, and a
+   panel opening toward inline-start from there stays on screen. A long list
+   scrolls inside the panel rather than past the fold.
+
+   Two classes on the closed state, because the panel is itself a <ul> inside
+   .cat-bar and `.cat-bar ul` (0,1,1) would outrank a single class's
+   display:none — the same specificity trap the onyx submenu notes call out,
+   which left this panel permanently open. */
+.cat-bar .cat-bar__more-panel {
+    position: absolute;
+    inset-inline-end: 0;
+    top: calc(100% + 0.4rem);
+    min-width: 13rem;
+    max-height: min(24rem, 70vh);
+    overflow-y: auto;
+    margin: 0;
+    padding: 0.4rem;
+    list-style: none;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    display: none;
+    z-index: 60;
+}
+
+.cat-bar .cat-bar__more.is-open > .cat-bar__more-panel { display: block; }
+
+.cat-bar__more-panel a {
+    display: block;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 0;
+    border-radius: var(--radius-sm);
+    white-space: normal;
+}
+
+.cat-bar__more-panel a:hover { background: var(--color-surface); }
+.cat-bar__more-panel a.is-active { color: var(--color-primary); }
+
 .site-header__logo {
     display: inline-flex;
     align-items: center;
@@ -4903,6 +6056,13 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
     gap: 0.75rem;
     margin-inline-start: auto;
 }
+
+/* The account dropdown is the shared <falak-user-menu>; this theme has no
+   notifications page, so its notifications row goes wherever the menu renders
+   (header, drawer, account pages). The SDK marks rows by href only, so match on
+   that; app.js also removes the node for browsers without :has(). */
+.f-user__item:has(> .f-user__link[href="/customer/notifications"]),
+.f-user__link[href="/customer/notifications"] { display: none !important; }
 
 /* cart pill */
 .cart-link {
@@ -4942,19 +6102,77 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
 }
 
 /*
-    Row layout stays on the root list only.
-
-    As a descendant selector `.main-menu ul` (0,1,1) outranks the single-class
-    `.main-menu__submenu` (0,1,0), so a `display: flex` up here would beat the
-    submenu's `display: none` and leave every dropdown open before <falak-menu>
-    ever toggles .is-open. The child combinator keeps the shared list resets
-    above without touching submenu display.
+    Row layout goes on the primary list by class, not on `.main-menu ul`: that
+    descendant selector (0,1,1) outranks the single-class `.main-menu__submenu`
+    (0,1,0), so a `display: flex` there would beat the submenu's
+    `display: none` and leave every dropdown open before <falak-menu> ever
+    toggles .is-open. The shared list resets above stay as they are.
 */
-.main-menu > ul {
+.main-menu__list {
     display: flex;
     align-items: center;
     gap: 0.25rem;
 }
+
+/*
+    Everything else in the <nav> is the phone drawer (menu.twig): the brand
+    row, search, the account card, section labels, the account list and the
+    footer. Desktop shows only the primary list, inline in the top bar, so the
+    wrapper is display:contents there — the list stays a direct flex item of
+    the bar — and the rest does not paint at all.
+*/
+.main-menu__body { display: contents; }
+
+/* Phone-only header pieces (header.twig): the search row under the icons and
+   the "All" chip that leads the categories strip. */
+.site-header__search,
+.cat-bar__all { display: none; }
+
+/*
+    Desktop bar, when the menu is longer than the screen. A merchant with nine
+    top-level links on a 1000px window had the right-hand controls — language,
+    currency, account, wishlist, cart — pushed clean off the edge, because the
+    link row refused to shrink and the actions group took the loss. Here the
+    nav is the only thing allowed to give: it wraps onto a second line, and
+    the actions and the brand mark keep their size. When everything fits, as
+    it does on most stores, nothing here changes a pixel.
+*/
+@media (min-width: 861px) {
+    .site-header .main-menu { flex: 1 1 auto; min-width: 0; }
+    .main-menu__list { flex-wrap: wrap; row-gap: 0; }
+    .main-menu__list > .main-menu__item > a { white-space: nowrap; }
+    .site-header__logo,
+    .site-header__actions { flex-shrink: 0; }
+}
+.main-menu__list svg.main-menu__icon { display: none; }
+
+/* Sized here, outside the phone block: an unsized <svg> is the UA's 300x150
+   box, and with the rule only under 860px every top-bar row grew to 150px. */
+.main-menu__icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    flex: 0 0 auto;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+img.main-menu__icon { object-fit: contain; border-radius: 4px; }
+.main-menu__head,
+.main-menu__foot,
+.main-menu__welcome,
+.main-menu__tiles,
+.main-menu__section,
+.main-menu__list--account,
+.main-menu__item--drawer-only { display: none; }
+
+/* The tiles hold <a>s, so the desktop link rule (.main-menu a, inline-flex)
+   would otherwise outrank the UA's [hidden] and paint them in the top bar
+   before app.js has even decided who is signed in. */
+.main-menu__tiles[hidden],
+.main-menu__welcome[hidden] { display: none; }
 
 .main-menu a {
     display: inline-flex;
@@ -5024,7 +6242,16 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
     background: none;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-sm);
+    /* The bars are currentColor, and a <button> does not inherit colour: the
+       browser paints it `buttontext`, which is pure black on a light scheme
+       and whatever the platform likes elsewhere — never the header ink the
+       icons beside it use, and wrong again on the dark top bar. */
+    color: inherit;
     cursor: pointer;
+    /* Never squeezed. Without this the flex row shrank the button to a 22px
+       sliver — three bars with no box around them — long before it gave up
+       any of the six action controls beside it. */
+    flex: 0 0 auto;
 }
 
 .menu-toggle span {
@@ -5036,25 +6263,50 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
 
 @media (max-width: 860px) {
     .menu-toggle { display: flex; }
+    .main-menu__body { display: block; }
+    .main-menu__section { display: block; }
+    .cat-bar__all { display: list-item; }
+    .main-menu__item--drawer-only { display: list-item; }
 
     /* Tighter rhythm: at desktop gaps the toggle + brand + actions row is
        wider than a phone screen, which pushed the whole page into a
        horizontal scroll and shoved the menu button out of view. */
-    .site-header__topbar-inner { gap: 0.75rem; }
+    .site-header__topbar-inner { gap: 0.6rem; min-width: 0; }
 
-    .site-header__actions { gap: 0.5rem; }
+    /*
+        Every control keeps its own size and the brand mark absorbs what is
+        left. `min-width: 0` on both the row and the actions group is what
+        makes that possible: a flex item's default `min-width: auto` refuses
+        to shrink below its content, so the row overflowed the header — and
+        `overflow-x: clip` on <body> turned that overflow into controls
+        sheared off at both edges rather than into a scrollbar that would at
+        least have shown the problem.
+    */
+    .site-header__actions {
+        gap: 0.4rem;
+        min-width: 0;
+        flex: 0 0 auto;
+    }
 
-    /* A long store name must squeeze and ellipsize, never widen the page. */
+    .site-header__actions > * { flex: 0 0 auto; }
+
+    /* A long store name must squeeze and ellipsize, never widen the page.
+       It may shrink but never grow: the actions group is pushed to the end by
+       its own auto margin, and a growing logo box would hand the brand mark a
+       tablet-wide click target made almost entirely of blank space. */
     .site-header__logo {
-        flex-shrink: 1;
+        flex: 0 1 auto;
         min-width: 0;
     }
+
+    .site-header__logo img { max-height: 2.4rem; }
 
     .site-header__logo span {
         min-width: 0;
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;
+        font-size: 1.05rem;
         /* The name's own script sets its direction, so truncation always
            keeps the START of the name ("Tahseen U…"), never the tail
            ("…o Store") — e.g. a Latin store name on the RTL storefront. */
@@ -5062,8 +6314,145 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
         text-align: start;
     }
 
-    /* Page menu moves to the drawer; the categories bar stays and scrolls. */
-    .cat-bar ul { justify-content: flex-start; }
+    /* ------------------------------------------ phone header: rows two and three */
+
+    /* The live search trigger leaves the icon row; the field below takes its
+       place, full width, as the mockup draws it. */
+    .site-header__actions .search-link { display: none; }
+
+    .site-header__search {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        min-height: 2.75rem;
+        /* It wears .container for the max-width, but the border is on this
+           box, so the page gutter has to be a margin here, not padding. */
+        margin: 0 1rem 0.75rem;
+        padding-inline: 0.9rem;
+        background: #fff;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius);
+        color: var(--color-text-faint);
+    }
+
+    .site-header__search:focus-within {
+        border-color: var(--color-primary);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent);
+    }
+
+    .site-header__search input {
+        flex: 1 1 auto;
+        min-width: 0;
+        border: 0;
+        background: transparent;
+        font: inherit;
+        font-size: 0.95rem;
+        color: var(--color-text);
+        outline: none;
+    }
+
+    .site-header__search input::placeholder { color: var(--color-text-faint); }
+
+    /* Icon row: wishlist, cart, account — in that order, badges riding the
+       icon corner, no outlines. The hamburger is bare lines too. */
+    .site-header__actions .wishlist-link { order: 1; }
+    .site-header__actions .cart-link { order: 2; }
+    .site-header__actions .f-user { order: 3; }
+
+    .site-header__actions .wishlist-link .f-wishlist-drawer__trigger,
+    .site-header__actions .cart-link {
+        width: 2.5rem;
+        height: 2.5rem;
+        padding: 0;
+        border: 0;
+        background: transparent;
+    }
+
+    .site-header__actions .cart-link .f-cart-summary__link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .site-header__actions .cart-link .f-cart-summary__icon { position: relative; display: inline-flex; }
+    .site-header__actions .cart-link .f-cart-summary__count {
+        position: absolute;
+        inset-block-start: -0.45rem;
+        inset-inline-end: -0.55rem;
+        margin: 0;
+        background: var(--color-text);
+        color: #fff;
+    }
+    .site-header__actions .wishlist-link .f-wishlist-drawer__count {
+        inset-block-start: -0.15rem;
+        inset-inline-end: -0.25rem;
+        background: var(--color-text);
+        color: #fff;
+    }
+
+    .menu-toggle { border: 0; padding-inline: 4px; width: 2.25rem; }
+
+    /* The account trigger joins the row on the same terms. The SDK draws it
+       as a filled primary-colour disc, which beside bare heart and bag
+       outlines reads as the one coloured, solid control in the row. Signed
+       out, it is the person outline alone, sized like its neighbours; signed
+       in, the initials keep a ring so they still read as an avatar — but an
+       outline in the header ink, like everything else here. */
+    .site-header__actions .f-user__trigger {
+        width: 2.5rem;
+        height: 2.5rem;
+        padding: 0;
+        justify-content: center;
+    }
+
+    .site-header__actions .f-user__avatar {
+        inline-size: 1.5rem;
+        block-size: 1.5rem;
+        background: transparent;
+        color: inherit;
+        border: 1.5px solid currentColor;
+        font-size: 0.6rem;
+    }
+
+    .site-header__actions .f-user__trigger--guest .f-user__avatar { border: 0; }
+
+    .site-header__actions .f-user__trigger--guest .f-user__avatar svg {
+        inline-size: 1.375rem;
+        block-size: 1.375rem;
+    }
+
+    /* Page menu moves to the drawer; the categories bar is a strip of chips.
+       The strip bleeds into the page gutter so the edge fade (above) sits over
+       the gutter, not over the first chip. */
+    .cat-bar { margin-inline: -1rem; }
+    .cat-bar ul { justify-content: flex-start; gap: 0.45rem; padding-block: 0.6rem; }
+
+    .cat-bar a {
+        min-height: 2.1rem;
+        padding: 0.3rem 0.85rem;
+        border: 1px solid var(--color-border);
+        border-radius: 999px;
+        background: #fff;
+        font-size: 0.88rem;
+        font-weight: 600;
+    }
+
+    .cat-bar a:hover { border-color: var(--color-text); color: var(--color-text); }
+
+    /* The chip for the page being viewed — app.js matches each link to the
+       location, so "All" fills on the listing and a category fills on its own
+       filtered listing. */
+    .cat-bar a.is-active {
+        background: var(--color-text);
+        border-color: var(--color-text);
+        color: #fff;
+    }
+
+    .site-header__navbar { border-top: 0; }
 
     /* Edge fade hints that the categories bar keeps scrolling. Symmetric, so
        it needs no RTL variant. */
@@ -5074,48 +6463,419 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
             transparent, #000 1.25rem, #000 calc(100% - 1.25rem), transparent);
     }
 
+    /*
+        The mask only hints that the strip continues; these make it usable.
+        Inline padding lets the first and last chip clear the fade instead of
+        sitting half-faded under it, snapping stops a swipe mid-label, and
+        `overscroll-behavior-inline: contain` keeps a swipe past the last chip
+        from triggering the browser's back gesture.
+    */
+    .cat-bar ul {
+        padding-inline: 1rem;
+        scroll-snap-type: inline proximity;
+        overscroll-behavior-inline: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .cat-bar li { scroll-snap-align: start; }
+
+
+    /* ------------------------------------------------- the drawer itself */
+
     .site-header .main-menu {
         position: fixed;
         inset-block: 0;
         inset-inline-start: 0;
-        width: min(20rem, 85vw);
-        background: var(--color-bg);
+        width: min(22rem, 86vw);
+        /* Column flow: the brand row and the footer keep their place while
+           only .main-menu__body between them scrolls. */
+        display: flex;
+        flex-direction: column;
+        /* A white panel, not the page's grey: over a dimmed page the body
+           background read as a second, washed-out backdrop rather than as a
+           sheet lying on top of it. */
+        background: #fff;
         color: var(--color-text);
-        box-shadow: var(--shadow);
-        padding: 1.25rem;
+        box-shadow: 0 0 40px rgba(16, 24, 40, 0.18);
         /* Rounded trailing edge — the drawer reads as a card, not a cut. */
         border-start-end-radius: var(--radius-lg);
         border-end-end-radius: var(--radius-lg);
         transform: translateX(calc(var(--rtl-flip, -1) * 105%));
-        transition: transform 220ms ease;
+        transition: transform 240ms cubic-bezier(0.32, 0.72, 0, 1);
         z-index: 80;
-        overflow-y: auto;
+        overflow: hidden;
     }
 
     [dir="rtl"] .site-header .main-menu { --rtl-flip: 1; }
 
     body.menu-is-open .site-header .main-menu { transform: translateX(0); }
 
+    /* The page behind must not scroll under the drawer — the same lock the
+       SDK's own modals take with body.f-modal-open, kept on its own class so
+       closing one never releases the other. */
+    body.menu-is-open { overflow: hidden; }
+
+    /* Row icons paint only in the drawer; the top bar stays text. */
+    .main-menu__list svg.main-menu__icon { display: block; }
+
+    /* -------------------------------------------------- drawer: brand row */
+
+    .main-menu__head {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex: 0 0 auto;
+        padding: 1rem 1rem 0.75rem;
+    }
+
+    /* Shrinks first: the pills and the close button keep their size, and
+       a text brand ellipsizes before the row breaks. */
+    .main-menu__brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        min-width: 0;
+        flex: 0 1 auto;
+        margin-inline-end: auto;
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .main-menu__brand img {
+        max-width: 6rem;
+        max-height: 2.25rem;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+    }
+
+    .main-menu__brand span {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        unicode-bidi: plaintext;
+    }
+
+    .main-menu__close {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        width: 2.25rem;
+        height: 2.25rem;
+        padding: 0;
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-sm);
+        color: var(--color-text);
+        cursor: pointer;
+        transition: color var(--transition), border-color var(--transition);
+    }
+
+    .main-menu__close:hover {
+        color: var(--color-primary);
+        border-color: var(--color-primary);
+    }
+
+    /* ----------------------------------------------------- drawer: body */
+
+    .main-menu__body {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        padding: 0 1rem 1rem;
+        scrollbar-width: thin;
+    }
+
+    .main-menu__search {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        min-height: 2.75rem;
+        padding-inline: 0.9rem;
+        margin-block-end: 0.9rem;
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius);
+        color: var(--color-text-faint);
+    }
+
+    .main-menu__search:focus-within {
+        border-color: var(--color-primary);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent);
+    }
+
+    .main-menu__search input {
+        flex: 1 1 auto;
+        min-width: 0;
+        border: 0;
+        background: transparent;
+        font: inherit;
+        font-size: 0.95rem;
+        color: var(--color-text);
+        outline: none;
+    }
+
+    .main-menu__search input::placeholder { color: var(--color-text-faint); }
+
+    /* The account card: brand-coloured, so it is the one thing in a white
+       panel that asks to be tapped. Hidden until app.js knows which of the
+       two states applies. */
+    .main-menu__welcome {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        column-gap: 0.75rem;
+        row-gap: 0.75rem;
+        align-items: center;
+        padding: 0.9rem;
+        margin-block-end: 1.1rem;
+        /* A tint of the brand colour, as in the mockup, not the solid brand:
+           it is a card the shopper reads, not a button they press. */
+        background: color-mix(in srgb, var(--color-primary) 22%, #fff);
+        color: var(--color-text);
+        border-radius: var(--radius);
+    }
+
+    .main-menu__welcome[hidden] { display: none; }
+
+    .main-menu__avatar {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--color-primary) 30%, #fff);
+        color: var(--color-text);
+        font-weight: 700;
+        font-size: 0.95rem;
+        letter-spacing: 0.02em;
+    }
+
+    .main-menu__welcome-text { min-width: 0; line-height: 1.4; }
+    .main-menu__welcome-text strong { display: block; font-size: 1rem; }
+    .main-menu__welcome-text small { display: block; font-size: 0.8rem; opacity: 0.85; }
+    .main-menu__welcome-text p { margin: 0.15rem 0 0; font-size: 0.85rem; opacity: 0.9; }
+
+    .main-menu__welcome-actions {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+    }
+
+    .main-menu__btn {
+        min-height: 2.5rem;
+        padding: 0.4rem 0.75rem;
+        border-radius: var(--radius-sm);
+        font: inherit;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .main-menu__btn--solid {
+        background: var(--color-primary);
+        color: var(--color-on-primary);
+        border: 1px solid var(--color-primary);
+    }
+
+    .main-menu__btn--ghost {
+        background: #fff;
+        color: var(--color-text);
+        border: 1px solid var(--color-border);
+    }
+
+    /* Two shortcut tiles under the card. */
+    .main-menu__tiles {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+        gap: 0.6rem;
+        margin-block-end: 1.1rem;
+    }
+
+    .main-menu__tiles[hidden] { display: none; }
+
+    .main-menu__tile {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        min-height: 3rem;
+        padding: 0.6rem 0.8rem;
+        background: #fff;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius);
+        color: var(--color-text);
+        font-weight: 600;
+        font-size: 0.92rem;
+        text-decoration: none;
+    }
+
+    .main-menu__tile[hidden] { display: none; }
+    .main-menu__tile .main-menu__icon { color: var(--color-text-soft); }
+
+    /* The categories entry sits second — after Home — whatever order the
+       markup emitted it in (see menu.twig). */
+    .main-menu__list > .main-menu__item:first-child { order: -2; }
+    .main-menu__item--cats { order: -1; }
+
+    .main-menu__section {
+        margin: 0.25rem 0 0.15rem;
+        padding-inline: 0.25rem;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--color-text-faint);
+    }
+
+    .main-menu__list + .main-menu__section { margin-block-start: 1rem; }
+
+    /* ------------------------------------------------------ drawer: links */
+
     .main-menu ul {
         flex-direction: column;
         align-items: stretch;
-        gap: 0.15rem;
+        gap: 0;
     }
 
-    .main-menu a { padding: 0.7rem 0.75rem; }
+    .main-menu__list { display: flex; }
+
+    /* A 48px row is the smallest comfortable touch target; the desktop
+       padding left these at 34px. */
+    .main-menu a {
+        /* Block-level in the drawer: the desktop pill is inline-flex and only
+           as wide as its label, which left the caret glued to the text instead
+           of at the far end of the row. */
+        display: flex;
+        width: 100%;
+        min-height: 2.9rem;
+        padding: 0.55rem 0.5rem;
+        gap: 0.75rem;
+        border-radius: var(--radius-sm);
+        font-size: 0.98rem;
+        font-weight: 500;
+    }
+
+    .main-menu__list > .main-menu__item > a > .main-menu__icon { color: var(--color-text-soft); }
+    .main-menu a:hover .main-menu__icon { color: inherit; }
+
+    /*
+        The caret belongs at the far end of a full-width row, not tucked
+        against the label as in the desktop bar. `margin-inline-start: auto`
+        is direction-aware, so it lands on the left in Arabic and the right in
+        English with no second rule.
+    */
+    .main-menu__item.has-children > a::after {
+        margin-inline-start: auto;
+        border-width: 5px;
+    }
 
     .main-menu__submenu {
         position: static;
         border: none;
         box-shadow: none;
-        padding-inline-start: 1rem;
+        padding: 0 0 0.4rem;
+        padding-inline-start: 0.9rem;
+        margin-inline-start: 1.1rem;
+        border-inline-start: 2px solid var(--color-border);
+        border-radius: 0;
         background: transparent;
+        min-width: 0;
     }
+
+    .main-menu__submenu a {
+        min-height: 2.5rem;
+        padding-block: 0.45rem;
+        font-size: 0.93rem;
+        color: var(--color-text-soft);
+    }
+
+    /* ---------------------------------------------------- drawer: footer */
+
+    .main-menu__foot {
+        display: block;
+        flex: 0 0 auto;
+        padding: 0.75rem 1rem max(0.9rem, env(safe-area-inset-bottom));
+        border-block-start: 1px solid var(--color-border);
+        background: #fff;
+    }
+
+    /* Language and currency, side by side above sign-out. */
+    .main-menu__prefs {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(0, 1fr);
+        gap: 0.5rem;
+    }
+
+    /* Each switcher pill fills its column; the header's pill rules do not
+       reach in here (they are scoped to .site-header__actions). */
+    .main-menu__prefs falak-language,
+    .main-menu__prefs falak-currency { display: block; min-width: 0; }
+
+    .main-menu__prefs [hidden] { display: none; }
+
+    .main-menu__prefs .f-locale__trigger,
+    .main-menu__prefs .f-currency__field {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        width: 100%;
+        min-height: 2.6rem;
+        padding: 0.4rem 0.75rem;
+        background: #fff;
+        border: 1px solid var(--color-border);
+        border-radius: 999px;
+        font: inherit;
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: var(--color-text);
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+    .main-menu__prefs .f-locale__globe,
+    .main-menu__prefs .f-currency__icon { color: var(--color-primary); opacity: 1; }
+
+    .main-menu__prefs .f-locale__chevron,
+    .main-menu__prefs .f-currency__chevron { display: none; }
+
+    .main-menu__logout {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        width: 100%;
+        min-height: 2.6rem;
+        margin-block-start: 0.6rem;
+        padding: 0.4rem 0.75rem;
+        background: color-mix(in srgb, var(--color-danger) 8%, #fff);
+        border: 1px solid color-mix(in srgb, var(--color-danger) 25%, #fff);
+        border-radius: var(--radius-sm);
+        font: inherit;
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: var(--color-danger);
+        cursor: pointer;
+    }
+
+    .main-menu__logout[hidden],
+    .main-menu__foot[hidden] { display: none; }
+
+    /* --------------------------------------------------------- backdrop */
 
     .menu-backdrop {
         position: fixed;
         inset: 0;
-        background: rgba(15, 18, 24, 0.45);
+        background: rgba(15, 18, 24, 0.55);
         backdrop-filter: blur(2px);
         opacity: 0;
         pointer-events: none;
@@ -5195,7 +6955,15 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
     margin-bottom: 0.35rem;
 }
 
-.site-footer__about { color: var(--color-text-soft); margin: 0; }
+.site-footer__about {
+    color: var(--color-text-soft);
+    margin: 0;
+    /* Merchant copy. One unbroken run — a pasted URL, an email, a 113-character
+       mash seen on a test store — laid the column out 660px wide, and on an RTL
+       page the viewport then scrolled to it: every screen opened 285px off
+       with the header sheared on both sides. Break anywhere rather than widen. */
+    overflow-wrap: anywhere;
+}
 
 .site-footer__menu ul {
     display: flex;
@@ -5306,6 +7074,198 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
 .footer-is-dark .site-footer__menu a:hover { color: var(--color-primary-light); }
 .footer-is-dark .site-footer__copyright { border-top-color: #2a2e38; color: #6b7280; }
 
+/* ==========================================================================
+   Footer — columns, compliance band, legal line
+   --------------------------------------------------------------------------
+   The same footer onyx carries, in this theme's own tokens: light by default,
+   dark under body.footer-is-dark. Columns the store does not have simply do
+   not render, and the grid adapts (auto-fit) so there is never a reserved
+   hole. Preview-only shells (customizer draft renders) are dashed and dimmed
+   so sample chrome cannot be mistaken for content.
+   ========================================================================== */
+
+/* ---- newsletter band: words beside the form ---- */
+.site-footer__newsletter-words { display: grid; gap: 0.25rem; }
+.site-footer__newsletter-text { margin: 0; color: var(--color-text-soft); font-size: 0.92rem; }
+
+/* ---- the columns ---- */
+.site-footer__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) repeat(auto-fit, minmax(10rem, 1fr));
+    gap: 2.5rem 3rem;
+    align-items: start;
+}
+
+.site-footer__col { min-inline-size: 0; }
+.site-footer__col--brand { display: grid; gap: 1.25rem; justify-items: start; }
+
+.site-footer__heading {
+    margin: 0 0 0.9rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-text);
+}
+
+.site-footer__links {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.6rem;
+}
+
+.site-footer__links a {
+    color: var(--color-text-soft);
+    text-decoration: none;
+}
+.site-footer__links a:hover { color: var(--color-primary); }
+
+/* "Show more" under a capped categories list — the rows past the cap ship
+   hidden and the button reveals them. */
+.site-footer__links li[hidden] { display: none; }
+
+.site-footer__more-btn {
+    margin-block-start: 0.6rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--color-primary);
+    cursor: pointer;
+}
+.site-footer__more-btn:hover { text-decoration: underline; }
+
+.site-footer__social-wrap { display: grid; gap: 0.5rem; }
+.site-footer__apps-text { margin: 0 0 0.75rem; color: var(--color-text-soft); font-size: 0.92rem; }
+
+/* ---- compliance band: badges one side, payment marks the other ---- */
+.site-footer__bottom {
+    margin-block-start: 2.5rem;
+    border-block-start: 1px solid var(--color-border);
+}
+
+.site-footer__bottom-inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem 1.5rem;
+    padding-block: 1.5rem;
+}
+
+.site-footer__marks {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    flex: 1 1 auto;
+    min-inline-size: 0;
+}
+
+.site-footer__marks .f-trust__list { flex-direction: row; flex-wrap: wrap; gap: 0.75rem; }
+
+.site-footer__marks .f-trust__item {
+    margin: 0;
+    padding: 0.5rem 0.875rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: #fff;
+}
+
+/* The official mark beside each certificate — a white tile because the marks
+   are designed for paper; `contain` because the three are different shapes. */
+.site-footer__marks .f-trust__logo {
+    flex: none;
+    inline-size: 2.5rem;
+    block-size: 2.5rem;
+    padding: 0.2rem;
+    border-radius: 0.4rem;
+    background: #fff;
+    object-fit: contain;
+}
+
+/* <falak-payments> is full-width elsewhere in this theme; in the band it
+   sizes to its marks and sits at the row's end. */
+.site-footer__bottom-inner falak-payments.f-payments { inline-size: auto; flex: 0 1 auto; margin: 0; }
+.site-footer__bottom-inner .f-payments__list { inline-size: auto; margin: 0; justify-content: flex-end; gap: 0.5rem; }
+
+/* ---- legal line ---- */
+.site-footer__legal {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 1.5rem;
+    padding-block: 1rem 0;
+    border-block-start: 1px solid var(--color-border);
+    color: var(--color-text-faint);
+    font-size: 0.85rem;
+}
+
+.site-footer__legal .site-footer__copyright {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    width: auto;
+    text-align: start;
+}
+
+.site-footer__legal-links {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1.25rem;
+}
+.site-footer__legal-links a { color: inherit; text-decoration: none; }
+.site-footer__legal-links a:hover { color: var(--color-primary); }
+.site-footer__powered { margin: 0; }
+
+/* ---- preview-only shells ---- */
+.site-footer__about.is-placeholder,
+.site-footer__group.is-placeholder .site-footer__heading { opacity: 0.55; }
+
+.site-footer__add {
+    margin: 0;
+    padding: 0.5rem 0.75rem;
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    color: var(--color-text-faint);
+}
+.site-footer__add--inline { display: inline-block; }
+
+/* The numbers prompt stands in for the badges only while there are none: the
+   component hides itself when it has nothing to show, and that is the signal. */
+.site-footer__marks falak-trust-badges:not([hidden]) ~ .site-footer__add--docs { display: none; }
+
+/* ---- dark footer ---- */
+.footer-is-dark .site-footer__heading { color: #f5f5f5; }
+.footer-is-dark .site-footer__links a,
+.footer-is-dark .site-footer__newsletter-text,
+.footer-is-dark .site-footer__apps-text { color: #9aa1ad; }
+.footer-is-dark .site-footer__links a:hover,
+.footer-is-dark .site-footer__legal-links a:hover { color: var(--color-primary-light); }
+.footer-is-dark .site-footer__more-btn { color: var(--color-primary-light); }
+.footer-is-dark .site-footer__bottom,
+.footer-is-dark .site-footer__legal { border-color: #2a2e38; }
+.footer-is-dark .site-footer__marks .f-trust__item { border-color: rgba(255, 255, 255, 0.14); background: rgba(255, 255, 255, 0.04); }
+.footer-is-dark .site-footer__add { border-color: rgba(255, 255, 255, 0.3); color: rgba(255, 255, 255, 0.6); }
+
+/* ---- phones ---- */
+@media (max-width: 767px) {
+    .site-footer__grid { grid-template-columns: 1fr; gap: 1.75rem; }
+    .site-footer__bottom-inner { justify-content: center; }
+    .site-footer__bottom-inner .f-payments__list { justify-content: center; }
+    .site-footer__legal { justify-content: center; text-align: center; }
+    .site-footer__legal .site-footer__copyright { text-align: center; }
+}
+
 /* ------------------------------------------------------- blocks (areas) */
 
 .block { margin-block: 3.5rem; }
@@ -5376,12 +7336,45 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
 
 .hero-slider__slide.is-active { display: flex; }
 
-.hero-slider__img {
+.hero-slider__img,
+.hero-slider__video {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
+}
+
+/* A background clip is decoration: it must not be reachable or grabbable,
+   and a tap on it has to land on the slide (its button) like a tap on the
+   photo does. */
+.hero-slider__video {
+    pointer-events: none;
+    -webkit-user-drag: none;
+}
+
+/* A slide with no title, text or button is a banner whose words are baked
+   into the picture, so cropping it to the slide's fixed height cuts them
+   off. Let the picture set the slide's height instead and show it whole,
+   at every width: this used to apply below 1024px only, and a 3:1 banner
+   on a 1280px laptop lost a third of its width to the fixed height (while
+   a phone and a 1920px desktop happened to fit, so the crop looked random).
+   The empty content box is lifted out of flow so its padding adds no
+   height, but it stays in the DOM for the customizer to select. */
+.hero-slider__slide:not(:has(.hero-slider__content > *)) {
+    min-height: 0;
+}
+
+.hero-slider__slide:not(:has(.hero-slider__content > *)) .hero-slider__img,
+.hero-slider__slide:not(:has(.hero-slider__content > *)) .hero-slider__video {
+    position: static;
+    height: auto;
+}
+
+.hero-slider__slide:not(:has(.hero-slider__content > *)) .hero-slider__content {
+    position: absolute;
+    inset: 0;
+    padding: 0;
 }
 
 /* Scrim anchored to the reading side, so text stays legible on any photo.
@@ -5393,7 +7386,7 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
     position: absolute;
     inset: 0;
     background: linear-gradient(90deg, rgba(12, 14, 18, 0.66) 8%, rgba(12, 14, 18, 0.25) 55%, rgba(12, 14, 18, 0.05));
-    opacity: var(--falak-overlay, 100%);
+    opacity: var(--falak-overlay, 0%);
 }
 
 [dir="rtl"] .hero-slider__slide::after {
@@ -5538,6 +7531,16 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
 
 .testimonial-card figcaption { font-weight: 700; font-size: 0.9rem; }
 
+/* The "real reviews" source's loading state: card-shaped blanks, the same
+   idea as .blog-card--skeleton, so the band holds its height while the
+   reviews are fetched. */
+.testimonial-card--skeleton {
+    min-block-size: 9rem;
+    background: var(--color-surface);
+    border-color: transparent;
+    box-shadow: none;
+}
+
 /* banner */
 .banner {
     position: relative;
@@ -5558,9 +7561,9 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
     background: linear-gradient(90deg, rgba(10, 12, 16, 0.55), rgba(10, 12, 16, 0.1));
     /* The customizer's section-level "Background dimming" publishes
        --falak-overlay on the section root; this scrim inherits it. 0 turns the
-       scrim off, and unset is 100% — the theme's own look, unchanged. `opacity`
+       scrim off, and unset is 0% — no scrim until the merchant asks for one. `opacity`
        takes a percentage directly, which is what the platform emits. */
-    opacity: var(--falak-overlay, 100%);
+    opacity: var(--falak-overlay, 0%);
 }
 
 [dir="rtl"] .banner::before {
@@ -5587,6 +7590,34 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
 
 /* offer countdown block — the band itself is <falak-countdown theme="…">, SDK-styled */
 .block--countdown falak-countdown { display: flex; }
+
+/* Expired: the live page drops the block server-side; `is-ended` is the page
+   that was open when the clock ran out (app.js, on the component's `ended`).
+   `is-expired` is the customizer's view: kept, greyed, with the note as a
+   pencil to the date that brings it back. */
+.block--countdown.is-ended { display: none; }
+.block--countdown.is-expired falak-countdown { filter: grayscale(1); }
+
+/* The band is the SDK's own markup, so the note cannot sit inside it: it is a
+   tab fixed to the band's top edge instead (in flow, so it never covers the
+   headline however many lines it wraps to), and the band squares its top
+   corners to meet it. */
+.block__expired-note {
+    margin: 0;
+    padding: 0.6rem 0.9rem;
+    border: 1px dashed rgba(0, 0, 0, 0.4);
+    border-block-end: 0;
+    border-radius: var(--radius-lg, 1rem) var(--radius-lg, 1rem) 0 0;
+    background: var(--color-surface-alt, #f4f5f7);
+    color: #1a1a1a;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    text-align: center;
+}
+.block--countdown.is-expired falak-countdown {
+    border-start-start-radius: 0;
+    border-start-end-radius: 0;
+}
 
 /* features row */
 .features-grid {
@@ -5663,7 +7694,8 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: clamp(1.5rem, 4vw, 3rem);
-    align-items: start;
+    /* Stretch, so the picture column is exactly as tall as the form card. */
+    align-items: stretch;
 }
 
 /* No side image: the form alone, held to a readable measure rather than
@@ -5674,11 +7706,18 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
     margin-inline: auto;
 }
 
+/* Side by side, the picture takes the form's height — the row is sized by
+   the card, the image is pinned to the cell and cropped to fit, so the two
+   edges always line up whatever the form's length or the photo's ratio. */
+.contact__media { position: relative; min-height: 16rem; }
+
 .contact__image {
+    position: absolute;
+    inset: 0;
     width: 100%;
+    height: 100%;
     border-radius: var(--radius-lg);
     object-fit: cover;
-    aspect-ratio: 4 / 5;
     background: var(--color-surface);
 }
 
@@ -5695,9 +7734,11 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
 
 @media (max-width: 720px) {
     .contact { grid-template-columns: 1fr; }
-    /* Stacked, the 4:5 portrait is a full screen the visitor scrolls past
-       before reaching the form the section exists for. */
-    .contact__image { aspect-ratio: 16 / 9; }
+    /* Stacked, the picture goes back into the flow as a 16:9 band — a tall
+       portrait would be a full screen the visitor scrolls past before
+       reaching the form the section exists for. */
+    .contact__media { min-height: 0; }
+    .contact__image { position: static; height: auto; aspect-ratio: 16 / 9; }
 }
 
 /* newsletter — the SDK's <falak-newsletter> in this theme's frame.
@@ -5750,6 +7791,15 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
     grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
     gap: 1.5rem;
     padding-block: 1.5rem 0;
+}
+
+/* The wishlist on a phone: two narrow columns, as the listing shows them,
+   rather than one 210px card after another. */
+@media (max-width: 480px) {
+    .account__content .product-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.75rem;
+    }
 }
 
 /* ------------------------------------------------------- video commerce */
@@ -5817,20 +7867,72 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
 .vp-grid[data-scroll-rail] > * { scroll-snap-align: start; }
 
 /*
-   The row's scroll affordance: a thin line showing how far along it is, drawn
-   by app.js under the grid. Without it a desktop shopper saw four cards, had no
-   scrollbar to drag and no wheel that moves a horizontal container — and so no
-   reason to think there were more.
+   The row's scroll affordances, drawn by app.js under the grid: a thin line
+   showing how far along it is, and from laptop widths a pair of arrows beside
+   it. Without them a desktop shopper saw four cards, had no scrollbar to drag
+   and no wheel that moves a horizontal container — and so no reason to think
+   there were more.
 */
+.vp-foot {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    margin-block-start: 1.5rem;
+}
+
+.vp-foot[hidden] { display: none; }
+
 .vp-rail {
     position: relative;
+    flex: 1;
     block-size: 2px;
-    margin-block-start: 1.5rem;
     border-radius: 10px;
     background: rgba(0, 0, 0, 0.1);
 }
 
-.vp-rail[hidden] { display: none; }
+/* The arrows are for the mouse. A thumb already scrolls the row natively and
+   two tap targets under it would only crowd the band, so they appear at the
+   same 861px where the grid starts following the merchant's column count. */
+.vp-nav { display: none; }
+
+@media (min-width: 53.8125rem) {
+    .vp-nav {
+        display: flex;
+        gap: 0.5rem;
+    }
+}
+
+.vp-nav__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 2.5rem;
+    block-size: 2.5rem;
+    padding: 0;
+    border: 1px solid var(--color-border);
+    border-radius: 50%;
+    background: var(--color-surface);
+    color: var(--color-text);
+    cursor: pointer;
+    transition: color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+
+.vp-nav__btn:hover:not(:disabled) {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.vp-nav__btn:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+/* app.js draws ONE chevron, pointing toward inline-start. The next button
+   mirrors it, and RTL mirrors the pair again — both arrows, one path. */
+.vp-nav__btn[data-vp-next] svg,
+[dir="rtl"] .vp-nav__btn[data-vp-prev] svg { transform: scaleX(-1); }
+
+[dir="rtl"] .vp-nav__btn[data-vp-next] svg { transform: none; }
 
 .vp-rail__thumb {
     position: absolute;
@@ -5855,10 +7957,10 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
     .vp-grid[data-scroll-rail] { --vp-visible: var(--vp-columns, 4); }
 }
 
-/* Placeholder tiles, sized to the card's square media so the grid is the
-   right height before the fetch lands and nothing below it jumps. */
+/* Placeholder tiles, sized to the reel card's 9/16 portrait so the grid is
+   the right height before the fetch lands and nothing below it jumps. */
 .vp-skeleton {
-    aspect-ratio: 1;
+    aspect-ratio: 9 / 16;
     border-radius: var(--radius);
     background: linear-gradient(
         90deg,
@@ -5880,6 +7982,149 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
     .vp-skeleton { animation: none; }
 }
 
+/*
+   The reel card.
+
+   The wall renders the SDK's ordinary <falak-product-card>, but a card whose
+   subject is a clip should read like the viewer it opens into: the video
+   full-bleed and portrait, with the name, the price and the buy row laid over
+   its foot instead of boxed underneath. Everything here is a reskin of the
+   markup the SDK already emits — scoped to .vp-grid so the same card keeps
+   its ordinary shape in the listing and on every other home row.
+
+   The inner keeps its flex column; the media is simply lifted out of the flow
+   to fill the whole card, and justify-content pins the body and actions to
+   the bottom edge, over a scrim that keeps white type legible on any frame.
+*/
+.vp-grid .f-card__inner {
+    position: relative;
+    justify-content: flex-end;
+    aspect-ratio: 9 / 16;
+    border: 0;
+    border-radius: var(--radius-lg);
+    background: #15181d;
+}
+
+.vp-grid .f-card__media {
+    position: absolute;
+    inset: 0;
+    aspect-ratio: auto;
+    background: transparent;
+}
+
+/* The scrim. A pseudo-element on the inner rather than a background on the
+   body, so the fade can run taller than the text it protects. It paints
+   after the (static) body in the stacking order, which is why the body and
+   actions below carry their own z-index. */
+.vp-grid .f-card__inner::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 0;
+    block-size: 55%;
+    background: linear-gradient(
+        to top,
+        rgba(0, 0, 0, 0.78),
+        rgba(0, 0, 0, 0.42) 45%,
+        rgba(0, 0, 0, 0)
+    );
+    pointer-events: none;
+}
+
+/* The sale/hot column keeps the top start corner; the free-shipping promise
+   moves up from the bottom so it never sits under the overlay. The clip
+   badge goes entirely — on a wall of nothing but clips a "product video"
+   pill on every card says nothing. */
+.vp-grid .f-card__marks {
+    inset-block-start: 0.75rem;
+    inset-inline-start: 0.75rem;
+}
+
+.vp-grid .f-card__video-badge { display: none; }
+
+.vp-grid .f-card__ship {
+    inset-block-end: auto;
+    inset-block-start: 0.75rem;
+    inset-inline-end: 0.75rem;
+}
+
+.vp-grid .f-card__body {
+    position: relative;
+    z-index: 1;
+    flex-grow: 0;
+    gap: 0.4rem;
+    padding: 0 1rem 0.15rem;
+    text-align: center;
+}
+
+.vp-grid .f-card__title { font-size: 0.95rem; }
+
+.vp-grid .f-card__link { color: #fff; }
+.vp-grid .f-card__link:hover { color: rgba(255, 255, 255, 0.85); }
+
+/* The stars belong to the grid card; over a clip they are clutter the
+   viewer itself also does without. */
+.vp-grid .f-card falak-rating-stars { display: none; }
+
+.vp-grid .f-card__price {
+    justify-content: center;
+    margin: 0;
+    padding-block-start: 0;
+}
+
+.vp-grid .f-card__price-now { font-size: 1.15rem; color: #fff; }
+.vp-grid .f-card__price-was { font-size: 0.85rem; color: rgba(255, 255, 255, 0.72); }
+
+/* The theme's danger red disappears into the scrim; a lighter tint of it
+   stays legible there. */
+.vp-grid .f-card__stock { color: #fda4af; }
+
+.vp-grid .f-card__actions {
+    position: relative;
+    z-index: 1;
+    padding: 0.5rem 0.9rem 0.9rem;
+}
+
+/* The buy row: the add button filled with the brand colour and carrying its
+   bag icon, the heart a frosted square beside it — the pair the reference
+   mock draws. */
+.vp-grid .f-card__add {
+    min-block-size: 2.75rem;
+    border: 0;
+    border-radius: var(--radius);
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+}
+
+.vp-grid .f-card__add:hover:not(:disabled) {
+    background: var(--color-primary-dark);
+    color: var(--color-on-primary);
+}
+
+.vp-grid .f-card__wishlist {
+    flex: none;
+    inline-size: 2.75rem;
+    min-block-size: 2.75rem;
+    border: 0;
+    border-radius: var(--radius);
+    background: rgba(255, 255, 255, 0.16);
+    color: #fff;
+    backdrop-filter: blur(6px);
+}
+
+.vp-grid .f-card__wishlist:hover {
+    background: rgba(255, 255, 255, 0.3);
+    color: #fff;
+}
+
+.vp-grid .f-card__wishlist.is-active,
+.vp-grid .f-card__wishlist.is-added { color: #f87171; }
+
+/* Under 560px the global card rule hides the button label and leaves the
+   bag icon — right here too: two reel cards share a phone's width, and
+   "أضف إلى السلة" beside a heart does not fit a half-width button. The
+   heart keeps its fixed square from above, so the bag takes the rest. */
+
 .block--video-products .block__subtitle {
     margin-block: -0.25rem 0;
     color: var(--color-text-soft);
@@ -5892,7 +8137,60 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
 }
 
 @media (max-width: 560px) {
-    .product-grid { grid-template-columns: repeat(2, 1fr); gap: 0.9rem; }
+    /*
+        Two cards per row, always. `1fr` alone is minmax(auto, 1fr): a column
+        never goes below its card's min-content width, and the nowrap
+        "choose options" + heart row held that at ~210px — so on a 390px
+        phone the two columns summed to 440px and the second card hung off
+        the edge of the screen, sheared by the body's overflow clip.
+    */
+    .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
+    .product-grid > falak-product-card { min-width: 0; }
+
+    /*
+        The buy row is two icons — on every card the theme shows, not only
+        the listing: the home grid, the sliders, related products and video
+        commerce all render the same <falak-product-card>. At half a phone's
+        width there is no room for "choose options" beside a heart, so the
+        bag the button already carries stands alone and the heart takes the
+        other half. The label stays in the DOM for screen readers; a sold-out
+        card still says so in the body copy above. Both hosts are
+        display:contents, so the inner buttons are the flex items here.
+    */
+    .f-card__actions { gap: 0.5rem; padding-inline: 0.6rem; }
+
+    .f-card__add,
+    .f-card__wishlist {
+        flex: 1 1 0;
+        min-inline-size: 0;
+        inline-size: auto;
+        min-block-size: 2.5rem;
+        padding: 0;
+    }
+
+    .f-card__add { position: relative; gap: 0; }
+    .f-card__add > svg { width: 20px; height: 20px; }
+
+    .f-card__add > span {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+    }
+}
+
+/*
+    Sold out is said once. With an add button on the card its label already
+    reads "out of stock", so the red body-copy line is a duplicate — hidden
+    only above the phone breakpoint: under 560px the button collapses to a
+    bare icon (its label goes sr-only, above) and the body line becomes the
+    one visible indicator again. A card without the button keeps the line
+    at every width — it is the only indicator it has.
+*/
+@media (min-width: 561px) {
+    falak-product-card[show-add-button] .f-card__stock { display: none; }
 }
 
 .product-card {
@@ -5994,6 +8292,12 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
 
 .product-single { padding-block: 1rem 2rem; }
 
+/* The related rail excludes the product the page is on (data-exclude-product
+   in single.twig), so on a store whose only product is this one the list now
+   comes back empty — the "none found" message under a "related" heading is
+   worse than no section at all. */
+.product-single__related:has(.f-list__message--empty) { display: none; }
+
 .product-single__layout {
     display: grid;
     grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
@@ -6057,6 +8361,38 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
     font-weight: 700;
     color: var(--color-primary-dark);
     margin-block: 0 1rem;
+}
+
+/* The SKU line under the title — reference metadata, kept quiet. */
+.product-single__sku {
+    font-size: 0.8rem;
+    color: var(--color-text-faint);
+    margin-block: 0 0.75rem;
+}
+
+/* The product's categories, a row of links above the title. */
+.product-single__categories {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 0;
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+.product-single__categories a {
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+.product-single__categories a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+.product-single__categories a + a::before {
+    content: "/";
+    display: inline-block;
+    margin-inline: 0.55rem;
+    color: var(--color-text-faint);
+    pointer-events: none;
 }
 
 /*
@@ -6166,7 +8502,12 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
 }
 
 @media (max-width: 820px) {
-    .cart-layout { grid-template-columns: 1fr; }
+    /* minmax(0, 1fr), not 1fr: a grid track's automatic minimum is its widest
+       item's MIN-CONTENT, so the summary's coupon control was stretching the
+       single column to 455px inside a 390px phone and taking every cart line
+       off the right of the screen with it. The desktop rule above already
+       says minmax(0, 1fr) for the same reason. */
+    .cart-layout { grid-template-columns: minmax(0, 1fr); }
 }
 
 .cart-items {
@@ -6249,23 +8590,6 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
 
 .empty-state__icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
 .empty-state p { margin-bottom: 1.5rem; }
-
-/*
-    The "other products" grid shown when a category turns up empty. Only the
-    heading needs rules — the grid and cards inside it are <falak-products-list>,
-    styled by the platform's falak-components.css.
-*/
-.product-listing__fallback {
-    margin-block-start: 1rem;
-    padding-block-start: 2.5rem;
-    border-block-start: 1px solid var(--color-border);
-}
-
-.product-listing__fallback h2 {
-    font-size: 1.125rem;
-    margin-bottom: 1.25rem;
-    text-align: center;
-}
 
 /*
     Listing layout: sidebar (<falak-filters>, SDK-styled) beside the grid on
@@ -6419,7 +8743,13 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
 }
 
 @media (max-width: 720px) {
-    .account__layout { grid-template-columns: 1fr; }
+    /* minmax(0, 1fr), not 1fr: a bare 1fr track is minmax(auto, 1fr), and
+       'auto' let the nav's four nowrap tabs set the column's minimum. The
+       whole account area then laid out 385px wide on a 358px screen, and
+       every page under it — orders, wishlist — was sheared off at the edge. */
+    .account__layout { grid-template-columns: minmax(0, 1fr); }
+    .account__nav,
+    .account__content { min-width: 0; }
 }
 
 .account__nav {
@@ -6442,7 +8772,13 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
 
 @media (max-width: 720px) {
     .account__nav { position: static; }
-    .account__nav ul { flex-direction: row; overflow-x: auto; }
+    .account__nav ul {
+        flex-direction: row;
+        overflow-x: auto;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+    .account__nav ul::-webkit-scrollbar { display: none; }
 }
 
 .account__nav a {
@@ -6482,6 +8818,23 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
 .account-details dt { color: var(--color-text-soft); font-weight: 600; }
 .account-details dd { margin: 0; }
 
+/*
+   An order number is one unbreakable token (`#ORD202610121035206409`) in a
+   flex row beside the status pill and the total. On a phone it needed more
+   than the column left over and, with nothing to break on, painted straight
+   past the card's edge. `anywhere` (not `break-word`, which won't break a
+   token alone on its line) lets it wrap instead of escaping.
+*/
+.f-orders__number { overflow-wrap: anywhere; }
+
+/* Below 560px the pill and the total drop to their own line so the number
+   gets the full card width. */
+@media (max-width: 35rem) {
+    .f-orders__row { flex-wrap: wrap; row-gap: 0.6rem; }
+    .f-orders__main { flex: 1 0 100%; }
+    .f-orders__total { margin-inline-start: auto; }
+}
+
 /* orders */
 .order-list {
     list-style: none;
@@ -6507,7 +8860,7 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
     min-width: 8rem;
 }
 
-.order-row__number { font-weight: 700; }
+.order-row__number { font-weight: 700; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .order-row__date { color: var(--color-text-soft); font-size: 0.85rem; }
 .order-row__total { font-weight: 700; white-space: nowrap; }
 
@@ -6553,50 +8906,466 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
 }
 
 /* -------------------------------------------------------------- blog */
+/* The card, the index, the article and its comment thread. Everything is
+   built in the browser by the custom-falak-blog-* elements in app.js, which
+   read /api/storefront/blogs; the Twig pages are shells. The card is ONE
+   definition — the index grid creates the element rather than markup of its
+   own — so keep these selectors and the element's classes in step. */
 
-.article-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 1.5rem;
-    padding-block: 1rem 2rem;
+:root {
+    --t26-calendar: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='5' width='18' height='16' rx='2'/%3E%3Cpath d='M3 10h18M8 3v4M16 3v4'/%3E%3C/svg%3E");
+    --t26-user:     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7'/%3E%3C/svg%3E");
+    --t26-chevron:  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 5 7 7-7 7'/%3E%3C/svg%3E");
+    --t26-tag:      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20.6 13.4 12 22l-9-9V3h10l7.6 7.6a2 2 0 0 1 0 2.8Z'/%3E%3Ccircle cx='7.5' cy='7.5' r='1.5'/%3E%3C/svg%3E");
 }
 
-.article-card {
+.blog-index,
+.blog-post { padding-block-end: 2.5rem; }
+
+/* ---- the card ---------------------------------------------------------- */
+
+/* The card is a custom element, so it needs the box an <article> would have
+   given it for free. The element adds .blog-card to itself, and the class is
+   what the rules below are written against. */
+custom-falak-blog-card { display: block; height: 100%; }
+
+.blog-card {
     display: flex;
     flex-direction: column;
+    height: 100%;
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
     overflow: hidden;
-    text-decoration: none;
-    color: inherit;
     background: var(--color-bg);
+    transition: box-shadow var(--transition), border-color var(--transition);
+}
+.blog-card:hover { box-shadow: var(--shadow); }
+
+.blog-card__media {
+    display: block;
+    aspect-ratio: 16 / 9;
+    background: var(--color-surface);
+    overflow: hidden;
+}
+.blog-card__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.4s ease;
+}
+.blog-card:hover .blog-card__media img { transform: scale(1.04); }
+.blog-card__placeholder { display: block; width: 100%; height: 100%; }
+
+.blog-card__body {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    padding: 1.1rem 1.25rem 1.25rem;
+}
+
+.blog-card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--color-text-soft);
+}
+.blog-card__meta-item { display: inline-flex; align-items: center; gap: 0.4rem; }
+
+.blog-card__meta-glyph {
+    width: 0.875rem;
+    height: 0.875rem;
+    flex: none;
+    background: currentColor;
+    -webkit-mask-position: center; mask-position: center;
+    -webkit-mask-size: contain;    mask-size: contain;
+    -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+}
+.blog-card__meta-glyph--date { -webkit-mask-image: var(--t26-calendar); mask-image: var(--t26-calendar); }
+.blog-card__meta-glyph--user { -webkit-mask-image: var(--t26-user);     mask-image: var(--t26-user); }
+
+.blog-card__title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.6;
+    /* Two lines, then ellipsis — a long headline must not push the "read more"
+       of one card out of line with its neighbours in the grid. */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.blog-card__title a { color: var(--color-text); text-decoration: none; }
+.blog-card__title a:hover { color: var(--color-primary); text-decoration: none; }
+
+.blog-card__excerpt {
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: 1.7;
+    color: var(--color-text-faint);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Pushed to the foot so it lines up across a row of cards whose excerpts run
+   to different lengths. */
+.blog-card__more {
+    margin-block-start: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    align-self: flex-start;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-primary);
+    text-decoration: none;
+}
+.blog-card__more:hover { color: var(--color-primary-dark); text-decoration: none; }
+
+.blog-card__more-chevron {
+    width: 0.7rem;
+    height: 0.7rem;
+    background: currentColor;
+    -webkit-mask: var(--t26-chevron) center / contain no-repeat;
+    mask: var(--t26-chevron) center / contain no-repeat;
+}
+/* The chevron points the way the language reads. */
+[dir="rtl"] .blog-card__more-chevron { transform: scaleX(-1); }
+
+/* ---- the index --------------------------------------------------------- */
+
+.blog-grid {
+    display: grid;
+    /* auto-FIT, not auto-fill: three articles in a container wide enough for
+       four would leave an empty track and push the row off to one side. */
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+/* Card-shaped blanks while the request is out, so the grid does not jump when
+   the articles land. */
+.blog-card--skeleton {
+    min-block-size: 22rem;
+    background: var(--color-surface);
+    border-color: transparent;
+}
+
+.blog-index__filter {
+    margin: 0 0 1.5rem;
+    font-size: 0.9375rem;
+    color: var(--color-text-soft);
+}
+.blog-index__filter a { margin-inline-start: 0.75rem; }
+
+.blog-index__empty {
+    padding: 3rem 1rem;
+    text-align: center;
+    color: var(--color-text-faint);
+}
+
+/* ---- the article ------------------------------------------------------- */
+
+.blog-post__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2rem;
+    padding-block-start: 1.5rem;
+}
+/* The sidebar arrives only when there is room for it beside the prose; below
+   that the related list follows the article instead of squeezing it. */
+@media (min-width: 1024px) {
+    .blog-post__grid { grid-template-columns: minmax(0, 1fr) 300px; }
+}
+
+.blog-post__title {
+    margin: 0 0 0.9rem;
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1.5;
+    text-wrap: balance;
+}
+
+.blog-post__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    margin: 0 0 1.5rem;
+    font-size: 0.875rem;
+    color: var(--color-text-soft);
+}
+.blog-post__meta-item { display: inline-flex; align-items: center; gap: 0.4rem; }
+.blog-post__category { color: var(--color-primary); text-decoration: none; }
+
+.blog-post__figure {
+    margin: 0 0 1.75rem;
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--color-surface);
+}
+/* A wide crop. Article heroes arrive at whatever ratio the merchant uploaded,
+   and a portrait shot rendered at its natural height pushes the whole article
+   below the fold. */
+.blog-post__figure img {
+    width: 100%;
+    aspect-ratio: 3 / 2;
+    object-fit: cover;
+    display: block;
+}
+
+/* Merchant HTML from the admin editor lands here, so the tags it may contain
+   are given a house style rather than left to the browser's defaults. */
+.blog-post__body { font-size: 1rem; line-height: 1.9; color: var(--color-text-soft); }
+.blog-post__body > * + * { margin-block-start: 1.1rem; }
+.blog-post__body h2,
+.blog-post__body h3 { color: var(--color-text); font-weight: 700; line-height: 1.5; }
+.blog-post__body h2 { font-size: 1.25rem; }
+.blog-post__body h3 { font-size: 1.0625rem; }
+.blog-post__body ul,
+.blog-post__body ol { padding-inline-start: 1.35rem; }
+.blog-post__body li + li { margin-block-start: 0.4rem; }
+.blog-post__body img { max-width: 100%; height: auto; border-radius: var(--radius); }
+.blog-post__body a { color: var(--color-primary); }
+.blog-post__body blockquote {
+    margin-inline: 0;
+    padding-inline-start: 1rem;
+    border-inline-start: 3px solid var(--color-primary);
+    color: var(--color-text);
+}
+/* A pasted table must scroll inside the article rather than widen the page. */
+.blog-post__body table { display: block; overflow-x: auto; max-width: 100%; }
+
+.blog-post__tags {
+    list-style: none;
+    margin: 2rem 0 0;
+    padding: 1.5rem 0 0;
+    border-block-start: 1px solid var(--color-border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+.blog-post__tags a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.9rem;
+    border-radius: 999px;
+    background: var(--color-surface);
+    color: var(--color-text-soft);
+    font-size: 0.8125rem;
+    text-decoration: none;
+}
+.blog-post__tags a:hover {
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+    text-decoration: none;
+}
+.blog-post__tag-glyph {
+    width: 0.8rem;
+    height: 0.8rem;
+    background: currentColor;
+    -webkit-mask: var(--t26-tag) center / contain no-repeat;
+    mask: var(--t26-tag) center / contain no-repeat;
+}
+
+.blog-post__aside { display: grid; gap: 1rem; align-content: start; }
+
+.blog-post__aside-title {
+    margin: 0 0 0.25rem;
+    font-size: 1.125rem;
+    font-weight: 700;
+}
+
+.blog-aside-card {
+    display: grid;
+    grid-template-columns: 5rem minmax(0, 1fr);
+    gap: 0.9rem;
+    align-items: center;
+    padding: 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-bg);
+    text-decoration: none;
     transition: box-shadow var(--transition);
 }
+.blog-aside-card:hover { box-shadow: var(--shadow); text-decoration: none; }
 
-.article-card:hover { box-shadow: var(--shadow); }
-
-.article-card > img {
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    object-fit: cover;
-}
-
-.article-card__body { padding: 1.1rem 1.25rem 1.25rem; }
-.article-card__body h3 { margin-bottom: 0.4rem; }
-.article-card__body p {
-    margin: 0 0 0.6rem;
-    color: var(--color-text-soft);
-    font-size: 0.92rem;
+.blog-aside-card__media {
+    display: block;
+    aspect-ratio: 1;
+    border-radius: var(--radius-sm);
     overflow: hidden;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    line-clamp: 3;
-    -webkit-box-orient: vertical;
+    background: var(--color-surface);
 }
-.article-card__body time { color: var(--color-text-faint); font-size: 0.8rem; }
+.blog-aside-card__media img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-.article-date { display: block; color: var(--color-text-faint); font-size: 0.85rem; margin-bottom: 1rem; }
-.article-cover { width: 100%; border-radius: var(--radius); margin-bottom: 1.5rem; }
+.blog-aside-card__body { display: grid; gap: 0.35rem; }
+.blog-aside-card__date {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.75rem;
+    color: var(--color-text-faint);
+}
+.blog-aside-card__title {
+    font-size: 0.875rem;
+    font-weight: 700;
+    line-height: 1.6;
+    color: var(--color-text);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.blog-aside-card:hover .blog-aside-card__title { color: var(--color-primary); }
+
+@media (max-width: 767px) {
+    .blog-post__title { font-size: 1.375rem; }
+    .blog-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ---- the comment thread ------------------------------------------------ */
+/* A hairline above the block, the thread, then a bordered textarea with the
+   submit sitting at its inline end. */
+
+.blog-comments {
+    margin-block-start: 2.5rem;
+    padding-block-start: 2rem;
+    border-block-start: 1px solid var(--color-border);
+}
+
+.blog-comments__title {
+    margin: 0 0 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.125rem;
+    font-weight: 700;
+}
+.blog-comments__count {
+    min-inline-size: 1.5rem;
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+    background: var(--color-surface);
+    color: var(--color-text-soft);
+    font-size: 0.8125rem;
+    font-weight: 400;
+    text-align: center;
+}
+
+.blog-comments__list {
+    list-style: none;
+    margin: 0 0 1.75rem;
+    padding: 0;
+    display: grid;
+    gap: 1rem;
+}
+
+.blog-comment {
+    display: grid;
+    grid-template-columns: 2.5rem minmax(0, 1fr);
+    gap: 0.85rem;
+    align-items: start;
+}
+
+/* No customer avatars on this platform, so the author's initial stands in.
+   The disc is a tint of the brand colour, mixed here because the theme has no
+   tint token; the fallback is the plain surface for browsers without
+   color-mix. */
+.blog-comment__avatar {
+    inline-size: 2.5rem;
+    block-size: 2.5rem;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--color-surface);
+    background: color-mix(in srgb, var(--color-primary) 12%, var(--color-bg));
+    color: var(--color-primary-dark);
+    font-weight: 700;
+}
+
+.blog-comment__body {
+    padding: 0.85rem 1rem;
+    border-radius: var(--radius);
+    background: var(--color-surface);
+}
+
+.blog-comment__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin: 0 0 0.35rem;
+}
+.blog-comment__author { font-weight: 700; font-size: 0.9375rem; }
+.blog-comment__date { font-size: 0.75rem; color: var(--color-text-faint); }
+
+/* Shopper-written prose: wrap long words rather than let one unbroken string
+   widen the article. */
+.blog-comment__text {
+    margin: 0;
+    font-size: 0.9375rem;
+    line-height: 1.8;
+    color: var(--color-text-soft);
+    overflow-wrap: anywhere;
+    white-space: pre-line;
+}
+
+.blog-comments__empty {
+    margin: 0 0 1.75rem;
+    color: var(--color-text-faint);
+    font-size: 0.9375rem;
+}
+
+.blog-comments__form { display: grid; gap: 0.75rem; }
+
+.blog-comments__input {
+    inline-size: 100%;
+    padding: 0.9rem 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg);
+    color: var(--color-text);
+    font: inherit;
+    font-size: 0.9375rem;
+    line-height: 1.7;
+    resize: vertical;
+}
+.blog-comments__input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+.blog-comments__input::placeholder { color: var(--color-text-faint); }
+
+/* The button sits at the inline end under the box. */
+.blog-comments__submit { justify-self: end; min-inline-size: 8rem; }
+
+.blog-comments__status {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--color-danger);
+}
+.blog-comments__status[hidden] { display: none; }
+
+.blog-comments__signin {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.15rem 1.25rem;
+    border-radius: var(--radius);
+    background: var(--color-surface);
+}
+.blog-comments__signin p { margin: 0; color: var(--color-text-soft); font-size: 0.9375rem; }
 
 /* ------------------------------------------------------------- brands */
 
@@ -6863,6 +9632,20 @@ a.photo-tile:hover img { transform: scale(1.04); }
     border: 0;
 }
 
+/* ---------------------------------------------------------- custom html */
+/* Merchant markup is unknown — keep its media inside the column. */
+.custom-html__body {
+    overflow-wrap: anywhere;
+}
+
+.custom-html__body :where(img, video, iframe) {
+    max-width: 100%;
+}
+
+.custom-html__body :where(img, video) {
+    height: auto;
+}
+
 /* ---------------------------------------------------------------- toasts */
 /* The visible half of falak.notify(): bottom-centre, colour by type. */
 .toasts {
@@ -6914,27 +9697,86 @@ a.photo-tile:hover img { transform: scale(1.04); }
 .cart-item__name { font-weight: 600; color: var(--color-text); text-decoration: none; display: block; }
 .cart-item__name:hover { color: var(--color-primary); }
 .cart-item__variation { display: block; font-size: 0.85rem; color: var(--color-text-soft); }
+
+/* The chosen options, one chip each.
+ *
+ * `.cart-item__placeholder` is the empty media tile, sized to match the
+ * photograph it stands in for so the line keeps its first column.
+ */
+.cart-item__placeholder {
+    display: block;
+    width: 76px;
+    height: 76px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+}
+
+.cart-item__options {
+    list-style: none;
+    margin: 0.35rem 0 0.4rem;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+.cart-item__option {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    /* The block padding is the smaller of the two: a chip wrapping a single
+       line of 0.8rem text wants to read as a tag, not as a button. */
+    padding: 0.22rem 0.55rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-bg, #fff);
+    font-size: 0.8rem;
+    line-height: 1.35;
+    max-inline-size: 100%;
+}
+.cart-item__option-label { color: var(--color-text-soft); }
+.cart-item__option-value {
+    font-weight: 600;
+    color: var(--color-text);
+    /* A merchant-typed value can be any length; it ellipsises inside the chip
+       rather than stretching the row past the price column. */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-inline-size: 0;
+}
+
 /* The colour/image a variant was chosen by, so a cart line shows the same
-   swatch the product page did rather than only naming it. The value is
+   swatch the product page did beside the value's name. The value is
    validated server-side (ProductOptionPresenter::safeDisplay) before it
-   reaches the style attribute. */
-.cart-item__swatch {
+   reaches the style attribute.
+
+   Scoped under .cart-item__option deliberately. `.cart-item img` up in the
+   base cart rules is (0,1,1) and sizes EVERY image in a line to 76px, so a
+   bare `.cart-item__swatch--image` (0,1,0) lost to it and the swatch drew at
+   the size of the product photograph. These win on specificity, not order. */
+.cart-item__option .cart-item__swatch {
+    flex: none;
     display: inline-block;
-    /* The swatch now stands in for the value's name, so it carries the
-       meaning on its own and is sized to be read rather than glanced past. */
     inline-size: 1.05rem;
     block-size: 1.05rem;
     border-radius: 50%;
-    vertical-align: -3px;
     box-shadow: 0 0 0 1px rgb(0 0 0 / 18%) inset;
 }
-.cart-item__swatch--image {
-    inline-size: 1.4rem;
-    block-size: 1.4rem;
+.cart-item__option .cart-item__swatch--image {
+    /* A hair larger than the colour dot: a cropped photograph needs the extra
+       pixels to be recognisable where a flat colour does not. */
+    inline-size: 1.15rem;
+    block-size: 1.15rem;
+    border: 1px solid var(--color-border);
     border-radius: 4px;
+    background: var(--color-surface);
     object-fit: cover;
+    box-shadow: none;
 }
+
 .cart-item__unit { display: block; font-size: 0.9rem; color: var(--color-text-soft); }
+.cart-item__unit-suffix { color: var(--color-text-faint); }
 .cart-item__unit del { margin-inline-start: 0.35rem; color: var(--color-text-faint); }
 
 .cart-item__qty {
@@ -6992,6 +9834,35 @@ a.photo-tile:hover img { transform: scale(1.04); }
 
 /* ------------------------------------------------------ variant chooser */
 .product-single__options { margin-block: 0.25rem 1rem; }
+
+/*
+    Weight and dimensions, under the variant picker. Tinted chips in the
+    store's own primary (color-mix, so it follows the merchant's colour
+    rather than a fixed theme tint), the value set in the darker shade.
+*/
+.product-specs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0 0 1rem;
+    padding: 0;
+    list-style: none;
+}
+
+.product-specs__item {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    padding: 0.4rem 0.75rem;
+    border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+    font-size: 0.82rem;
+    line-height: 1.3;
+}
+
+.product-specs__label { color: var(--color-text-soft); }
+.product-specs__value { font-weight: 600; color: var(--color-primary-dark); }
 .product-single__price del { margin-inline-start: 0.4rem; font-size: 0.85em; font-weight: 400; color: var(--color-text-faint); }
 .product-single__options .f-options__pill { border-radius: var(--radius-sm); }
 
@@ -7039,12 +9910,128 @@ a.photo-tile:hover img { transform: scale(1.04); }
 .search-link .f-search__trigger:hover { border-color: var(--color-primary); color: var(--color-primary); }
 .topnav-is-dark .site-header .search-link .f-search__trigger { border-color: #3a3f4b; }
 
-#falak-search .f-modal__body { background: var(--color-surface); border-radius: var(--radius); }
-#falak-search .f-search__input { background: var(--color-bg); border-color: var(--color-border); border-radius: var(--radius-sm); }
-#falak-search .f-search__link:hover { background: var(--color-surface-alt, var(--color-bg)); }
-#falak-search .f-search__thumb { border-radius: var(--radius-sm); }
+/* The dropdown panel. The meta line, clear ×, quick-add button and chevron
+   below are markup the falak-search patch at the end of app.js renders —
+   the SDK's own markup has none of them.
+   Ink is pinned to --color-on-white: the element lives in the header, and
+   under a dark topnav the panel would otherwise inherit its light text. */
+#falak-search .f-modal__body {
+    background: var(--color-surface);
+    border-radius: calc(var(--radius) * 1.5);
+    color: var(--color-on-white);
+}
+#falak-search .f-search__panel { padding: 1.25rem; }
+
+/* The dialog is flush (no-padding) and has no title, so its header — which
+   holds only the close × — would sit hard against the top corner. Inset it,
+   and take the same amount off the panel's top padding so the pill below
+   does not move: 0.75rem + 2rem button + 0.5rem = the old 2rem + 1.25rem. */
+#falak-search .f-modal__header {
+    justify-content: flex-end;
+    padding: 0.75rem 0.75rem 0;
+}
+#falak-search .f-search__panel { padding-block-start: 0.5rem; }
+
+#falak-search .f-search__form .f-search__icon { inset-inline-start: 1.1rem; }
+#falak-search .f-search__input {
+    background: var(--color-bg);
+    /* --color-border alone can vanish on a store whose bg is near-white;
+       the mockup draws the pill in a tint of the brand colour. */
+    border-color: color-mix(in srgb, var(--color-primary) 30%, var(--color-border));
+    border-radius: 999px;
+    padding-block: 0.8rem;
+    padding-inline: 2.9rem;     /* room for the magnifier and the × */
+}
+/* Chromium draws its own cancel ×; the injected one is the design's. */
+#falak-search .f-search__input::-webkit-search-cancel-button { display: none; }
+
+.f-search__clear {
+    position: absolute;
+    inset-inline-end: 0.6rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--color-text-soft);
+    cursor: pointer;
+}
+.f-search__clear:hover { color: var(--color-on-white); background: var(--color-bg); }
+
+/* "PRODUCTS — N results" */
+.f-search__meta {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-block: 0.25rem 0.6rem;
+    font-size: 0.78rem;
+    color: var(--color-text-soft);
+}
+.f-search__meta-label { text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
+
+/* Result rows as cards; the <li> (not the SDK's <a>) is the bordered box,
+   so the quick-add button and chevron can sit beside the link, not in it. */
+.f-search__list { list-style: none; margin: 0; padding: 0; gap: 0.6rem; }
+.f-search__item {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-bg);
+    padding-inline-end: 0.9rem;
+    transition: border-color var(--transition);
+}
+.f-search__item:hover { border-color: color-mix(in srgb, var(--color-primary) 45%, var(--color-border)); }
+#falak-search .f-search__link { flex: 1 1 auto; min-width: 0; padding: 0.65rem; }
+#falak-search .f-search__link:hover { background: transparent; }
+#falak-search .f-search__thumb { inline-size: 4rem; block-size: 4rem; border-radius: var(--radius-sm); }
+#falak-search .f-search__name { font-weight: 600; white-space: normal; }
 #falak-search .f-search__price-now { color: var(--color-primary); }
-#falak-search .f-search__view-all { color: var(--color-primary); border-color: var(--color-border); }
+
+/* Quick-add — a circled bag between the link and the chevron. */
+.f-search__item falak-add-product-button { flex: none; display: inline-flex; }
+.f-search__add-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+    border: 1px solid var(--color-border);
+    border-radius: 50%;
+    background: var(--color-surface);
+    color: var(--color-on-white);
+    cursor: pointer;
+    transition: border-color var(--transition), color var(--transition);
+}
+.f-search__add-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.f-add-product--unavailable .f-search__add-btn { opacity: 0.45; cursor: not-allowed; }
+
+.f-search__chevron { flex: none; display: inline-flex; margin-inline-start: 0.5rem; color: var(--color-text-faint); }
+[dir="rtl"] .f-search__chevron svg { transform: scaleX(-1); }
+
+/* View all — a full-width dark pill with a forward arrow, replacing the
+   SDK's bordered text link. */
+#falak-search .f-search__view-all {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-block-start: 0.9rem;
+    padding-block: 0.85rem;
+    border: 0;
+    border-radius: var(--radius);
+    background: var(--color-text);
+    color: #fff;
+    font-weight: 600;
+}
+#falak-search .f-search__view-all:hover { text-decoration: none; opacity: 0.92; }
+#falak-search .f-search__view-all::after { content: '→'; }
+[dir="rtl"] #falak-search .f-search__view-all::after { content: '←'; }
 
 /* ------------------------------------------------------ wishlist drawer */
 /* Header trigger matches the account avatar / cart link; the panel takes
@@ -7097,6 +10084,10 @@ a.photo-tile:hover img { transform: scale(1.04); }
 .checkout-page .f-input { border-radius: var(--radius-sm); background: #fff; }
 .checkout-page .f-checkout__method { border-radius: var(--radius-sm); background: #fff; }
 .checkout-page .f-checkout__summary { background: var(--color-surface); border-radius: var(--radius); }
+/* The product list scrolls, and each thumbnail's count badge rides 0.35rem
+   above it, so the first row's badge was cut off by the list's top edge.
+   Room above the first row keeps it whole. */
+.checkout-page .f-checkout__lines { padding-block-start: 0.45rem; }
 .checkout-page .f-btn { border-radius: var(--radius-sm); }
 .checkout-page .f-btn--primary { background: var(--color-primary); color: var(--color-on-primary); }
 .checkout-page .f-btn--primary:hover:not(:disabled) { background: var(--color-primary-dark); opacity: 1; }
@@ -7126,8 +10117,30 @@ a.photo-tile:hover img { transform: scale(1.04); }
 .product-single__panels { display: grid; gap: 0.75rem; margin-block-start: 1.25rem; }
 .btn--notify { display: inline-flex; align-items: center; gap: 0.45rem; }
 .product-single__size-guide { margin-block: 0.25rem 0.75rem; }
-.product-single__reviews > h2 { margin-block-end: 1rem; }
+.product-single__reviews { margin-block-start: 2.5rem; }
 .product-single__reviews-summary { padding: 1.25rem; margin-block-end: 1.5rem; border: 1px solid var(--color-border); border-radius: var(--radius); background: #fff; }
+
+/* With no reviews, the sign-in gate (or the review form) is the only thing
+   worth showing — the list's "no reviews yet" line under it just repeated
+   what the empty page already made obvious. */
+.product-single__reviews .f-comments__empty { display: none; }
+
+/* The review form is for customers who bought and received the product;
+   everyone else gets the reviews themselves and nothing more. The SDK
+   explains the rule in a dashed gate box ("sign in" / "only customers who
+   bought..."), and the component prints its own "Reviews" subheading under
+   the section — both stand down here. The form itself is untouched, so an
+   eligible customer still sees it. */
+.product-single__reviews .f-comments__title,
+.product-single__reviews .f-comments__gate { display: none; }
+
+.product-single__questions { margin-block-start: 2.5rem; }
+
+/* "All questions — 0" sat directly above the empty block's own "No questions
+   yet", counting a list that isn't there. The component renders the heading
+   next to whichever of the two follows it, so it stands down only when the
+   list is empty and still divides the ask form from a real list. */
+.product-single__questions .f-questions__list-title:has(+ .f-questions__empty) { display: none; }
 
 /* ========================================================================
    Customizer style hooks
@@ -7185,6 +10198,40 @@ a.photo-tile:hover img { transform: scale(1.04); }
     font-weight: var(--falak-el-heading-weight, 700);
     color: var(--falak-el-heading-color, revert);
 }
+
+/* The view-all centred under the carousel: plain text and an arrow, the
+   arrow pointing left (forward in Arabic) and mirrored in English. Rendered by
+   the template, not the component — see products-slider.twig. */
+.products-slider__all {
+    display: flex;
+    justify-content: center;
+    margin-block-start: 1.25rem;
+}
+
+.products-slider__all > a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-block: 0.25rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--color-text);
+    text-decoration: none;
+}
+
+.products-slider__all > a:hover { color: var(--color-primary); }
+
+.products-slider__all svg { flex: none; transition: transform 0.2s ease; }
+[dir="ltr"] .products-slider__all svg { transform: scaleX(-1); }
+.products-slider__all > a:hover svg { transform: translateX(-3px); }
+[dir="ltr"] .products-slider__all > a:hover svg { transform: scaleX(-1) translateX(-3px); }
+
+/* An empty catalogue swaps the track for the empty message; a view-all under
+   a row of nothing reads as a broken section. */
+.block--products-slider:has(.f-list__message--empty) .products-slider__all { display: none; }
+
+/* app.js unhides it once the slider reports more products than the threshold. */
+.products-slider__all[hidden] { display: none; }
 
 /* products — the cards inside <falak-products-list> */
 .block--products .f-card__inner {
@@ -7596,6 +10643,50 @@ a.photo-tile:hover img { transform: scale(1.04); }
 }
 
 /*
+   The reel's arrows: mid-height on the OVERLAY, flanking the panel, pointer
+   screens only. Below the breakpoint the next clip is a swipe away and two
+   discs would just crowd the frame; above it the reel cannot scroll at all
+   (only the active slide is drawn), and these are a mouse's one way from clip
+   to clip. app.js disables the arrow with nothing left on its side, and here a
+   disabled step disappears rather than greying out over the scrim.
+
+   position: fixed is what gets them OUT of the dialog: they are rendered
+   inside the panel, whose overflow:hidden (the corner radius clip) would
+   swallow anything hung past its edge — fixed re-homes them to the viewport,
+   which the full-screen modal already covers. The one thing that would break
+   that is a transformed ancestor, and the body's f-rise entrance is exactly
+   that for its 0.2s — so the arrows fade in only after it has finished.
+*/
+.vv__chip--step {
+    display: none;
+    position: fixed;
+    inset-block-start: 50%;
+    translate: 0 -50%;
+    /* The panel's own width formula — --vv-block is inherited from the modal
+       body above — so the arrows track the dialog's edge at every viewport
+       instead of hugging the screen's. */
+    --vv-panel: min(calc(var(--vv-block, 45rem) * 9 / 16), 100vw);
+    animation: f-fade 0.18s ease 0.22s backwards;
+}
+
+@media (min-width: 48.0625rem) {
+    .vv__chip--step { display: inline-flex; }
+    .vv__chip--step:disabled { display: none; }
+}
+
+/* A 1rem breath from the panel's edge, but never pushed off a screen that is
+   barely wider than the dialog. */
+.vv__chip--prev { inset-inline-start: max(0.75rem, calc(50% - var(--vv-panel) / 2 - 3.4rem)); }
+.vv__chip--next { inset-inline-end: max(0.75rem, calc(50% - var(--vv-panel) / 2 - 3.4rem)); }
+
+/* One chevron, drawn pointing toward inline-start: the next arrow mirrors it,
+   and RTL mirrors the pair again. */
+.vv__chip--next svg,
+[dir="rtl"] .vv__chip--prev svg { transform: scaleX(-1); }
+
+[dir="rtl"] .vv__chip--next svg { transform: none; }
+
+/*
    Tinted while the sound is ON.
 
    The clip always starts muted — a browser refuses to autoplay audio — so the
@@ -7665,10 +10756,7 @@ a.photo-tile:hover img { transform: scale(1.04); }
     font-weight: 700;
     line-height: 1.35;
     color: #fff;
-    text-decoration: none;
 }
-
-.vv__name:hover { text-decoration: underline; }
 
 .vv__price {
     margin: 0;
@@ -7753,3 +10841,207 @@ a.photo-tile:hover img { transform: scale(1.04); }
     .vv__spinner,
     .vv__loader::after { animation-duration: 2s; }
 }
+
+/* ------------------------------------------ header: language + currency */
+
+/*
+ * The language trigger and the currency dropdown wear the same soft pill as
+ * the cart — border, 999px radius, 600 weight — so the whole actions row
+ * reads as one family. The icons take the brand colour: at this size a grey
+ * globe looks like a disabled control.
+ */
+.site-header__actions .f-locale__trigger,
+.site-header__actions .f-currency__field {
+    gap: 0.45rem;
+    min-block-size: 2.4rem;
+    padding: 0.4rem 0.85rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: #fff;
+    color: inherit;
+    font-weight: 600;
+    font-size: 0.88rem;
+    line-height: 1.2;
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.site-header__actions .f-locale__trigger:hover,
+.site-header__actions .f-currency__field:hover {
+    background: #fff;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent);
+}
+
+.site-header__actions .f-locale__globe,
+.site-header__actions .f-currency__icon { color: var(--color-primary); opacity: 1; }
+.site-header__actions .f-currency__chevron { opacity: 0.55; }
+
+/*
+ * The preferences sheet lives inside the sticky header, so it is stacked in
+ * the header's own context (z-index 50) — and a hero layer above 50 would
+ * paint over it. While a sheet is open, the header rises above everything.
+ */
+.site-header:has(.f-modal[data-visible="true"]) { z-index: 1200; }
+
+/* ---------------------------------------- phones: locale lives in the drawer */
+
+/*
+ * The actions row carries six controls — search, language, currency, account,
+ * wishlist, cart — beside the brand mark and the menu button. That fits a
+ * desktop bar and nothing narrower: on a phone the row kept its controls at
+ * full size and took the space out of the only two items that would yield,
+ * squeezing the logo to a 23px stub and the hamburger to three bare lines,
+ * then shearing whatever was left off both edges (<body> clips overflow, so
+ * there was not even a scrollbar to show it).
+ *
+ * So the two that have somewhere else to go, go. The language and currency
+ * pills leave the row and the drawer gains one entry (menu.twig) that opens
+ * the very same preferences sheet the pills open, with both choices in it.
+ * <falak-localization-modal> itself stays in the header — it is the sheet,
+ * it renders no inline box, and the drawer entry reaches it through the
+ * SDK bus.
+ *
+ * Hidden by element name, not by class: <falak-localization-modal> wears
+ * `.f-locale` too (as `.f-locale--sheet`), so a class selector here would
+ * switch off the very sheet the drawer entry is meant to open.
+ */
+@media (max-width: 860px) {
+    .site-header__actions falak-language,
+    .site-header__actions falak-currency { display: none; }
+
+    /*
+     * The cart's amount goes with them. It is the widest thing in the row
+     * (a five-figure total in a long currency name runs past 120px), it
+     * re-renders on every cart change, and it is the one value that is
+     * already repeated on the page it links to. Icon and count badge stay —
+     * those are what the control is for.
+     */
+    .site-header__actions .cart-link .f-cart-summary__total { display: none; }
+    .site-header__actions .cart-link { padding-inline: 0.6rem; }
+}
+
+/* The narrowest phones: four icon controls plus the brand mark and the menu
+   button are what is left, and under 380px even those crowd. The gaps close
+   up first; the brand mark keeps at least its icon width. */
+@media (max-width: 380px) {
+    .site-header__topbar-inner { gap: 0.4rem; }
+    .site-header__actions { gap: 0.2rem; }
+    .site-header__actions .cart-link { padding-inline: 0.45rem; }
+    .site-header__logo { min-width: 2.25rem; }
+}
+
+
+/* ------------------------------------------------ thank-you page (theme look) */
+/* A hero card, then the order beside what the shopper needs to know next.
+   Written after the base .thank-you rules so these win on source order. */
+.thank-you { display: flex; flex-direction: column; align-items: stretch; gap: 1.25rem; max-inline-size: 60rem; margin-inline: auto; padding-block: 1.5rem 3rem; text-align: center; }
+.thank-you > * { margin-block: 0; }
+.thank-you__hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 2.25rem 1.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg, 1rem);
+    background: var(--color-bg, #fff);
+}
+.thank-you__hero > * { margin: 0; }
+.thank-you__mark,
+.thank-you__icon {
+    display: grid;
+    place-items: center;
+    inline-size: 64px;
+    block-size: 64px;
+    margin: 0;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--color-primary) 16%, var(--color-bg, #fff));
+    color: var(--color-primary);
+    font-size: 1.75rem;
+}
+.thank-you__title,
+.thank-you__hero h1 { margin: 0; font-size: clamp(1.35rem, 2.4vw, 1.9rem); font-weight: 700; }
+.thank-you__message,
+.thank-you__hero > p { color: var(--color-text-soft); }
+.thank-you__order { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0.75rem; }
+.thank-you__pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.5rem 0.35rem 0.85rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.6rem;
+    background: var(--color-surface);
+    font-size: 0.9rem;
+}
+.thank-you__pill-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-text-soft); }
+.thank-you__copy {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 1.75rem;
+    block-size: 1.75rem;
+    border: 0;
+    border-radius: 0.4rem;
+    background: transparent;
+    color: var(--color-text-soft);
+    cursor: pointer;
+}
+.thank-you__copy:hover { background: var(--color-border); color: var(--color-text); }
+.thank-you__copied {
+    position: absolute;
+    inset-block-end: calc(100% + 0.35rem);
+    inset-inline-start: 50%;
+    transform: translateX(-50%);
+    padding: 0.2rem 0.5rem;
+    border-radius: 0.35rem;
+    background: var(--color-text);
+    color: var(--color-bg, #fff);
+    font-size: 0.7rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s;
+}
+[dir="rtl"] .thank-you__copied { transform: translateX(50%); }
+.thank-you__copy.is-copied .thank-you__copied { opacity: 1; }
+.thank-you__total { font-size: 1.05rem; font-weight: 700; margin: 0; }
+.thank-you__sent { font-size: 0.875rem; color: var(--color-text-soft); }
+.thank-you__grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; text-align: start; }
+@media (min-width: 820px) {
+    .thank-you__grid { grid-template-columns: minmax(0, 1fr) 20rem; align-items: start; }
+}
+.thank-you__aside { display: flex; flex-direction: column; gap: 1rem; min-inline-size: 0; }
+.thank-you__card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1.25rem 1.35rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg, 1rem);
+    background: var(--color-bg, #fff);
+}
+.thank-you__card-title { margin: 0; font-size: 1rem; font-weight: 700; }
+.thank-you__card-text { margin: 0; font-size: 0.9rem; line-height: 1.6; }
+.thank-you__card-text--soft { font-size: 0.8rem; color: var(--color-text-soft); }
+.thank-you__facts { display: flex; flex-direction: column; gap: 0.5rem; margin: 0; }
+.thank-you__facts > div { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-block: 0.45rem; border-block-end: 1px solid var(--color-border); font-size: 0.88rem; }
+.thank-you__facts > div:last-child { border-block-end: 0; }
+.thank-you__facts dt { color: var(--color-text-soft); }
+.thank-you__facts dd { margin: 0; font-weight: 600; }
+.thank-you__status { display: inline-block; padding: 0.15rem 0.6rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; background: var(--color-surface); }
+.thank-you__status--paid, .thank-you__status--completed { background: #dcfce7; color: #166534; }
+.thank-you__status--pending, .thank-you__status--unpaid { background: #fef3c7; color: #92400e; }
+.thank-you__status--failed { background: #fee2e2; color: #991b1b; }
+.thank-you__steps { margin: 0; padding-inline-start: 1.25rem; display: flex; flex-direction: column; gap: 0.4rem; font-size: 0.88rem; color: var(--color-text-soft); }
+.thank-you__steps li::marker { color: var(--color-primary); font-weight: 700; }
+.thank-you__summary { display: block; inline-size: 100%; margin: 0; }
+.thank-you__card .thank-you__items { max-width: none; margin: 0; }
+.thank-you__card .f-order__totals { padding: 1rem 0 0; background: none; border-radius: 0; border-block-start: 1px solid var(--color-border); }
+.thank-you__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.75rem; margin-block-start: 0.25rem; }
+
+/* The SDK chips the currency row with the payment gateway (TAP) — that names
+   the processor, not the currency, and read as a mislabel. The method row
+   already says how the order was paid; the reference chip there is a <code>. */
+.f-order__pay-row > span.f-order__badge { display: none; }

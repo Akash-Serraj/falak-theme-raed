@@ -6,6 +6,7 @@
         "en": "Image with Text"
     },
     "icon": "layout-left-line",
+    "preview": "images/sections/image-with-text.png",
     "is_default": false,
     "areas": [
         "home",

@@ -1,0 +1,66 @@
+{
+    "key": "falak-custom-html",
+    "path": "home.custom-html",
+    "title": {
+        "ar": "HTML مخصص",
+        "en": "Custom HTML"
+    },
+    "icon": "code-line",
+    "preview": "images/sections/custom-html.png",
+    "is_default": false,
+    "areas": [
+        "home",
+        "pages"
+    ],
+    "styleable": [
+        {
+            "id": "title",
+            "label": {
+                "ar": "عنوان القسم",
+                "en": "Section title"
+            }
+        }
+    ],
+    "fields": [
+        {
+            "id": "title",
+            "type": "string",
+            "format": "text",
+            "label": {
+                "ar": "عنوان القسم",
+                "en": "Section title"
+            },
+            "multilanguage": true,
+            "required": false,
+            "maxLength": 100
+        },
+        {
+            "id": "html",
+            "type": "string",
+            "format": "textarea",
+            "label": {
+                "ar": "كود HTML",
+                "en": "HTML code"
+            },
+            "description": {
+                "ar": "يُعرض كما هو داخل القسم — يمكنك استخدام وسوم HTML وCSS وJavaScript.",
+                "en": "Rendered as-is inside the section — HTML, <style> and <script> tags are all allowed."
+            },
+            "required": false
+        },
+        {
+            "id": "full_width",
+            "type": "boolean",
+            "format": "switch",
+            "label": {
+                "ar": "عرض كامل",
+                "en": "Full width"
+            },
+            "description": {
+                "ar": "يمتد المحتوى بعرض الشاشة بدل حاوية الصفحة.",
+                "en": "Let the content span the screen instead of the page container."
+            },
+            "value": false
+        }
+    ]
+}

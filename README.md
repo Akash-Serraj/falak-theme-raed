@@ -12,6 +12,7 @@ src/
     styles/app.css          design system — token-driven, RTL via logical properties
     js/app.js               menu drawer, add-to-cart, qty stepper, gallery
     js/home.js              hero slider
+    images/sections/        one preview thumbnail per block, 800px wide (see below)
   locales/
     ar.json · en.json       every trans() key used by the templates
   views/
@@ -34,15 +35,43 @@ data-guarded and render empty states until the platform wires their data.
 
 ## Merchant components
 
-| Component | Areas |
-|---|---|
-| Hero slider | home |
-| Testimonials | home, pages |
-| Promo banner | home, pages |
-| Store features | home, pages |
-| Image with text | home, pages |
-| Photo grid | home, pages |
-| Video | home, pages |
+| Component | Areas | Preview |
+|---|---|---|
+| Hero slider | home | `enhanced-slider.png` |
+| Products grid | home, pages | `products.png` |
+| Products carousel | home, pages | `products-slider.png` |
+| Video commerce | home, pages | `video-products.png` |
+| Videos slider | home, pages | `videos-slider.png` |
+| Video | home, pages | `video.png` |
+| All categories | home, pages | `categories-circles.png` |
+| Promo banner | home, pages | `banner.png` |
+| Offer countdown | home, pages | `offer-countdown.png` |
+| Image with text | home, pages | `image-with-text.png` |
+| Photo grid | home, pages | `photo-grid.png` |
+| Store features | home, pages | `features.png` |
+| Testimonials | home, pages | `testimonials.png` |
+| Newsletter | home, pages | `newsletter.png` |
+| Contact form | home, pages | `contact.png` |
+| Custom HTML | home, pages | `custom-html.png` |
+
+### Preview thumbnails
+
+Every block carries a `"preview"` entry in its `*.schema.json`, next to `icon`:
+
+```json
+"icon": "image-line",
+"preview": "images/sections/banner.png",
+```
+
+The path is relative to `src/assets/`. The customizer shows the picture in the
+add-section gallery and at the top of the section editor, resolving it against
+wherever this version's assets are served from (CDN for a published version,
+the dev proxy for a workspace). Because the image travels inside the package,
+each submitted version shows its own screenshots and a store pinned to an older
+version keeps seeing that version's pictures.
+
+Keep thumbnails at 800px wide, PNG, named after the schema file. A block
+without `preview` still works; the gallery falls back to its icon.
 
 ## Customizer annotations
 

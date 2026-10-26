@@ -6,6 +6,7 @@
         "en": "Offer Countdown"
     },
     "icon": "timer-line",
+    "preview": "images/sections/offer-countdown.png",
     "is_default": false,
     "areas": [
         "home",

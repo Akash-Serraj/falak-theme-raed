@@ -205,8 +205,8 @@
                         "en": "Starter menu links"
                     },
                     "description": {
-                        "ar": "تظهر في القائمة الرئيسية حتى تنشئ قائمة من شاشة القوائم، عندها تحل قائمتك محلها",
-                        "en": "Shown in the main menu until you build a menu on the Menus screen, which then replaces them"
+                        "ar": "تظهر في القائمة الرئيسية قبل قائمتك من شاشة القوائم. أوقف «إظهار الرابط» لإخفاء أي رابط",
+                        "en": "Shown in the main menu ahead of your own menu from the Menus screen. Turn off \"Show this link\" to hide one"
                     },
                     "item_label": { "ar": "رابط", "en": "Link" },
                     "maxLength": 5,
@@ -246,6 +246,11 @@
                         {
                             "topnav_links.label": { "ar": "المنتجات", "en": "Products" },
                             "topnav_links.url": "/products",
+                            "topnav_links.visible": true
+                        },
+                        {
+                            "topnav_links.label": { "ar": "المدونة", "en": "Blog" },
+                            "topnav_links.url": "/blogs",
                             "topnav_links.visible": true
                         }
                     ]
@@ -341,6 +346,337 @@
                     },
                     "required": false,
                     "maxLength": 255
+                },
+                {
+                    "id": "footer_newsletter_text",
+                    "type": "string",
+                    "format": "text",
+                    "label": {
+                        "ar": "نص النشرة البريدية",
+                        "en": "Newsletter subtitle"
+                    },
+                    "description": {
+                        "ar": "سطر قصير تحت العنوان داخل بطاقة النشرة",
+                        "en": "A short line under the heading inside the newsletter card"
+                    },
+                    "multilanguage": true,
+                    "required": false,
+                    "maxLength": 160
+                },
+                {
+                    "id": "footer_commercial_registry",
+                    "type": "string",
+                    "format": "text",
+                    "label": {
+                        "ar": "رقم السجل التجاري",
+                        "en": "Commercial Registry number"
+                    },
+                    "description": {
+                        "ar": "يظهر في شارة «السجل التجاري» أسفل الصفحة. اتركه فارغاً لاستخدام الرقم المسجّل في الإعدادات الأساسية",
+                        "en": "Shown in the Commercial Registry badge at the bottom of the page. Leave empty to use the number from Basic settings"
+                    },
+                    "required": false,
+                    "maxLength": 40
+                },
+                {
+                    "id": "footer_business_center",
+                    "type": "string",
+                    "format": "text",
+                    "label": {
+                        "ar": "رقم المركز السعودي للأعمال",
+                        "en": "Saudi Business Center number"
+                    },
+                    "description": {
+                        "ar": "يظهر في شارة «المركز السعودي للأعمال». اتركه فارغاً لاستخدام الرقم المسجّل في الإعدادات الأساسية",
+                        "en": "Shown in the Saudi Business Center badge. Leave empty to use the number from Basic settings"
+                    },
+                    "required": false,
+                    "maxLength": 40
+                },
+                {
+                    "id": "footer_freelance_licence",
+                    "type": "string",
+                    "format": "text",
+                    "label": {
+                        "ar": "رقم وثيقة العمل الحر",
+                        "en": "Freelance licence number"
+                    },
+                    "description": {
+                        "ar": "يظهر في شارة «وثيقة العمل الحر». اتركه فارغاً لاستخدام الرقم المسجّل في الإعدادات الأساسية",
+                        "en": "Shown in the Freelance licence badge. Leave empty to use the number from Basic settings"
+                    },
+                    "required": false,
+                    "maxLength": 40
+                },
+                {
+                    "id": "footer_vat_certificate",
+                    "type": "string",
+                    "format": "text",
+                    "label": {
+                        "ar": "رقم شهادة ضريبة القيمة المضافة",
+                        "en": "VAT Certificate number"
+                    },
+                    "description": {
+                        "ar": "يظهر في شارة «شهادة ضريبة القيمة المضافة». اتركه فارغاً لاستخدام الرقم المسجّل في الإعدادات الأساسية",
+                        "en": "Shown in the VAT Certificate badge. Leave empty to use the number from Basic settings"
+                    },
+                    "required": false,
+                    "maxLength": 40
+                },
+                {
+                    "id": "footer_app_ios",
+                    "type": "string",
+                    "format": "text",
+                    "label": {
+                        "ar": "رابط التطبيق — App Store",
+                        "en": "App Store link"
+                    },
+                    "required": false,
+                    "maxLength": 255
+                },
+                {
+                    "id": "footer_app_android",
+                    "type": "string",
+                    "format": "text",
+                    "label": {
+                        "ar": "رابط التطبيق — Google Play",
+                        "en": "Google Play link"
+                    },
+                    "required": false,
+                    "maxLength": 255
+                },
+                {
+                    "id": "footer_apps_text",
+                    "type": "string",
+                    "format": "text",
+                    "label": {
+                        "ar": "وصف تحميل التطبيق",
+                        "en": "App download subtitle"
+                    },
+                    "description": {
+                        "ar": "سطر قصير أسفل عنوان تحميل التطبيق",
+                        "en": "A short line under the app download heading"
+                    },
+                    "multilanguage": true,
+                    "required": false,
+                    "maxLength": 120
+                },
+                {
+                    "id": "footer_more_links_title",
+                    "type": "string",
+                    "format": "text",
+                    "label": {
+                        "ar": "عنوان عمود الروابط المفيدة",
+                        "en": "Useful Links heading"
+                    },
+                    "description": {
+                        "ar": "عنوان العمود الثاني من الروابط — مثل «معلومات» أو «السياسات»",
+                        "en": "The heading over the second links column — e.g. Information, or Policies"
+                    },
+                    "multilanguage": true,
+                    "required": false,
+                    "maxLength": 40,
+                    "value": {
+                        "ar": "روابط مفيدة",
+                        "en": "Useful Links"
+                    }
+                },
+                {
+                    "id": "footer_more_links",
+                    "type": "collection",
+                    "format": "collection",
+                    "label": {
+                        "ar": "روابط مفيدة",
+                        "en": "Useful Links"
+                    },
+                    "description": {
+                        "ar": "عمود روابط ثانٍ بجانب الروابط السريعة — السياسات، الصفحات، أو أي رابط آخر",
+                        "en": "A second links column beside Quick links — policies, pages, or any other link"
+                    },
+                    "item_label": {
+                        "ar": "رابط",
+                        "en": "Link"
+                    },
+                    "maxLength": 8,
+                    "fields": [
+                        {
+                            "id": "footer_more_links.label",
+                            "type": "string",
+                            "format": "text",
+                            "label": {
+                                "ar": "الاسم",
+                                "en": "Label"
+                            },
+                            "multilanguage": true,
+                            "required": true,
+                            "maxLength": 40
+                        },
+                        {
+                            "id": "footer_more_links.url",
+                            "type": "string",
+                            "format": "page-link",
+                            "label": {
+                                "ar": "الرابط",
+                                "en": "Link"
+                            },
+                            "description": {
+                                "ar": "اكتب رابطاً، أو اختر صفحة منشورة من القائمة",
+                                "en": "Type a link, or pick a published page from the list"
+                            },
+                            "required": true,
+                            "maxLength": 200
+                        }
+                    ]
+                },
+                {
+                    "id": "footer_legal_links",
+                    "type": "collection",
+                    "format": "collection",
+                    "label": {
+                        "ar": "روابط السياسات",
+                        "en": "Policy links"
+                    },
+                    "description": {
+                        "ar": "تظهر في الصف الأخير من التذييل بجانب حقوق النشر — سياسة الخصوصية، الشروط والأحكام، الاسترجاع",
+                        "en": "Shown in the footer's last row beside the copyright — privacy policy, terms, returns"
+                    },
+                    "item_label": {
+                        "ar": "رابط",
+                        "en": "Link"
+                    },
+                    "maxLength": 5,
+                    "fields": [
+                        {
+                            "id": "footer_legal_links.label",
+                            "type": "string",
+                            "format": "text",
+                            "label": {
+                                "ar": "الاسم",
+                                "en": "Label"
+                            },
+                            "multilanguage": true,
+                            "required": true,
+                            "maxLength": 40
+                        },
+                        {
+                            "id": "footer_legal_links.url",
+                            "type": "string",
+                            "format": "text",
+                            "label": {
+                                "ar": "الرابط",
+                                "en": "Link"
+                            },
+                            "description": {
+                                "ar": "مثال: /return-policy",
+                                "en": "Example: /return-policy"
+                            },
+                            "required": true,
+                            "maxLength": 255
+                        }
+                    ]
+                },
+                {
+                    "id": "footer_links",
+                    "type": "collection",
+                    "format": "collection",
+                    "label": {
+                        "ar": "روابط سريعة",
+                        "en": "Quick links"
+                    },
+                    "description": {
+                        "ar": "الروابط في عمود «روابط سريعة». تبدأ بصفحات المتجر الأساسية — عدّلها أو احذفها أو أضف غيرها",
+                        "en": "The links in the Quick links column. Starts with the store's core pages — edit, remove or add to them"
+                    },
+                    "item_label": {
+                        "ar": "رابط",
+                        "en": "Link"
+                    },
+                    "maxLength": 8,
+                    "fields": [
+                        {
+                            "id": "footer_links.label",
+                            "type": "string",
+                            "format": "text",
+                            "label": {
+                                "ar": "الاسم",
+                                "en": "Label"
+                            },
+                            "multilanguage": true,
+                            "required": true,
+                            "maxLength": 40
+                        },
+                        {
+                            "id": "footer_links.url",
+                            "type": "string",
+                            "format": "page-link",
+                            "label": {
+                                "ar": "الرابط",
+                                "en": "Link"
+                            },
+                            "description": {
+                                "ar": "اكتب رابطاً، أو اختر صفحة منشورة من القائمة",
+                                "en": "Type a link, or pick a published page from the list"
+                            },
+                            "required": true,
+                            "maxLength": 200
+                        }
+                    ],
+                    "value": [
+                        {
+                            "footer_links.label": {
+                                "ar": "الرئيسية",
+                                "en": "Home"
+                            },
+                            "footer_links.url": "/"
+                        },
+                        {
+                            "footer_links.label": {
+                                "ar": "المنتجات",
+                                "en": "Products"
+                            },
+                            "footer_links.url": "/products"
+                        },
+                        {
+                            "footer_links.label": {
+                                "ar": "سلة التسوق",
+                                "en": "Cart"
+                            },
+                            "footer_links.url": "/cart"
+                        },
+                        {
+                            "footer_links.label": {
+                                "ar": "حسابي",
+                                "en": "My account"
+                            },
+                            "footer_links.url": "/customer/profile"
+                        }
+                    ]
+                },
+                {
+                    "id": "footer_links_menu",
+                    "type": "string",
+                    "format": "panel-link",
+                    "panel": "menus",
+                    "label": {
+                        "ar": "استخدام قائمة تنقّل بدلاً من ذلك",
+                        "en": "Use a navigation menu instead"
+                    },
+                    "description": {
+                        "ar": "إذا أنشأت قائمة «روابط التذييل» في شاشة القوائم فستحل محل الروابط أعلاه",
+                        "en": "A Footer links menu built in the Menus panel replaces the links above"
+                    }
+                },
+                {
+                    "id": "footer_contact_note",
+                    "type": "static",
+                    "label": {
+                        "ar": "بيانات التواصل",
+                        "en": "Contact details"
+                    },
+                    "description": {
+                        "ar": "الهاتف والبريد وواتساب في التذييل تأتي من إعدادات المتجر الأساسية في لوحة التحكم، لا من هنا",
+                        "en": "The phone, email and WhatsApp shown in the footer come from the dashboard's Basic settings, not from here"
+                    }
                 }
             ]
         },

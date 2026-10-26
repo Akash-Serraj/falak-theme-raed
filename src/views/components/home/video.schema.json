@@ -6,6 +6,7 @@
         "en": "Video"
     },
     "icon": "video-line",
+    "preview": "images/sections/video.png",
     "is_default": false,
     "areas": [
         "home",

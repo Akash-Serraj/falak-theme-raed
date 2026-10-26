@@ -6,6 +6,7 @@
         "en": "Videos Slider"
     },
     "icon": "film-line",
+    "preview": "images/sections/videos-slider.png",
     "is_default": false,
     "areas": [
         "home",

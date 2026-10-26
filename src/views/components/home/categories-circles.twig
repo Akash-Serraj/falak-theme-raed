@@ -17,8 +17,9 @@
     component — a fetch is the only way to reach them. Same shape as Nova's
     wireCategoryGrid.
 
-    Hidden until it has something to show, so a store with no categories
-    renders nothing here instead of a titled band with a gap under it.
+    Hidden until the fetch answers, so nothing flashes on first paint. A store
+    with no categories gets the band and a line saying none have been added yet
+    — the merchant who placed the section has to be able to see it.
 
     | Variable             | Type    | Description                     |
     | component.title      | ?string | section title                   |

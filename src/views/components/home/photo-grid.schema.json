@@ -6,6 +6,7 @@
         "en": "Photo Grid"
     },
     "icon": "grid-line",
+    "preview": "images/sections/photo-grid.png",
     "is_default": false,
     "areas": [
         "home",

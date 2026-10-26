@@ -6,6 +6,7 @@
         "en": "Contact Form"
     },
     "icon": "mail-line",
+    "preview": "images/sections/contact.png",
     "is_default": false,
     "areas": [
         "home",

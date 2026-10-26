@@ -32,6 +32,118 @@
 
     if (backdrop) backdrop.addEventListener('click', closeMenu);
 
+    // The drawer's own close button (menu.twig). The backdrop alone is not a
+    // discoverable way out, and the hamburger that opened the drawer sits
+    // behind the overlay once the drawer is over it.
+    var drawerClose = document.querySelector('[data-menu-close]');
+    if (drawerClose) drawerClose.addEventListener('click', closeMenu);
+
+    var drawer = document.querySelector('.main-menu');
+
+    // Following a link inside the drawer closes it. On a cross-page link the
+    // drawer would otherwise come back open on a bfcache restore; on a
+    // same-page anchor it would simply sit over the target.
+    //
+    // Except the first tap on a parent item: <falak-menu> turns that tap into
+    // "open the submenu" instead of navigating (it marks such links with
+    // aria-controls), and the drawer has to stay for the shopper to see it.
+    // Its listener runs after this one — it sits on the outer <falak-menu> —
+    // so `is-open` here is the state BEFORE that tap is handled.
+    if (drawer) {
+        drawer.addEventListener('click', function (event) {
+            var link = event.target.closest('a[href]');
+            if (!link) return;
+
+            var parent = link.closest('li');
+            var opensSubmenu = link.hasAttribute('aria-controls')
+                && parent && !parent.classList.contains('is-open');
+
+            if (!opensSubmenu) closeMenu();
+        });
+    }
+
+    /* ---------------------------------------- drawer: account + sign-in */
+
+    /*
+        The drawer carries a guest card (sign in / create account), two
+        account tiles and a sign-out button. Which of them show is a
+        client-side fact — the storefront session is the SDK's
+        token, not anything Twig can see — so all three ship hidden and this
+        picks, now and again on every auth event, the same way
+        <falak-user-menu> redraws itself.
+    */
+    var guestCard = document.querySelector('[data-menu-guest]');
+    var logoutButton = document.querySelector('[data-menu-logout]');
+
+    function syncDrawerAuth() {
+        var auth = window.falak && window.falak.auth;
+        if (!auth || !drawer) return;
+
+        var signedIn = auth.isLoggedIn();
+        if (guestCard) guestCard.hidden = signedIn;
+        if (logoutButton) logoutButton.hidden = !signedIn;
+        // The shortcut tiles are account pages; a guest gets the sign-in card.
+        var tiles = drawer.querySelector('[data-menu-tiles]');
+        if (tiles) tiles.hidden = !signedIn;
+    }
+
+    if (drawer && window.falak && window.falak.onReady) {
+        window.falak.onReady(function () {
+            syncDrawerAuth();
+
+            ['auth::logged.in', 'auth::logged.out', 'auth::token.invalid', 'auth::user.fetched']
+                .forEach(function (name) { window.falak.event.on(name, syncDrawerAuth); });
+
+            // Rows the store has switched off drop out rather than 404 — the
+            // same gate <falak-user-menu> applies to its own list.
+            drawer.querySelectorAll('[data-menu-feature]').forEach(function (row) {
+                if (!window.falak.config.get('store.settings.' + row.dataset.menuFeature, true)) row.hidden = true;
+            });
+        });
+
+        // Both guest buttons open the OTP sheet: `auth::required` is what the
+        // layout's <falak-login-modal> listens for, and what <falak-user-menu>
+        // dispatches for its own sign-in button.
+        drawer.addEventListener('click', function (event) {
+            if (event.target.closest('[data-menu-login]')) {
+                closeMenu();
+                window.falak.event.dispatch('auth::required');
+            }
+        });
+
+        if (logoutButton) {
+            logoutButton.addEventListener('click', function () {
+                logoutButton.disabled = true;
+                Promise.resolve(window.falak.auth.logout()).finally(function () {
+                    // Server-rendered account markup is still on the page.
+                    window.location.reload();
+                });
+            });
+        }
+    }
+
+    /* ------------------------------------- account menu: no notifications */
+    /*
+        This theme has no notifications page, so the shared <falak-user-menu>
+        must not offer one. The component redraws its list on every auth
+        event, so a one-off removal is not enough: watch each menu and drop
+        the row whenever it reappears (app.css hides it too, via :has()).
+    */
+    function dropNotificationRows(root) {
+        (root || document).querySelectorAll(
+            'falak-user-menu .f-user__link[href="/customer/notifications"]'
+        ).forEach(function (link) {
+            var row = link.closest('.f-user__item');
+            (row || link).remove();
+        });
+    }
+
+    dropNotificationRows();
+    document.querySelectorAll('falak-user-menu').forEach(function (menu) {
+        new MutationObserver(function () { dropNotificationRows(menu); })
+            .observe(menu, { childList: true, subtree: true });
+    });
+
     // Dropdown submenus, keyboard handling and viewport-edge flipping are
     // handled by <falak-menu> (see menu.twig's own comment) — kept out of
     // this file entirely to avoid double-toggling.
@@ -39,6 +151,170 @@
     document.addEventListener('keydown', function (event) {
         if (event.key === 'Escape') closeMenu();
     });
+
+    /* ------------------------------------------ categories strip: current chip */
+
+    /*
+        "All" leads the strip and links to the listing; each category chip
+        links to the listing filtered to it. The one matching this page fills
+        (app.css .is-active) — compared on path and query, with the query
+        parameters sorted, so `?category_id[]=5` matches however the merchant's
+        link was typed. Nothing fills on pages the strip does not describe.
+    */
+    var chips = document.querySelectorAll('.cat-bar a[href]');
+    if (chips.length) {
+        var key = function (url) {
+            try {
+                var u = new URL(url, window.location.href);
+                var params = Array.from(u.searchParams.entries())
+                    .filter(function (pair) { return pair[0] !== 'lang' && pair[0] !== 'currency' && pair[0] !== 'page'; })
+                    .sort()
+                    .map(function (pair) { return pair[0] + '=' + pair[1]; })
+                    .join('&');
+                return u.pathname.replace(/\/+$/, '') + '?' + params;
+            } catch (error) {
+                return url;
+            }
+        };
+        var current = key(window.location.href);
+        chips.forEach(function (chip) {
+            if (key(chip.href) === current) chip.classList.add('is-active');
+        });
+    }
+
+    /* ------------------------------------------ categories strip: overflow */
+
+    /*
+        The desktop strip is centred and its scrollbar hidden, so once the
+        merchant's categories outgrow the row the extras were simply cut off —
+        reachable by a wheel-less horizontal scroll nobody has. Priority+
+        instead: the row keeps what fits and folds the rest into a trailing
+        "More N" dropdown, recounted on every resize.
+
+        Desktop only. The phone strip is already a swipeable row of chips with
+        an edge fade saying so; folding there would take away the better
+        affordance.
+    */
+    var catBar = document.querySelector('.cat-bar ul');
+    if (catBar) {
+        var desktopBar = window.matchMedia('(min-width: 861px)');
+
+        var moreLabel = function () {
+            if (window.falak && window.falak.lang) return window.falak.lang.get('menu.more');
+            return (document.documentElement.lang || '').indexOf('ar') === 0 ? 'المزيد' : 'More';
+        };
+
+        var moreItem = document.createElement('li');
+        moreItem.className = 'cat-bar__more';
+        moreItem.hidden = true;
+
+        var moreTrigger = document.createElement('a');
+        moreTrigger.href = '#';
+        moreTrigger.setAttribute('role', 'button');
+        moreTrigger.setAttribute('aria-haspopup', 'true');
+        moreTrigger.setAttribute('aria-expanded', 'false');
+        moreTrigger.innerHTML = '<span data-more-label></span><span class="cat-bar__more-count" data-more-count></span>'
+            + '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"'
+            + ' stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+
+        var morePanel = document.createElement('ul');
+        morePanel.className = 'cat-bar__more-panel';
+        morePanel.id = 'cat-bar-more';
+        moreTrigger.setAttribute('aria-controls', morePanel.id);
+
+        moreItem.appendChild(moreTrigger);
+        moreItem.appendChild(morePanel);
+        catBar.appendChild(moreItem);
+
+        var setMoreOpen = function (open) {
+            moreItem.classList.toggle('is-open', open);
+            moreTrigger.setAttribute('aria-expanded', String(open));
+        };
+
+        moreTrigger.addEventListener('click', function (event) {
+            event.preventDefault();
+            setMoreOpen(!moreItem.classList.contains('is-open'));
+        });
+        document.addEventListener('click', function (event) {
+            if (!moreItem.contains(event.target)) setMoreOpen(false);
+        });
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') setMoreOpen(false);
+        });
+
+        /* The "All" chip is the phone strip's; on desktop it is display:none
+           and must not join the measuring or the folding. */
+        var stripItems = function () {
+            return Array.from(catBar.children).filter(function (li) {
+                return li !== moreItem && !li.classList.contains('cat-bar__all');
+            });
+        };
+
+        var relayoutStrip = function () {
+            var items = stripItems();
+            items.forEach(function (li) { li.classList.remove('is-collapsed'); });
+            morePanel.innerHTML = '';
+            moreItem.hidden = true;
+            setMoreOpen(false);
+
+            if (!desktopBar.matches) {
+                catBar.removeAttribute('data-cat-overflow');
+                return;
+            }
+
+            /* Keys `overflow: visible` in the stylesheet, so the dropdown is
+               not clipped by the strip's own scroller — safe, because after
+               the fold nothing overflows the row any more. */
+            catBar.setAttribute('data-cat-overflow', '');
+
+            if (catBar.scrollWidth <= catBar.clientWidth + 1) return;
+
+            /* Worded and counted BEFORE measuring, with the widest count it
+               could end up holding — an empty pill measures ~40px narrow and
+               the fold comes up one chip short. */
+            moreTrigger.querySelector('[data-more-label]').textContent = moreLabel();
+            moreTrigger.querySelector('[data-more-count]').textContent = String(items.length);
+
+            moreItem.hidden = false;
+            var collapsed = [];
+            for (var i = items.length - 1; i >= 0 && catBar.scrollWidth > catBar.clientWidth + 1; i--) {
+                items[i].classList.add('is-collapsed');
+                collapsed.unshift(items[i]);
+            }
+
+            collapsed.forEach(function (li) {
+                var link = li.querySelector('a');
+                if (!link) return;
+                var row = document.createElement('li');
+                var a = document.createElement('a');
+                a.href = link.getAttribute('href') || '#';
+                if (link.getAttribute('target')) {
+                    a.target = link.getAttribute('target');
+                    a.rel = 'noopener';
+                }
+                a.textContent = (link.textContent || '').trim();
+                // The chip matcher above has already run; carry its verdict.
+                if (link.classList.contains('is-active')) a.classList.add('is-active');
+                row.appendChild(a);
+                morePanel.appendChild(row);
+            });
+
+            moreTrigger.querySelector('[data-more-count]').textContent = String(collapsed.length);
+        };
+
+        var stripFrame = 0;
+        var queueStrip = function () {
+            cancelAnimationFrame(stripFrame);
+            stripFrame = requestAnimationFrame(relayoutStrip);
+        };
+
+        window.addEventListener('resize', queueStrip);
+        if (desktopBar.addEventListener) desktopBar.addEventListener('change', queueStrip);
+        /* A late font swap can change what fits by a whole chip. */
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(queueStrip);
+
+        relayoutStrip();
+    }
 
     /* ----------------------------------------------- language switching */
     // The storefront reads ?lang= per request, so the choice must ride on
@@ -67,11 +343,6 @@
             link.setAttribute('href', url.pathname + url.search + url.hash);
         });
     }
-
-    /* --------------------------------------------------- announcement bar */
-    // Now <falak-announcement> (platform component): dashboard declarations,
-    // the customizer text, the welcome fallback, marquee and per-text
-    // dismissal all live there. Nothing for the theme to do.
 
     /* -------------------------------------------- video embed normalizer */
     // Merchants paste whatever YouTube/Vimeo link they have, but only the
@@ -148,6 +419,40 @@
     if (window.falak && !document.querySelector('falak-notifications')) {
         window.falak.notify.setNotifier(function (message, type) { showToast(message, type); });
     }
+
+    /* ----------------------------------------------------- copy page link */
+    /*
+        The product share row's copy button. Falls back to a hidden textarea
+        where the async clipboard API is missing (plain-http hosts).
+    */
+    function copyText(text) {
+        if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+        return new Promise(function (resolve, reject) {
+            var field = document.createElement('textarea');
+            field.value = text;
+            field.setAttribute('readonly', '');
+            field.style.cssText = 'position:fixed;inset-block-start:-9999px;opacity:0';
+            document.body.appendChild(field);
+            field.select();
+            var ok = false;
+            try { ok = document.execCommand('copy'); } catch (e) { /* reported below */ }
+            field.remove();
+            ok ? resolve() : reject();
+        });
+    }
+
+    document.querySelectorAll('[data-copy-link]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            copyText(window.location.href).then(function () {
+                button.classList.add('is-copied');
+                window.clearTimeout(button._copiedTimer);
+                button._copiedTimer = window.setTimeout(function () { button.classList.remove('is-copied'); }, 1800);
+                showToast(button.dataset.copiedText, 'success');
+            }, function () {
+                showToast(button.dataset.failedText, 'error');
+            });
+        });
+    });
 
     /* --------------------------------------------------------- cart page */
     /*
@@ -401,6 +706,38 @@
     document.addEventListener('keydown', function (event) {
         if (event.key === 'Escape') setFilters(false);
     });
+
+    /* ------------------------------------------- payment return: failed */
+    // A declined or cancelled payment does not park the shopper on the
+    // return page's "Payment was not completed" screen with a "check
+    // status" button: it sends them to the order itself, where the status
+    // banner says the same thing and "Retry payment" opens the gateway
+    // picker. The verdict arrives on the bus BEFORE the component paints
+    // its failed state, so the screen never flashes. Pending verdicts stay
+    // here, where the component keeps polling for a late webhook.
+    var paymentStatus = document.querySelector('falak-payment-status');
+    if (paymentStatus && window.falak && window.falak.onReady) {
+        var orderUrlTemplate = paymentStatus.getAttribute('order-url') || '/customer/orders/{order}';
+        var sentToOrder = false;
+
+        function sendToOrder(orderNumber) {
+            if (sentToOrder || !orderNumber) return;
+            sentToOrder = true;
+            // replace(), not assign(): Back from the order page must not land
+            // on a return page that would only redirect again.
+            window.location.replace(orderUrlTemplate.replace('{order}', encodeURIComponent(orderNumber)));
+        }
+
+        window.falak.onReady(function () {
+            window.falak.event.on('checkout::payment.verified', function (payload) {
+                if (payload && payload.status === 'failed') sendToOrder(payload.orderNumber);
+            });
+
+            // Had the verdict already landed before this listener existed,
+            // the component is sitting in its failed state right now.
+            if (paymentStatus._state === 'failed') sendToOrder(paymentStatus._number);
+        });
+    }
 })();
 
 /*
@@ -441,9 +778,23 @@
                 .sort(function (a, b) { return (a.sort_order || 0) - (b.sort_order || 0); })
                 .slice(0, limit);
 
-            /* Left hidden: a titled band with an empty space under it reads as
-               broken, and an empty catalogue is the normal state of a new store. */
-            if (!categories.length) return;
+            /* A store with no categories yet says so where the tiles would be,
+               rather than leaving the whole band hidden: the merchant who
+               placed the section has to be able to see it. Styled with the
+               component library's message classes — same state, same look. */
+            if (!categories.length) {
+                var note = document.createElement('div');
+                note.className = 'f-list__message f-list__message--empty';
+
+                var noteText = document.createElement('p');
+                noteText.textContent = window.falak.lang.get('categories.none_added');
+
+                note.appendChild(noteText);
+                list.insertAdjacentElement('afterend', note);
+                section.removeAttribute('hidden');
+
+                return;
+            }
 
             categories.forEach(function (category) {
                 var tile = document.createElement('a');
@@ -527,7 +878,7 @@
         if (!(limit > 0)) limit = 4;
 
         var badge = section.getAttribute('data-badge') || '';
-        var playback = section.getAttribute('data-playback') || 'hover';
+        var playback = section.getAttribute('data-playback') || 'inview';
         var actions = section.getAttribute('data-actions') !== '0';
 
         function fill(products) {
@@ -930,8 +1281,27 @@
                not twelve. */
             const slides = list.map((p, index) => this.slide(p, index, index === active)).join('');
 
+            /* Drawn pointing toward inline-start; the stylesheet mirrors it
+               for the next arrow and again under [dir="rtl"]. */
+            const chevron = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"'
+                + ' stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+                + '<path d="M15 18l-6-6 6-6"/></svg>';
+
+            /* The reel's arrows, for the pointer. On a phone the next clip is a
+               swipe away and these stay hidden; above the breakpoint only the
+               active slide is drawn and nothing scrolls, so without them a
+               mouse had no way from one clip to the next. A reel of one has
+               nowhere to step and gets none. */
+            const arrows = list.length > 1
+                ? '<button type="button" class="vv__chip vv__chip--step vv__chip--prev" data-vv-step="-1"'
+                    + ' aria-label="' + this.escape(t('common.previous')) + '">' + chevron + '</button>'
+                + '<button type="button" class="vv__chip vv__chip--step vv__chip--next" data-vv-step="1"'
+                    + ' aria-label="' + this.escape(t('common.next')) + '">' + chevron + '</button>'
+                : '';
+
             return ''
                 + '<div class="vv__reel" data-vv-reel data-active="' + active + '">' + slides + '</div>'
+                + arrows
                 + '<button type="button" class="vv__chip vv__chip--sound" data-vv-sound'
                     + ' aria-pressed="false"'
                     + ' aria-label="' + this.escape(t('videos.toggle_sound')) + '"'
@@ -1079,7 +1449,7 @@
                    never a second one arguing about the same audio. */
 
                 + '<div class="vv__foot">'
-                    + '<a class="vv__name" href="' + this.escape(p.url) + '">' + this.escape(p.name) + '</a>'
+                    + '<span class="vv__name">' + this.escape(p.name) + '</span>'
 
                     + '<p class="vv__price">'
                         + '<span class="vv__amount">' + this.escape(falak.money(p.price)) + '</span>'
@@ -1181,6 +1551,7 @@
          */
         wire(modal) {
             this.wireReel(modal);
+            this.wireStep(modal);
             this.wireLoader(modal);
             this.wireSound(modal);
             this.wireMediaFallback(modal);
@@ -1275,6 +1646,58 @@
             window.requestAnimationFrame(() => start(0));
         }
 
+        /* Bound to the MODAL (see wire) and delegated, so it survives the
+           library's re-render of everything inside. */
+        wireStep(modal) {
+            modal.addEventListener('click', (event) => {
+                const button = event.target.closest('[data-vv-step]');
+                if (!button || button.disabled || !modal.contains(button)) return;
+                this.step(modal, Number(button.getAttribute('data-vv-step')) || 0);
+            });
+        }
+
+        /*
+         * One clip over, for the arrows.
+         *
+         * On a phone the reel scrolls, so the step is a scroll and the
+         * observer names the slide the way it does for a swipe. Above the
+         * breakpoint the reel CANNOT scroll — only the active slide is drawn —
+         * so there the step is the class change itself, with settle() doing
+         * what it does for every change of slide: swap the clips over and
+         * carry the shopper's sound choice across.
+         */
+        step(modal, delta) {
+            const reel = modal.querySelector('[data-vv-reel]');
+            const slides = [...(reel ? reel.querySelectorAll('[data-vv-slide]') : [])];
+            if (slides.length < 2) return;
+
+            const current = this.current(modal);
+            const index = Math.max(0, Math.min(slides.indexOf(current) + delta, slides.length - 1));
+            const target = slides[index];
+            if (!target || target === current) return;
+
+            if (reel.scrollHeight > reel.clientHeight + 1) {
+                reel.scrollTo({ top: target.offsetTop - slides[0].offsetTop, behavior: 'smooth' });
+                return;
+            }
+
+            slides.forEach(slide => slide.classList.toggle('is-active', slide === target));
+            reel.setAttribute('data-active', target.getAttribute('data-index'));
+            this.settle(modal, target);
+        }
+
+        /* The ends say so: an arrow with no clip left on its side disappears
+           (the stylesheet hides a disabled step) rather than swallowing the
+           click over the video. */
+        syncStep(modal) {
+            const slides = [...modal.querySelectorAll('[data-vv-slide]')];
+            const index = slides.indexOf(this.current(modal));
+            const prev = modal.querySelector('[data-vv-step="-1"]');
+            const next = modal.querySelector('[data-vv-step="1"]');
+            if (prev) prev.disabled = index <= 0;
+            if (next) next.disabled = index >= slides.length - 1;
+        }
+
         /*
          * Make `active` the one that is playing, and the only one holding a
          * clip.
@@ -1342,6 +1765,11 @@
             });
 
             if (sound) sound.hidden = !active.querySelector('[data-vv-video]');
+
+            /* Every change of slide comes through here — a swipe, an arrow, the
+               opening jump — so this is the one place the arrows' end state is
+               kept true. */
+            this.syncStep(modal);
         }
 
         /*
@@ -1810,17 +2238,52 @@
         var rail = document.createElement('div');
         rail.className = 'vp-rail';
         rail.innerHTML = '<span class="vp-rail__thumb"></span>';
-        track.insertAdjacentElement('afterend', rail);
+
+        /* Drawn pointing toward inline-start; the stylesheet mirrors it for
+           the next button and again under [dir="rtl"], so one path serves all
+           four cases. */
+        var chevron = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"'
+            + ' stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+            + '<path d="M15 18l-6-6 6-6"/></svg>';
+
+        var lang = window.falak && window.falak.lang;
+
+        var nav = document.createElement('div');
+        nav.className = 'vp-nav';
+        nav.innerHTML =
+            '<button type="button" class="vp-nav__btn" data-vp-prev aria-label="'
+                + (lang ? lang.get('common.previous') : 'Previous') + '">' + chevron + '</button>'
+            + '<button type="button" class="vp-nav__btn" data-vp-next aria-label="'
+                + (lang ? lang.get('common.next') : 'Next') + '">' + chevron + '</button>';
+
+        /* One line under the row: the progress rail with the arrows at its
+           inline end. The stylesheet keeps the arrows for mouse-sized screens;
+           on a phone the row scrolls under the thumb and needs neither. */
+        var foot = document.createElement('div');
+        foot.className = 'vp-foot';
+        foot.appendChild(rail);
+        foot.appendChild(nav);
+        track.insertAdjacentElement('afterend', foot);
 
         var thumb = rail.firstElementChild;
+        var prev = nav.querySelector('[data-vp-prev]');
+        var next = nav.querySelector('[data-vp-next]');
 
         function update() {
             var span = track.scrollWidth - track.clientWidth;
 
             /* Nothing to scroll — the merchant's count fits after all, or the
-               window grew. A line that cannot move is just a stray rule. */
-            if (span <= 0) { rail.hidden = true; return; }
-            rail.hidden = false;
+               window grew. A line that cannot move is just a stray rule, and
+               arrows that cannot move anything go with it. */
+            if (span <= 0) { foot.hidden = true; return; }
+            foot.hidden = false;
+
+            /* The ends say so: an arrow with nowhere left to go greys out
+               instead of swallowing the click. scrollLeft runs negative in
+               RTL, so distance is its magnitude either way. */
+            var gone = Math.abs(track.scrollLeft);
+            prev.disabled = gone <= 1;
+            next.disabled = gone >= span - 1;
 
             /* The thumb is the share of the row currently in view, floored so a
                very long wall still leaves something to see and grab. */
@@ -1836,6 +2299,23 @@
         track.addEventListener('scroll', update, { passive: true });
         window.addEventListener('resize', update);
         update();
+
+        /*
+         * One viewport of cards per press, smooth, and the snap already live
+         * on the track settles it onto a card boundary — so the arrows page
+         * through the row without ever leaving half a card at the edge.
+         *
+         * "Forward" is a LOGICAL direction: in RTL the row advances as
+         * scrollLeft falls, so the sign follows the track's direction rather
+         * than the arrow's side of the screen.
+         */
+        function page(sign) {
+            var forward = getComputedStyle(track).direction === 'rtl' ? -1 : 1;
+            track.scrollBy({ left: sign * forward * track.clientWidth, behavior: 'smooth' });
+        }
+
+        prev.addEventListener('click', function () { page(-1); });
+        next.addEventListener('click', function () { page(1); });
 
         /*
          * Grab a card and drag the row with it.
@@ -1924,4 +2404,1282 @@
     } else {
         init();
     }
+})();
+
+
+/*
+ * <custom-falak-blog-card> — THE article card, one definition for the theme.
+ *
+ * The counterpart of the product card: the index grid builds this element
+ * rather than markup of its own, so one card can never drift from another.
+ *
+ * Two ways it gets its data, in order:
+ *
+ *   1. `_post` property — how the list hands over a record it already fetched.
+ *      A property, not a JSON attribute, so a headline containing a quote
+ *      never needs two rounds of escaping.
+ *   2. `post` attribute — a record already in hand from Twig.
+ *
+ * Labels come from falak.lang, which is loaded from this theme's own
+ * src/locales files — the same table trans() reads in Twig — so the card needs
+ * nothing passed in to say "read more" in the right language.
+ */
+(function () {
+    'use strict';
+
+    if (window.customElements && customElements.get('custom-falak-blog-card')) return;
+
+    class CustomFalakBlogCard extends HTMLElement {
+        connectedCallback() {
+            if (!window.falak) return;
+            window.falak.onReady(() => this.render());
+        }
+
+        get record() {
+            if (this._post) return this._post;
+            try { return JSON.parse(this.getAttribute('post') || 'null'); }
+            catch (e) { return null; }
+        }
+
+        escape(v) {
+            return String(v ?? '').replace(/[&<>"']/g, function (c) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+            });
+        }
+
+        /*
+         * TWO SHAPES arrive here, and both have to work:
+         *
+         *   the API's raw row      title, slug, featured_image, published_at
+         *   the server's mapBlog   title, url, image, published_label
+         *
+         * Cards created by the list carry the first; a card server-rendered
+         * from Twig carries the second.
+         */
+        normalise(row) {
+            return {
+                title: row.title || '',
+                url: row.url || ('/blogs/' + (row.slug || '')),
+                image: row.image !== undefined ? row.image : this.media(this.rawImage(row)),
+                imageAlt: row.image_alt || row.featured_image_alt || row.title || '',
+                excerpt: row.excerpt || '',
+                /* show_author is the server's opt-in; a row that hid the name
+                   arrives with it already null, on either shape. */
+                author: row.author !== undefined ? row.author : (row.author_name || null),
+                date: row.published_label || this.formatDate(row.published_at),
+            };
+        }
+
+        /*
+         * featured_image_url is the model's accessor, and it runs the stored
+         * value through the disk's url() unconditionally — which mangles a
+         * value that is already absolute into ".../storage/https://…". So an
+         * absolute stored path wins over the accessor, matching what the
+         * server's blogImage() does for the same row.
+         */
+        rawImage(row) {
+            const stored = String(row.featured_image || '').trim();
+            if (stored && /^(https?:)?[/][/]/i.test(stored)) return stored;
+            return row.featured_image_url || stored;
+        }
+
+        /* Bare storage paths are resolved against the public disk — the same
+           rule the video wall applies to its clips. */
+        media(value) {
+            var s = String(value || '').trim();
+            if (!s) return null;
+            if (/^(https?:)?[/][/]/i.test(s) || s.indexOf('data:') === 0) return s;
+            if (s.charAt(0) === '/') return s;
+            return '/storage/' + s.replace(/^[/]+/, '');
+        }
+
+        formatDate(value) {
+            if (!value) return null;
+
+            const date = new Date(value);
+            if (isNaN(date.getTime())) return null;
+
+            try {
+                return new Intl.DateTimeFormat(
+                    window.falak.lang.locale === 'ar' ? 'ar' : 'en-GB',
+                    { day: 'numeric', month: 'long', year: 'numeric' }
+                ).format(date);
+            } catch (e) {
+                return date.toISOString().slice(0, 10);
+            }
+        }
+
+        render() {
+            const raw = this.record;
+            if (!raw) return;
+
+            const p = this.normalise(raw);
+            const t = key => window.falak.lang.get(key);
+
+            this.classList.add('blog-card');
+
+            this.innerHTML =
+                '<a class="blog-card__media" href="' + this.escape(p.url) + '" aria-label="' + this.escape(p.title) + '">'
+                    + (p.image
+                        ? '<img src="' + this.escape(p.image) + '" alt="' + this.escape(p.imageAlt) + '" loading="lazy">'
+                        : '<span class="blog-card__placeholder"></span>')
+                + '</a>'
+                + '<div class="blog-card__body">'
+                    + '<p class="blog-card__meta">'
+                        + (p.date
+                            ? '<span class="blog-card__meta-item">'
+                                + '<span class="blog-card__meta-glyph blog-card__meta-glyph--date" aria-hidden="true"></span>'
+                                + this.escape(p.date)
+                              + '</span>'
+                            : '')
+                        + (p.author
+                            ? '<span class="blog-card__meta-item">'
+                                + '<span class="blog-card__meta-glyph blog-card__meta-glyph--user" aria-hidden="true"></span>'
+                                + this.escape(p.author)
+                              + '</span>'
+                            : '')
+                    + '</p>'
+                    + '<h3 class="blog-card__title"><a href="' + this.escape(p.url) + '">' + this.escape(p.title) + '</a></h3>'
+                    + (p.excerpt ? '<p class="blog-card__excerpt">' + this.escape(p.excerpt) + '</p>' : '')
+                    + '<a class="blog-card__more" href="' + this.escape(p.url) + '">'
+                        + this.escape(t('blog.read_more'))
+                        + '<span class="blog-card__more-chevron" aria-hidden="true"></span>'
+                    + '</a>'
+                + '</div>';
+        }
+    }
+
+    customElements.define('custom-falak-blog-card', CustomFalakBlogCard);
+})();
+
+/*
+ * <custom-falak-blog-list> — the /blogs grid.
+ *
+ * Reads GET /api/storefront/blogs, the endpoint that already existed. It owns
+ * the published scope, the ?category / ?tag / ?search filters and the per-post
+ * "show author" rule, so none of that is restated here or in the controller.
+ *
+ * Filters come off the page's own query string, so /blogs?tag=x is a real,
+ * shareable URL and the server needs to know nothing about it.
+ *
+ * | attribute | role                          |
+ * | per-page  | how many articles to request  |
+ */
+(function () {
+    'use strict';
+
+    if (window.customElements && customElements.get('custom-falak-blog-list')) return;
+
+    class CustomFalakBlogList extends HTMLElement {
+        connectedCallback() {
+            if (!window.falak) return;
+            window.falak.onReady(() => this.load());
+        }
+
+        async load() {
+            const falak = window.falak;
+            const query = new URLSearchParams(window.location.search);
+
+            this.tag = query.get('tag');
+
+            this.renderState('loading');
+
+            try {
+                /* 'blogs', NOT '/blogs'. helpers.url.api() returns any path
+                   that already starts with a slash verbatim, so a leading one
+                   fetches the storefront's own HTML index page instead of
+                   /api/storefront/blogs — a 200 of text/html and no rows. */
+                const response = await falak.api.request('blogs', {
+                    params: {
+                        per_page: Number(this.getAttribute('per-page')) || 24,
+                        tag: this.tag,
+                        category: query.get('category'),
+                        search: query.get('search'),
+                    },
+                });
+
+                /* The endpoint answers { success, data: <paginator> }, and the
+                   client returns it as it came. Both shapes are read rather
+                   than guessed at, so a change on either side degrades to an
+                   empty grid instead of a thrown render. */
+                const payload = (response && response.data) || response;
+                this.posts = Array.isArray(payload) ? payload : ((payload && payload.data) || []);
+                this.render();
+            } catch (e) {
+                falak.logger.warn('custom-falak-blog-list: fetch failed', e);
+                this.renderState('error');
+            }
+        }
+
+        renderState(state) {
+            const t = key => window.falak.lang.get(key);
+
+            /* The loading state is a row of card-shaped blanks rather than a
+               spinner, so the page does not jump when the articles land. */
+            if (state === 'loading') {
+                this.innerHTML = '<div class="blog-grid">'
+                    + new Array(3).fill('<div class="blog-card blog-card--skeleton" aria-hidden="true"></div>').join('')
+                    + '</div>';
+                return;
+            }
+
+            const message = document.createElement('p');
+            message.className = 'blog-index__empty';
+            message.textContent = state === 'error' ? t('blog.load_failed') : t('blog.none');
+
+            this.innerHTML = '';
+            this.appendChild(message);
+        }
+
+        render() {
+            const falak = window.falak;
+
+            if (!this.posts || !this.posts.length) {
+                this.renderState('empty');
+                return;
+            }
+
+            this.innerHTML = '';
+
+            /* A filtered view says so, and offers the way back out. Rendered
+               only when a tag is actually in play. */
+            if (this.tag) {
+                const filter = document.createElement('p');
+                filter.className = 'blog-index__filter';
+                filter.textContent = falak.lang.get('blog.tagged') + ' ';
+
+                const strong = document.createElement('strong');
+                strong.textContent = this.tag;
+                filter.appendChild(strong);
+
+                const clear = document.createElement('a');
+                clear.href = '/blogs';
+                clear.textContent = falak.lang.get('blog.clear_filter');
+                filter.appendChild(clear);
+
+                this.appendChild(filter);
+            }
+
+            const grid = document.createElement('div');
+            grid.className = 'blog-grid';
+
+            /* Cards are created as elements and handed their record as a
+               property, so a headline with a quote in it never needs
+               escaping twice. */
+            this.posts.forEach(post => {
+                const card = document.createElement('custom-falak-blog-card');
+                card._post = post;
+                grid.appendChild(card);
+            });
+
+            this.appendChild(grid);
+        }
+    }
+
+    customElements.define('custom-falak-blog-list', CustomFalakBlogList);
+})();
+
+/*
+ * <custom-falak-blog-article> — one article and its sidebar.
+ *
+ * Two calls to the endpoint that already existed:
+ *   GET /blogs/{slug}   the article. This is also what bumps view_count —
+ *                       the controller does it, so nothing here has to.
+ *   GET /blogs          the sidebar. Scoped to the article's own category
+ *                       when it has one, and falling back to the newest of
+ *                       anything when that returns too little: a sidebar that
+ *                       empties itself on a store with one post per category
+ *                       is worse than a slightly loose match.
+ *
+ * | attribute | role                                  |
+ * | slug      | the article to load, from the route   |
+ */
+(function () {
+    'use strict';
+
+    if (window.customElements && customElements.get('custom-falak-blog-article')) return;
+
+    const RELATED = 4;
+
+    class CustomFalakBlogArticle extends HTMLElement {
+        connectedCallback() {
+            if (!window.falak) return;
+            window.falak.onReady(() => this.load());
+        }
+
+        escape(v) {
+            return String(v ?? '').replace(/[&<>"']/g, function (c) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+            });
+        }
+
+        async load() {
+            const falak = window.falak;
+            const slug = this.getAttribute('slug');
+
+            try {
+                /* withoutNotifier: a missing article is this page's own error
+                   to render, not a toast in the corner of the screen. */
+                const response = await falak.api.withoutNotifier(
+                    () => falak.api.request('blogs/' + encodeURIComponent(slug))
+                );
+
+                this.post = (response && response.data) || response;
+            } catch (e) {
+                this.post = null;
+            }
+
+            if (!this.post || !this.post.id) {
+                this.renderMissing();
+                return;
+            }
+
+            this.render();
+            /* Not awaited: the sidebar is a second request and the article
+               must not wait on it to paint. */
+            this.loadRelated();
+        }
+
+        async loadRelated() {
+            const falak = window.falak;
+            const category = this.post.category && this.post.category.slug;
+
+            const fetchList = async params => {
+                try {
+                    const response = await falak.api.request('blogs', { params });
+                    const payload = (response && response.data) || response;
+                    return Array.isArray(payload) ? payload : ((payload && payload.data) || []);
+                } catch (e) {
+                    return [];
+                }
+            };
+
+            const mine = row => row.id !== this.post.id;
+
+            let rows = category
+                ? (await fetchList({ per_page: RELATED + 1, category })).filter(mine)
+                : [];
+
+            if (rows.length < RELATED) {
+                const seen = new Set(rows.map(row => row.id));
+                const latest = (await fetchList({ per_page: RELATED + 1 })).filter(mine);
+
+                latest.forEach(row => {
+                    if (rows.length < RELATED && !seen.has(row.id)) {
+                        seen.add(row.id);
+                        rows.push(row);
+                    }
+                });
+            }
+
+            this.renderRelated(rows.slice(0, RELATED));
+        }
+
+        media(value) {
+            var s = String(value || '').trim();
+            if (!s) return null;
+            if (/^(https?:)?[/][/]/i.test(s) || s.indexOf('data:') === 0) return s;
+            if (s.charAt(0) === '/') return s;
+            return '/storage/' + s.replace(/^[/]+/, '');
+        }
+
+        /* featured_image_url runs the stored value through the disk's url()
+           unconditionally, which mangles a path that is already absolute into
+           ".../storage/https://…". Absolute wins over the accessor. */
+        image(row) {
+            const stored = String(row.featured_image || '').trim();
+            if (stored && /^(https?:)?[/][/]/i.test(stored)) return stored;
+            return this.media(row.featured_image_url || stored);
+        }
+
+        date(value) {
+            if (!value) return null;
+
+            const parsed = new Date(value);
+            if (isNaN(parsed.getTime())) return null;
+
+            try {
+                return new Intl.DateTimeFormat(
+                    window.falak.lang.locale === 'ar' ? 'ar' : 'en-GB',
+                    { day: 'numeric', month: 'long', year: 'numeric' }
+                ).format(parsed);
+            } catch (e) {
+                return parsed.toISOString().slice(0, 10);
+            }
+        }
+
+        /*
+         * A category name is an {ar, en} pair, and the endpoint hands it over
+         * as the raw column — a JSON STRING, not an object, because the model
+         * has no cast for it. Printed as-is it reads {"ar": …, "en": …} on
+         * the page, so it is parsed here and the current language picked;
+         * a plain string passes straight through.
+         */
+        label(value) {
+            let pair = value;
+
+            if (typeof pair === 'string') {
+                const trimmed = pair.trim();
+                if (trimmed.charAt(0) !== '{') return trimmed;
+                try { pair = JSON.parse(trimmed); } catch (e) { return trimmed; }
+            }
+
+            if (!pair || typeof pair !== 'object') return '';
+
+            const locale = window.falak.lang.locale === 'ar' ? 'ar' : 'en';
+            const other = locale === 'ar' ? 'en' : 'ar';
+
+            return String(pair[locale] || pair[other] || Object.values(pair).find(Boolean) || '');
+        }
+
+        renderMissing() {
+            const t = key => window.falak.lang.get(key);
+
+            /* The theme's own empty state, with the way back to the index. */
+            this.innerHTML =
+                '<div class="empty-state">'
+                    + '<div class="empty-state__icon" aria-hidden="true">📝</div>'
+                    + '<p>' + this.escape(t('blog.not_found')) + '</p>'
+                    + '<a class="btn btn--outline" href="/blogs">' + this.escape(t('blog.title')) + '</a>'
+                + '</div>';
+        }
+
+        render() {
+            const post = this.post;
+            const t = key => window.falak.lang.get(key);
+            const image = this.image(post);
+            const published = this.date(post.published_at);
+            const tags = Array.isArray(post.tags) ? post.tags : [];
+            const category = post.category ? this.label(post.category.name) : '';
+
+            this.innerHTML =
+                '<div class="blog-post__grid">'
+                    + '<article class="blog-post__main">'
+                        + '<h1 class="blog-post__title">' + this.escape(post.title) + '</h1>'
+                        + '<p class="blog-post__meta">'
+                            + (published
+                                ? '<span class="blog-post__meta-item">'
+                                    + '<span class="blog-card__meta-glyph blog-card__meta-glyph--date" aria-hidden="true"></span>'
+                                    + this.escape(published)
+                                  + '</span>'
+                                : '')
+                            /* author_name arrives null when the merchant did
+                               not opt in — the endpoint strips it. */
+                            + (post.author_name
+                                ? '<span class="blog-post__meta-item">'
+                                    + '<span class="blog-card__meta-glyph blog-card__meta-glyph--user" aria-hidden="true"></span>'
+                                    + this.escape(post.author_name)
+                                  + '</span>'
+                                : '')
+                            + (category
+                                ? '<a class="blog-post__meta-item blog-post__category" href="/blogs?category='
+                                    + encodeURIComponent(post.category.slug || '') + '">'
+                                    + this.escape(category)
+                                  + '</a>'
+                                : '')
+                        + '</p>'
+                        + (image
+                            ? '<figure class="blog-post__figure">'
+                                + '<img src="' + this.escape(image) + '" alt="'
+                                + this.escape(post.featured_image_alt || post.title) + '">'
+                              + '</figure>'
+                            : '')
+                        /* The article body is merchant HTML from the admin
+                           editor, so it goes in as markup. It is the ONLY
+                           unescaped value on this page; every other field is a
+                           single-line column with no reason to carry tags. */
+                        + '<div class="blog-post__body">' + (post.content || '') + '</div>'
+                        + (tags.length
+                            ? '<ul class="blog-post__tags">'
+                                + tags.map(tag =>
+                                    '<li><a href="/blogs?tag=' + encodeURIComponent(tag) + '">'
+                                        + '<span class="blog-post__tag-glyph" aria-hidden="true"></span>'
+                                        + this.escape(tag)
+                                    + '</a></li>').join('')
+                              + '</ul>'
+                            : '')
+                        /* The thread hangs off the article, inside the
+                           content column — not the page — so it sits under the
+                           tags and beside the sidebar rather than below it. */
+                        + '<custom-falak-blog-comments slug="'
+                            + this.escape(this.getAttribute('slug') || '') + '"></custom-falak-blog-comments>'
+                    + '</article>'
+                    /* Filled by loadRelated(), which is still in flight. */
+                    + '<aside class="blog-post__aside" hidden>'
+                        + '<h2 class="blog-post__aside-title">' + this.escape(t('blog.related')) + '</h2>'
+                    + '</aside>'
+                + '</div>';
+        }
+
+        renderRelated(rows) {
+            const aside = this.querySelector('.blog-post__aside');
+            if (!aside || !rows.length) return;
+
+            aside.hidden = false;
+
+            rows.forEach(row => {
+                const image = this.image(row);
+                const published = this.date(row.published_at);
+
+                const card = document.createElement('a');
+                card.className = 'blog-aside-card';
+                card.href = '/blogs/' + (row.slug || '');
+                card.innerHTML =
+                    (image
+                        ? '<span class="blog-aside-card__media">'
+                            + '<img src="' + this.escape(image) + '" alt="'
+                            + this.escape(row.featured_image_alt || row.title) + '" loading="lazy">'
+                          + '</span>'
+                        : '')
+                    + '<span class="blog-aside-card__body">'
+                        + (published
+                            ? '<span class="blog-aside-card__date">'
+                                + '<span class="blog-card__meta-glyph blog-card__meta-glyph--date" aria-hidden="true"></span>'
+                                + this.escape(published)
+                              + '</span>'
+                            : '')
+                        + '<span class="blog-aside-card__title">' + this.escape(row.title) + '</span>'
+                    + '</span>';
+
+                aside.appendChild(card);
+            });
+        }
+    }
+
+    customElements.define('custom-falak-blog-article', CustomFalakBlogArticle);
+})();
+
+/*
+ * <custom-falak-blog-comments> — the article's comment thread and form.
+ *
+ * Reads GET /api/storefront/blogs/{slug}/comments, which is public, and posts
+ * to POST /api/customer/blog-comments, which is not: that route sits behind
+ * auth:sanctum + tenant.customer, so the author comes from the session and a
+ * guest is offered the sign-in modal instead of a form that would fail on
+ * submit — the same courtesy <falak-comments> extends for product reviews.
+ *
+ * The sign-in modal is already in the master layout (<falak-login-modal>) and
+ * opens on the SDK's `login::open` bus event, so this element neither owns
+ * nor imports one.
+ *
+ * | attribute | role                              |
+ * | slug      | the article, from the page's route |
+ */
+(function () {
+    'use strict';
+
+    if (window.customElements && customElements.get('custom-falak-blog-comments')) return;
+
+    class CustomFalakBlogComments extends HTMLElement {
+        connectedCallback() {
+            if (!window.falak) return;
+
+            window.falak.onReady(() => {
+                this.load();
+
+                /* Signing in from the modal has to turn the prompt into a form
+                   without a reload; signing out has to do the reverse. */
+                this._offIn = window.falak.event.on('auth::logged.in', () => this.render());
+                this._offOut = window.falak.event.on('auth::logged.out', () => this.render());
+            });
+        }
+
+        disconnectedCallback() {
+            if (typeof this._offIn === 'function') this._offIn();
+            if (typeof this._offOut === 'function') this._offOut();
+        }
+
+        escape(v) {
+            return String(v ?? '').replace(/[&<>"']/g, function (c) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+            });
+        }
+
+        get slug() { return this.getAttribute('slug') || ''; }
+
+        async load() {
+            const falak = window.falak;
+
+            try {
+                const response = await falak.api.withoutNotifier(
+                    () => falak.api.request('blogs/' + encodeURIComponent(this.slug) + '/comments', {
+                        params: { per_page: 50 },
+                    })
+                );
+
+                const payload = (response && response.data) || response;
+                this.comments = Array.isArray(payload) ? payload : ((payload && payload.data) || []);
+            } catch (e) {
+                /* A thread that cannot be read is not a reason to hide the form:
+                   the article is still there and a customer can still write. */
+                falak.logger.warn('custom-falak-blog-comments: fetch failed', e);
+                this.comments = [];
+            }
+
+            this.render();
+        }
+
+        date(value) {
+            if (!value) return null;
+
+            const parsed = new Date(value);
+            if (isNaN(parsed.getTime())) return null;
+
+            try {
+                return new Intl.DateTimeFormat(
+                    window.falak.lang.locale === 'ar' ? 'ar' : 'en-GB',
+                    { day: 'numeric', month: 'long', year: 'numeric' }
+                ).format(parsed);
+            } catch (e) {
+                return parsed.toISOString().slice(0, 10);
+            }
+        }
+
+        /* The disc beside a comment: the author's first letter, because there
+           are no customer avatars on this platform. */
+        initial(name) {
+            const trimmed = String(name || '').trim();
+            return trimmed ? trimmed.charAt(0).toUpperCase() : '?';
+        }
+
+        render() {
+            const falak = window.falak;
+            const t = key => falak.lang.get(key);
+            const rows = this.comments || [];
+
+            const list = rows.length
+                ? '<ul class="blog-comments__list">'
+                    + rows.map(row =>
+                        '<li class="blog-comment">'
+                            + '<span class="blog-comment__avatar" aria-hidden="true">'
+                                + this.escape(this.initial(row.author_name))
+                            + '</span>'
+                            + '<div class="blog-comment__body">'
+                                + '<p class="blog-comment__meta">'
+                                    + '<span class="blog-comment__author">'
+                                        + this.escape(row.author_name || t('blog.comment_anonymous'))
+                                    + '</span>'
+                                    + (this.date(row.created_at)
+                                        ? '<span class="blog-comment__date">' + this.escape(this.date(row.created_at)) + '</span>'
+                                        : '')
+                                + '</p>'
+                                /* Shopper-written text. Escaped, never markup —
+                                   this is the one field on the article that did
+                                   not come from the merchant. */
+                                + '<p class="blog-comment__text">' + this.escape(row.comment) + '</p>'
+                            + '</div>'
+                        + '</li>').join('')
+                  + '</ul>'
+                : '<p class="blog-comments__empty">' + this.escape(t('blog.comments_none')) + '</p>';
+
+            const form = falak.auth.isLoggedIn()
+                ? '<form class="blog-comments__form">'
+                    + '<textarea class="blog-comments__input" name="comment" rows="4" maxlength="2000"'
+                        + ' placeholder="' + this.escape(t('blog.comment_placeholder')) + '" required></textarea>'
+                    + '<p class="blog-comments__status" role="status" hidden></p>'
+                    + '<button type="submit" class="btn btn--primary blog-comments__submit">'
+                        + this.escape(t('blog.comment_submit'))
+                    + '</button>'
+                  + '</form>'
+                : '<div class="blog-comments__signin">'
+                    + '<p>' + this.escape(t('blog.comment_signin')) + '</p>'
+                    + '<button type="button" class="btn btn--primary blog-comments__signin-btn">'
+                        + this.escape(t('auth.login'))
+                    + '</button>'
+                  + '</div>';
+
+            this.innerHTML =
+                '<section class="blog-comments">'
+                    + '<h2 class="blog-comments__title">'
+                        + this.escape(t('blog.comments'))
+                        + (rows.length ? ' <span class="blog-comments__count">' + rows.length + '</span>' : '')
+                    + '</h2>'
+                    + list
+                    + form
+                + '</section>';
+
+            this.wire();
+        }
+
+        wire() {
+            const falak = window.falak;
+
+            const signin = this.querySelector('.blog-comments__signin-btn');
+            if (signin) {
+                signin.addEventListener('click', () => falak.event.dispatch('login::open'));
+                return;
+            }
+
+            const form = this.querySelector('.blog-comments__form');
+            if (!form) return;
+
+            form.addEventListener('submit', async event => {
+                event.preventDefault();
+
+                const input = form.querySelector('.blog-comments__input');
+                const button = form.querySelector('.blog-comments__submit');
+                const status = form.querySelector('.blog-comments__status');
+                const comment = String(input.value || '').trim();
+
+                if (comment.length < 2) return;
+
+                /* Disabled for the whole round trip: a double submit is two
+                   identical comments, and the endpoint has no idempotency key
+                   to fold them back together. */
+                button.disabled = true;
+                status.hidden = true;
+
+                try {
+                    /* Absolute, unlike the reads: url.api() prefixes bare
+                       paths with /api/storefront, and the authenticated
+                       customer group lives at /api/customer — which is why the
+                       SDK's own auth calls are written this way too. */
+                    const response = await falak.api.request('/api/customer/blog-comments', {
+                        method: 'post',
+                        body: { slug: this.slug, comment },
+                    });
+
+                    const created = (response && response.data) || response;
+
+                    input.value = '';
+
+                    /* Appended from the response rather than re-fetching the
+                       thread — and only when the server says it is visible, so
+                       a future "hold for moderation" setting does not make this
+                       element lie about what other people can see. */
+                    if (created && created.is_approved === false) {
+                        status.textContent = falak.lang.get('blog.comment_pending');
+                        status.hidden = false;
+                    } else {
+                        this.comments = (this.comments || []).concat(created || []);
+                        this.render();
+                    }
+                } catch (e) {
+                    status.textContent = falak.lang.get('blog.comment_failed');
+                    status.hidden = false;
+                } finally {
+                    if (button.isConnected) button.disabled = false;
+                }
+            });
+        }
+    }
+
+    customElements.define('custom-falak-blog-comments', CustomFalakBlogComments);
+})();
+
+/*
+ * <custom-falak-testimonials> — the testimonials block's "real reviews" source.
+ *
+ * Reads GET /api/storefront/reviews, the store-wide endpoint that already
+ * existed. It owns the enable_reviews switch and the per-review review_visible
+ * opt-in, so neither is restated here: a store with reviews turned off gets an
+ * empty list and this element hides the whole section rather than printing
+ * "no reviews yet" on a shop's home page.
+ *
+ * It builds the SAME .testimonial-card figures the block's manual branch
+ * writes in Twig, so a quote looks identical whichever source it came from —
+ * the grid, not onyx's slider, because that is this theme's testimonials.
+ *
+ * Lives in app.js rather than home.js because the block is placeable on
+ * merchant pages too, and home.js only loads on the home page.
+ *
+ * | attribute  | role                                        |
+ * | limit      | how many reviews to request                 |
+ * | show-stars | present = the star row renders (the block's |
+ * |            | show_stars switch, applied to fetched rows) |
+ */
+(function () {
+    'use strict';
+
+    if (window.customElements && customElements.get('custom-falak-testimonials')) return;
+
+    class CustomFalakTestimonials extends HTMLElement {
+        connectedCallback() {
+            if (!window.falak) return;
+            window.falak.onReady(() => this.load());
+        }
+
+        escape(v) {
+            return String(v ?? '').replace(/[&<>"']/g, function (c) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+            });
+        }
+
+        async load() {
+            const falak = window.falak;
+            const limit = Number(this.getAttribute('limit')) || 6;
+
+            /* Card-shaped blanks rather than a spinner, so the band holds its
+               height and the page does not jump when the reviews land — the
+               same loading state the blog grid uses. */
+            this.innerHTML = '<div class="testimonials-grid">'
+                + new Array(Math.min(limit, 3)).fill(
+                    '<div class="testimonial-card testimonial-card--skeleton" aria-hidden="true"></div>'
+                ).join('')
+                + '</div>';
+
+            try {
+                /* 'reviews', not '/reviews': url.api() returns a leading-slash
+                   path verbatim and would fetch a storefront page. */
+                const response = await falak.api.withoutNotifier(() => falak.api.request('reviews', {
+                    params: { per_page: limit },
+                }));
+
+                /* This endpoint answers { reviews: [...], pagination: {...} } —
+                   its own shape, not the { success, data } envelope the blog
+                   endpoints use. Read both rather than assume either. */
+                this.reviews = (response && (response.reviews || response.data)) || [];
+                if (!Array.isArray(this.reviews)) this.reviews = [];
+            } catch (e) {
+                falak.logger.warn('custom-falak-testimonials: fetch failed', e);
+                this.reviews = [];
+            }
+
+            this.render();
+        }
+
+        render() {
+            const falak = window.falak;
+            const showStars = this.hasAttribute('show-stars');
+
+            /*
+             * Nothing to show is a reason to remove the whole block, heading
+             * and all. The section is this element's grandparent:
+             * <section><div class="container"> … this.
+             */
+            if (!this.reviews.length) {
+                this.innerHTML = '';
+
+                const section = this.closest('.block--testimonials');
+                if (section) section.hidden = true;
+                return;
+            }
+
+            this.innerHTML = '<div class="testimonials-grid">'
+                + this.reviews.map((row) => {
+                    /* customer_name is nullable on the endpoint — a guest
+                       checkout has no customer row behind it — so the fallback
+                       is a label, never an empty byline. */
+                    const name = row.customer_name || falak.lang.get('product.anonymous');
+                    const text = row.review_comment || '';
+                    const rating = Math.min(5, Math.round(Number(row.review_rating) || 0));
+
+                    return '<figure class="testimonial-card">'
+                        + (showStars && rating > 0
+                            ? '<div class="testimonial-card__stars" aria-label="' + rating + '/5">'
+                                + new Array(rating).fill('★').join('')
+                              + '</div>'
+                            : '')
+                        + (text ? '<blockquote>' + this.escape(text) + '</blockquote>' : '')
+                        + '<figcaption>' + this.escape(name) + '</figcaption>'
+                    + '</figure>';
+                }).join('')
+                + '</div>';
+        }
+    }
+
+    customElements.define('custom-falak-testimonials', CustomFalakTestimonials);
+})();
+
+/*
+    Search dropdown — the desktop design: pill field with a clear ×, a
+    "Products / N results" line over the list, each result a card row with a
+    quick-add button and a chevron, and a full-width dark "view all" pill.
+
+    <falak-search> stays the SDK's — trigger, modal, fetch, debounce, the
+    race guard and reset-on-close are all untouched. The design just needs
+    markup the SDK does not render, so the three markup-producing methods on
+    its prototype are re-pointed here (keeping every SDK class, data-
+    attribute and event, so the SDK's own delegated listeners and CSS still
+    apply); app.css carries the look.
+
+    The extra markup MUST come from these overrides rather than from edits
+    to the live tree: <falak-modal> snapshots its children on first render
+    and rebuilds them from that snapshot on every open/close, so anything
+    inserted afterwards is wiped at the next toggle. Listeners for the new
+    controls are delegated on the <falak-search> element itself for the same
+    reason.
+*/
+(function () {
+    'use strict';
+
+    if (!window.customElements || !customElements.whenDefined) return;
+
+    customElements.whenDefined('falak-search').then(function () {
+        const Search = customElements.get('falak-search');
+        const proto = Search.prototype;
+
+        if (proto._theme2026Search) return;
+        proto._theme2026Search = true;
+
+        /* ------------------------------------------- field: the clear × */
+
+        proto.render = function () {
+            this.classList.add('f-search');
+
+            this.innerHTML = `
+                <button type="button" class="f-search__trigger" data-search-open aria-label="${this.escape(this.trans('search.title'))}">
+                    ${Search.ICON}
+                </button>
+                <falak-modal id="falak-search" width="lg" position="top" no-padding>
+                    <div class="f-search__panel">
+                        <form class="f-search__form" data-search-form novalidate>
+                            <span class="f-search__icon" aria-hidden="true">${Search.ICON}</span>
+                            <input class="f-search__input" type="search" name="q" data-search-input
+                                   placeholder="${this.escape(this.trans('search.placeholder'))}"
+                                   autocomplete="off" spellcheck="false">
+                            <button type="button" class="f-search__clear" data-search-clear
+                                    aria-label="${this.escape(this.trans('search.clear'))}">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                            </button>
+                        </form>
+                        <div class="f-search__results" data-search-results hidden></div>
+                    </div>
+                </falak-modal>`;
+
+            this._modal = this.querySelector('falak-modal');
+        };
+
+        const baseAfterRender = proto.afterRender;
+        proto.afterRender = function () {
+            baseAfterRender.call(this);
+
+            if (this._clearWired) return;
+            this._clearWired = true;
+
+            this.listen(this, 'click', (event) => {
+                if (!event.target.closest('[data-search-clear]')) return;
+
+                const input = this.querySelector('[data-search-input]');
+                if (!input) return;
+
+                input.value = '';
+                /* Through the SDK's own input path (bubbling), so its
+                   debounce is cancelled and the result list emptied the
+                   same way typing backspace-to-nothing would. */
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+                input.focus();
+            });
+        };
+
+        /* --------------------------- rows: quick-add button + chevron */
+
+        proto.resultHtml = function (product) {
+            const locale = this.sdk.lang.locale;
+            const name = (locale === 'ar' && product.name_ar) ? product.name_ar : product.name;
+
+            const list = Number(product.price_cents ?? 0);
+            const discount = Number(product.discount_price_cents ?? 0);
+            const onSale = discount > 0 && discount < list;
+            const price = onSale ? discount : list;
+
+            const image = product.images?.[0]?.url
+                || product.images?.[0]?.image_path
+                || this.sdk.config.get('store.placeholders.product')
+                || null;
+            const url = this.sdk.url.product(product.id);
+
+            /*
+             * Stock and variants, read the way <falak-product-card> reads
+             * the same API row: the server's resolved `in_stock` when sent,
+             * else the row itself — and a variant product is decided by its
+             * variants alone, never by its own product-level quantity.
+             */
+            const hasOptions = Array.isArray(product.variations) && product.variations.length > 0;
+            const inStock = product.in_stock !== undefined
+                ? !!product.in_stock
+                : (!!product.allow_backorders || (hasOptions
+                    ? product.variations.some((v) => v.quantity === null || v.quantity === undefined || Number(v.quantity) > 0)
+                    : (product.quantity === null || product.quantity === undefined || Number(product.quantity) > 0)));
+
+            return `
+                <li class="f-search__item">
+                    <a class="f-search__link" href="${this.escape(url)}" data-search-result>
+                        <span class="f-search__thumb">
+                            ${image
+                                ? `<img src="${this.escape(image)}" alt="" loading="lazy" decoding="async">`
+                                : `<span class="f-search__thumb-placeholder"></span>`}
+                        </span>
+                        <span class="f-search__info">
+                            <span class="f-search__name">${this.escape(name || '')}</span>
+                            <span class="f-search__price">
+                                <span class="f-search__price-now">${this.escape(this.money(price, product.currency))}</span>
+                                ${onSale ? `<del class="f-search__price-was">${this.escape(this.money(list, product.currency))}</del>` : ''}
+                            </span>
+                        </span>
+                    </a>
+                    <falak-add-product-button product-id="${product.id}"
+                                              product-status="${inStock ? 'sale' : 'out'}"
+                                              ${hasOptions ? 'has-options' : ''}
+                                              product-name="${this.escape(name || '')}"
+                                              product-image="${this.escape(image || '')}"
+                                              product-price="${this.escape(this.money(price, product.currency))}"
+                                              product-price-amount="${this.escape(price)}"
+                                              ${onSale ? `product-compare-price="${this.escape(list)}"` : ''}
+                                              ${product.currency ? `product-currency="${this.escape(product.currency)}"` : ''}
+                                              product-url="${this.escape(url)}"
+                                              product-in-stock="${inStock ? 'true' : 'false'}"
+                                              button-class="f-search__add-btn"
+                                              source="search">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                    </falak-add-product-button>
+                    <span class="f-search__chevron" aria-hidden="true">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                    </span>
+                </li>`;
+        };
+
+        /* -------------------------- "Products / N results" over the list */
+
+        const baseShowResults = proto.showResults;
+        proto.showResults = function (products) {
+            baseShowResults.call(this, products);
+
+            if (!Array.isArray(products) || !products.length) return;
+
+            const host = this.querySelector('[data-search-results]');
+            const listEl = host && host.querySelector('.f-search__list');
+            if (!listEl) return;
+
+            const count = products.length;
+            const countText = count === 1
+                ? this.trans('search.one_result')
+                : this.trans('search.results_count', { count: count });
+
+            listEl.insertAdjacentHTML('beforebegin', `
+                <div class="f-search__meta">
+                    <span class="f-search__meta-label">${this.escape(this.trans('search.products'))}</span>
+                    <span class="f-search__meta-count">${this.escape(countText)}</span>
+                </div>`);
+        };
+
+        /* An instance that upgraded before this patch ran already rendered
+           the SDK markup — re-render it (idempotent at page load: the modal
+           is closed and no query is in flight; the SDK's _wired guard keeps
+           listeners single). */
+        document.querySelectorAll('falak-search').forEach(function (el) {
+            if (!el.isConnected || typeof el.render !== 'function') return;
+            try {
+                el.render();
+                el.afterRender();
+            } catch (e) {
+                /* leave that instance on the SDK's own rendering */
+            }
+        });
+    });
+})();
+
+/* ======================================================================
+   Footer categories — "show more"
+   ----------------------------------------------------------------------
+   The footer caps a long categories list: the rows past the cap ship as
+   hidden <li data-footer-extra> and the button under the list reveals
+   them, swapping its label to "show less".
+   ====================================================================== */
+(function () {
+    'use strict';
+
+    function init() {
+        document.querySelectorAll('.site-footer [data-footer-more]').forEach(function (button) {
+            button.addEventListener('click', function () {
+                var expanded = button.getAttribute('aria-expanded') === 'true';
+                var group = button.closest('.site-footer__group');
+                if (!group) return;
+
+                group.querySelectorAll('[data-footer-extra]').forEach(function (item) {
+                    item.hidden = expanded;
+                });
+
+                button.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+                var more = button.querySelector('[data-more-label]');
+                var less = button.querySelector('[data-less-label]');
+                if (more) more.hidden = !expanded;
+                if (less) less.hidden = expanded;
+            });
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();
+
+/* ---------------------------------------------- self-free product rails */
+
+/*
+ * A product page must not suggest the product already on screen. The rails
+ * are the SDK's generic listing components, and the listing endpoints never
+ * know which product the shopper is viewing — "the newest of the category"
+ * regularly includes it.
+ *
+ * Any <falak-products-list> / <falak-products-slider> carrying
+ * data-exclude-product="<id>" gets that product dropped here. Both
+ * components dispatch their bubbling `fetched` event synchronously BEFORE
+ * they render, and `detail.products` is the very array they render from,
+ * so editing it in place is invisible — no re-render, no flicker.
+ *
+ * data-max-cards then trims back to the count the layout was designed for:
+ * the template asks the endpoint for one extra product, so the rail stays
+ * full when the current product was in the window and does not grow when
+ * it was not.
+ */
+(function () {
+    'use strict';
+
+    document.addEventListener('fetched', function (event) {
+        var host = event.target;
+        if (!host || !host.getAttribute) return;
+
+        var exclude = host.getAttribute('data-exclude-product');
+        var products = event.detail && event.detail.products;
+        if (!exclude || !Array.isArray(products)) return;
+
+        for (var i = products.length - 1; i >= 0; i--) {
+            if (String(products[i].id) === exclude) products.splice(i, 1);
+        }
+
+        var max = parseInt(host.getAttribute('data-max-cards') || '', 10);
+        if (max > 0 && products.length > max) products.length = max;
+    });
+})();
+
+/* ----------------------------------------------- products-slider view-all */
+
+/*
+ * The products carousel renders its "view all" link hidden, because only the
+ * slider knows how many products match. `detail.total` is the full count
+ * before the limit slice, so the link appears only when there is more to see
+ * than the threshold (data-view-all-min) — a store with eight products or
+ * fewer has nothing behind the link.
+ */
+(function () {
+    'use strict';
+
+    document.addEventListener('fetched', function (event) {
+        var host = event.target;
+        if (!host || host.localName !== 'falak-products-slider') return;
+
+        var section = host.closest('.block--products-slider');
+        var link = section && section.querySelector('.products-slider__all[data-view-all-min]');
+        if (!link) return;
+
+        var min = parseInt(link.getAttribute('data-view-all-min'), 10) || 0;
+        var total = Number(event.detail && event.detail.total) || 0;
+        link.hidden = total <= min;
+    });
+})();
+
+/*
+ * Announcement marquee — seamless repeat.
+ *
+ * The SDK scrolls merchant declarations whatever their length, over a track
+ * that holds the message twice and travels half its width. That is only
+ * continuous while one message is wider than the strip; a short message on a
+ * wide screen left most of the bar empty and jumped when the loop restarted.
+ *
+ * Repeat the message until the track covers the bar plus one spare copy,
+ * then hand app.css one copy's width as --announce-step. The loop travels
+ * exactly that, so the frame it ends on is the frame it began on: the text
+ * runs unbroken with no gap and no visible restart. The duration comes from
+ * the step at the SDK's own 60px/s, so the speed does not change with the
+ * number of copies.
+ *
+ * The component renders after its SDK setup resolves, and re-renders when
+ * the message changes, so the build runs off an observer — detached while
+ * cloning, since the clones are themselves childList mutations.
+ */
+(function () {
+    'use strict';
+
+    const SPEED = 60; // px/s — the SDK's own marquee speed
+    const bar = document.querySelector('falak-announcement');
+    if (!bar) return;
+
+    const observer = new MutationObserver(() => build());
+
+    const watch = () => observer.observe(bar, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['class'],
+    });
+
+    function build() {
+        if (!bar.classList.contains('f-announce--scroll')) return;
+
+        const inner = bar.querySelector('.f-announce__inner');
+        const track = bar.querySelector('.f-announce__track');
+        if (!inner || !track || !track.children.length) return;
+
+        const original = track.children[0];
+        // Includes the SDK's 4rem trailing pad, which is the gap between
+        // repeats — so one step carries the message and its separator.
+        const step = original.getBoundingClientRect().width;
+        // Zero while the webfont is still loading; a later pass retries.
+        if (!step) return;
+
+        // The bar plus one spare copy: no frame of the loop can show a gap.
+        const needed = Math.ceil(inner.clientWidth / step) + 1;
+
+        if (track.children.length !== needed) {
+            observer.disconnect();
+
+            while (track.children.length > 1) track.lastElementChild.remove();
+            for (let i = 1; i < needed; i++) {
+                const copy = original.cloneNode(true);
+                // The repeats are decoration; one reading is enough.
+                copy.setAttribute('aria-hidden', 'true');
+                track.appendChild(copy);
+            }
+
+            watch();
+        }
+
+        track.style.setProperty('--announce-step', step + 'px');
+        track.style.setProperty('--announce-chain-duration', step / SPEED + 's');
+    }
+
+    watch();
+    window.addEventListener('resize', build);
+    build();
+    // The strip is measured in the theme font; a late swap changes the step.
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(build);
+})();
+
+/*
+ * Expired offer countdowns.
+ *
+ * The server already drops a section whose `ends_at` has passed (see
+ * offer-countdown.twig). This is the page that is open when the moment
+ * arrives: <falak-countdown> fires `ended` once and would otherwise sit there
+ * as a row of zeros under "offer ends in". Live pages only: the customizer
+ * preview renders the section flagged instead, so it carries no
+ * data-countdown-hide-on-end and keeps showing the merchant what happened.
+ */
+(function () {
+    'use strict';
+
+    var CLOCKS = 'falak-countdown, falak-count-down';
+
+    function hide(clock) {
+        var block = clock.closest('[data-countdown-hide-on-end]');
+        if (block) block.classList.add('is-ended');
+    }
+
+    document.addEventListener('ended', function (event) {
+        var clock = event.target;
+        if (clock && clock.matches && clock.matches(CLOCKS)) hide(clock);
+    });
+
+    /* A clock whose moment had passed by the time it first rendered fired
+       `ended` during its upgrade, possibly before this deferred script was
+       listening — the SDK records that as data-ended on the element. */
+    Array.prototype.forEach.call(
+        document.querySelectorAll('[data-countdown-hide-on-end] falak-countdown, [data-countdown-hide-on-end] falak-count-down'),
+        function (clock) {
+            if (clock.ended === true || clock.getAttribute('data-ended') === 'true') hide(clock);
+        }
+    );
 })();
