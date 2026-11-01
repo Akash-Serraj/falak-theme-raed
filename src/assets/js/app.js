@@ -413,7 +413,7 @@
 
     Fetched rather than rendered in Twig: a home block gets no page data, the
     sandbox exposes no categories function, and there is no categories
-    component in the SDK. Ported from Nova's wireCategoryGrid.
+    component in the SDK.
 
     Lives in app.js rather than home.js because the block is placeable on
     merchant pages too, and home.js only loads on the home page.
@@ -821,9 +821,9 @@
         }
 
         /*
-         * The API's raw row, which is the only shape that ever reaches here:
-         * both the wall's own endpoint and product.show return the model. The
-         * quick view carries a second branch for the server's mapProduct shape
+         * The API's raw product, which is the only shape that ever reaches here:
+         * both the wall's own endpoint and the product endpoint return it. The
+         * quick view carries a second branch for the server-rendered card shape,
          * because server-rendered cards open that one; nothing server-rendered
          * opens this.
          */
@@ -842,7 +842,7 @@
                labels, swatch colours, and which groups are drawn as a <select>
                rather than as pills. Without it the picker falls back to plain
                pills derived from the variation attributes, which is why the
-               wall's endpoint eager-loads `options.values`. */
+               wall's endpoint includes `options.values`. */
             const options = Array.isArray(p.options) ? p.options : [];
             const backorders = !!p.allow_backorders;
 
@@ -874,8 +874,8 @@
                  * The PATH first, not the absolute URL — the same order the
                  * card uses.
                  *
-                 * `video_thumbnail_url` is the model's accessor and points at
-                 * the CENTRAL domain; media() turns the bare path into a
+                 * `video_thumbnail_url` is an absolute URL on another host;
+                 * media() turns the bare path into a
                  * storefront-relative `/storage/…`. Preferring the URL here
                  * meant the viewer asked for the very picture the card was
                  * already showing under a different origin — so the browser

@@ -1,12 +1,39 @@
-# Falak Theme 2026
+# Falak Cart Starter Theme
 
-Falak Cart's default storefront theme and the official reference implementation
-of the theme package structure. Bilingual (Arabic/English), RTL-first.
+The starting point for a Falak Cart storefront theme. Bilingual
+(Arabic/English), RTL-first, and complete: every page type, a header and
+footer, and a set of components merchants can place on their pages.
+
+Rename it, restyle it, add or remove components — it is yours.
+
+## Getting started
+
+Create a theme from the Partners Portal, or from the terminal with the
+[Falak CLI](https://www.npmjs.com/package/@falakcart/cli):
+
+```bash
+npm install -g @falakcart/cli
+falak login
+falak theme create my-theme
+cd my-theme
+falak theme preview      # every save lands on your demo store
+```
+
+A theme created in the Portal lives in a GitHub repository instead: each push
+to its development branch is checked and, if it passes, deployed to your demo
+store. A push that fails the security checks is not deployed — the reason
+shows in the Portal and as a check on the commit in GitHub.
+
+Before submitting a version for review, run:
+
+```bash
+falak theme validate
+```
 
 ## Structure
 
 ```
-theme.json                  manifest: metadata, settings schema, presets
+theme.json                  manifest: name, settings schema, presets
 src/
   assets/
     styles/app.css          design system — token-driven, RTL via logical properties
@@ -17,20 +44,28 @@ src/
   views/
     layouts/master.twig     required hooks: head:end, body:end
     layouts/customer.twig   account-area layout (side navigation)
-    pages/                  one template per platform page type
+    pages/                  one template per storefront page type
     components/             header/footer + merchant-placeable blocks
 ```
 
-## Platform contract
+Fill in `author`, `author_email`, `support_url` and `description` in
+`theme.json` — they are what merchants see on your marketplace listing, and
+where they come for help with your theme.
 
-Globals, sandboxed functions, hooks and page-data shapes are defined by
-`config/theme-context.php` in the platform. The Twig sandbox allows a fixed
-set of tags, filters and functions — run the platform checklist before
-submitting.
+## Templates
+
+Templates are Twig, rendered in a sandbox: a fixed set of tags, filters and
+functions is allowed, and `falak theme validate` reports anything outside it.
+The globals every view receives (`store`, `theme`, `menus`, `page`, `user`)
+are listed at the top of `layouts/master.twig`.
 
 Pages under `pages/customer/`, `pages/blog/`, `pages/brands/`, `search.twig`
-and `thank-you.twig` are ahead of the current storefront routes: they are
-data-guarded and render empty states until the platform wires their data.
+and `thank-you.twig` are data-guarded: they render an empty state when the
+store has nothing to show there.
+
+A theme may only contain Twig templates, CSS, JavaScript, JSON, images, fonts
+and text files. Keep scripts inside the theme, under `src/assets`, rather than
+loading them from other domains.
 
 ## Merchant components
 
@@ -98,12 +133,7 @@ which is not always the language being previewed, because a value written in
 only one language still renders in the other. The platform works that out per
 field; a theme just renders `{{ component.title }}` as normal and tags it.
 
-## Development
+## Releasing
 
-Files are read from `storage/themes/falak-theme-2026/{version}/` via the
-`themes` disk. After editing a published version locally:
-
-```bash
-rm -rf storage/framework/cache/twig/falak-theme-2026   # compiled-template cache
-php artisan theme:seed-reference                       # re-freeze manifest + schemas
-```
+Record your own releases in `CHANGELOG.md`, and raise the version with
+`falak theme version patch|minor|major` before each submission.

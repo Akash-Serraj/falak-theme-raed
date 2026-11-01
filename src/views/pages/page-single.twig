@@ -13,7 +13,7 @@
 
 {% block content %}
     {% if page.type == 'builder' %}
-        {# merchant-composed sections for THIS page (tenant_theme_components by tenant_page_id) #}
+        {# merchant-composed sections for THIS page #}
         {% component page %}
     {% else %}
         <div class="container content-page">

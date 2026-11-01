@@ -697,7 +697,7 @@ falak-rating-stars[data-busy] { opacity: 0.5; }
 
 /* ------------------------------------------------- product card variants */
 /*
-    Theme-raed's custom-salla-product-card vocabulary, as attributes:
+    Product card variants, chosen by attribute:
     minimal · full-image · special · horizontal. Same data, four treatments.
 */
 
@@ -4814,7 +4814,7 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
 
 /* ---------------------------------------------------------------- header */
 
-/* Two-row header: brand bar on top, navigation bar below (Al-Mahud style). */
+/* Two-row header: brand bar on top, navigation bar below. */
 .site-header {
     /* --color-header-bg is only emitted when the merchant sets one, so an
        unset value falls through to the page background rather than pinning
@@ -5056,7 +5056,7 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
         white-space: nowrap;
         text-overflow: ellipsis;
         /* The name's own script sets its direction, so truncation always
-           keeps the START of the name ("Tahseen U…"), never the tail
+           keeps the START of the name ("Golden Sp…"), never the tail
            ("…o Store") — e.g. a Latin store name on the RTL storefront. */
         unicode-bidi: plaintext;
         text-align: start;
@@ -5315,7 +5315,7 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
     margin-bottom: 2rem;
 }
 
-/* Raed-style accent: a short primary bar anchors every section heading. */
+/* Accent: a short primary bar anchors every section heading. */
 .block__title::after {
     content: '';
     display: block;
@@ -5349,7 +5349,7 @@ falak-announcement:not(.f-announce--scroll) .f-announce__inner { padding-inline:
     white-space: pre-line;
 }
 
-/* hero slider — full-bleed photography with a directional scrim (Al-Mahud style) */
+/* hero slider — full-bleed photography with a directional scrim */
 /* The optional line under a section heading (contact, and any block that
    wants one). Sits below the accent bar the title draws. */
 .block__subtitle {
