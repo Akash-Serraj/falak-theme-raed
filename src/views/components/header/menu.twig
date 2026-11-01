@@ -10,10 +10,21 @@
     <falak-menu> wraps it rather than replacing it: the component finds the list
     that is already here and adds only the parts that need JavaScript — dropdown
     state, keyboard handling, the mobile drawer and viewport-edge flipping. It
-    discovers structure from the markup, so these class names stay the theme's
-    own and app.css keeps styling them.
+    discovers structure from the markup (an item is a <li> with a nested <ul>),
+    so these class names stay the theme's own and app.css keeps styling them.
 
-    On mobile the <nav> becomes an off-canvas drawer (see app.css + app.js).
+    Desktop shows only .main-menu__list, inline in the top bar. Under 860px the
+    whole <nav> becomes an off-canvas drawer (app.css + app.js) and the rest of
+    the markup below is that drawer: a brand row with its close button, the
+    account card and its two shortcut tiles, the sectioned lists, and a pinned
+    footer with the language/currency pills and sign-out. All of it is
+    display:none on desktop.
+
+    Auth state is not known at render time (the storefront session is a
+    client-side token — see falak.auth), so the guest card and the tiles
+    ship `hidden`, and app.js reveals the right ones on
+    `auth::*` events. No-JS visitors see none of them, which is correct:
+    without the SDK there is nothing to sign in to.
 
     Customizer: the platform wraps every {% component %} in draft renders, so
     this block is selectable in the preview on its own and opens the "Header &
@@ -27,46 +38,206 @@
     seeds Home and Products so the strip is never blank, the same way Nova's
     utility bar does.
 
-    A FALLBACK, not an addition: the moment the merchant creates a menu on the
-    Menus screen their items take over completely. Showing both would put a
-    second, un-deletable "Home" beside theirs.
+    Shown alongside the merchant's own menu, ahead of it: a menu built on the
+    Menus screen no longer hides them. Each link has its own "show" switch in
+    the customizer, so a merchant whose menu already has a Home turns the
+    starter one off rather than living with two.
 #}
-{% set starter_links = menus.main_menu|default([])|length == 0
-    ? theme.settings.get('topnav_links')|default([])
-    : [] %}
+{% set starter_links = theme.settings.get('topnav_links')|default([]) %}
+{% set store_root = store.url|trim('/') %}
+{% set has_cats = menus.categories_menu|default([])|length > 0 %}
 <falak-menu>
     <nav class="main-menu" id="main-menu" aria-label="{{ trans('common.menu') }}">
-        <ul>
-            {# `visible is not defined` rather than `|default(true)`: `default`
-               treats false as empty and would switch a hidden link back on. #}
-            {% for link in starter_links %}
-                {% if link.visible is not defined or link.visible %}
-                    <li class="main-menu__item">
-                        <a href="{{ link.url|default('/') }}">{{ link.label }}</a>
-                    </li>
+        {# Icon sprite for the drawer rows. <use> keeps every row's markup to
+           one line and the sandbox's `raw` filter out of it. #}
+        {# style, not only the hidden attribute: the theme's own svg rules outrank
+           the UA's [hidden] and painted this as a blank 300x150 box. #}
+        <svg hidden style="display:none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+            <symbol id="mm-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z"/></symbol>
+            <symbol id="mm-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+            <symbol id="mm-bag" viewBox="0 0 24 24"><path d="M5 8h14l-1 12H6z"/><path d="M9 8V6a3 3 0 016 0v2"/></symbol>
+            <symbol id="mm-tag" viewBox="0 0 24 24"><path d="M3 12V4h8l9 9-8 8z"/><circle cx="7.5" cy="8.5" r="1.2"/></symbol>
+            <symbol id="mm-star" viewBox="0 0 24 24"><path d="M12 3l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.4 6.3 20.5l1.2-6.4L2.8 9.7l6.4-.8z"/></symbol>
+            <symbol id="mm-news" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></symbol>
+            <symbol id="mm-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></symbol>
+            <symbol id="mm-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/></symbol>
+            <symbol id="mm-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></symbol>
+            <symbol id="mm-box" viewBox="0 0 24 24"><path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/></symbol>
+            <symbol id="mm-heart" viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z"/></symbol>
+            <symbol id="mm-bell" viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0112 0v5l2 2H4z"/><path d="M10 20a2 2 0 004 0"/></symbol>
+            <symbol id="mm-logout" viewBox="0 0 24 24"><path d="M15 4h3a2 2 0 012 2v12a2 2 0 01-2 2h-3"/><path d="M10 16l-4-4 4-4M6 12h9"/></symbol>
+            <symbol id="mm-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+        </svg>
+
+        {# ------------------------------------------------ drawer: brand row #}
+        <div class="main-menu__head">
+            <a href="{{ store.url }}" class="main-menu__brand" aria-label="{{ store.name }}">
+                {% if store.logo %}
+                    <img src="{{ store.logo }}" alt="{{ store.name }}" width="36" height="36">
+                {% else %}
+                    <span>{{ store.name }}</span>
                 {% endif %}
-            {% endfor %}
+            </a>
+            <button class="main-menu__close" type="button" data-menu-close
+                    aria-label="{{ trans('common.close') }}">
+                <svg class="main-menu__icon" aria-hidden="true"><use href="#mm-close"/></svg>
+            </button>
+        </div>
 
-            {% for item in menus.main_menu|default([]) %}
-                <li class="main-menu__item{{ item.children|length > 0 ? ' has-children' : '' }}">
-                    <a href="{{ item.url }}"{{ item.is_new_tab ? ' target="_blank" rel="noopener"' : '' }}>
-                        {% if item.image %}<img src="{{ item.image }}" alt="" width="20" height="20">{% endif %}
-                        {{ item.title }}
-                    </a>
+        <div class="main-menu__body">
+            {# Guest card. Both buttons open the OTP sign-in sheet: the store
+               signs a customer in by phone, and a number it has not seen
+               before becomes an account on the spot — so "create account" is
+               the same door, labelled for the shopper who thinks they need a
+               different one. #}
+            <div class="main-menu__welcome" data-menu-guest hidden>
+                <span class="main-menu__avatar" aria-hidden="true">
+                    <svg class="main-menu__icon" aria-hidden="true"><use href="#mm-user"/></svg>
+                </span>
+                <div class="main-menu__welcome-text">
+                    <strong>{{ trans('menu.welcome') }}</strong>
+                    <p>{{ trans('menu.welcome_text') }}</p>
+                </div>
+                <div class="main-menu__welcome-actions">
+                    <button type="button" class="main-menu__btn main-menu__btn--solid" data-menu-login>{{ trans('auth.sign_in') }}</button>
+                    <button type="button" class="main-menu__btn main-menu__btn--ghost" data-menu-login>{{ trans('auth.create_account') }}</button>
+                </div>
+            </div>
 
-                    {% if item.children|length > 0 %}
+            {# Two shortcut tiles for a signed-in customer. The mockup's second
+               tile is Addresses; this storefront has no addresses page, so the
+               wishlist stands in (feature-gated like its list row below). #}
+            <div class="main-menu__tiles" data-menu-tiles hidden>
+                <a class="main-menu__tile" href="/customer/orders">
+                    <svg class="main-menu__icon" aria-hidden="true"><use href="#mm-box"/></svg>
+                    <span>{{ trans('account.orders') }}</span>
+                </a>
+                <a class="main-menu__tile" href="/customer/wishlist" data-menu-feature="wishlist_enabled">
+                    <svg class="main-menu__icon" aria-hidden="true"><use href="#mm-heart"/></svg>
+                    <span>{{ trans('account.wishlist') }}</span>
+                </a>
+            </div>
+
+            <p class="main-menu__section">{{ trans('menu.shop') }}</p>
+
+            <ul class="main-menu__list">
+                {# `visible is not defined` rather than `|default(true)`: `default`
+                   treats false as empty and would switch a hidden link back on.
+                   A /blogs link waits for the store's first published post
+                   (`has_blog`) — until then the page it opens is empty. #}
+                {% for link in starter_links %}
+                    {% set u = link.url|default('/') %}
+                    {% if (link.visible is not defined or link.visible) and (has_blog or '/blogs' not in u) %}
+                        {% set icon = 'link' %}
+                        {% if u == '/' or u|trim('/') == store_root %}{% set icon = 'home' %}
+                        {% elseif '/categor' in u %}{% set icon = 'grid' %}
+                        {% elseif '/product' in u %}{% set icon = 'bag' %}
+                        {% elseif '/offer' in u %}{% set icon = 'tag' %}
+                        {% elseif '/brand' in u %}{% set icon = 'star' %}
+                        {% elseif '/blog' in u %}{% set icon = 'news' %}
+                        {% elseif '/contact' in u %}{% set icon = 'mail' %}
+                        {% endif %}
+                        <li class="main-menu__item">
+                            <a href="{{ u }}">
+                                <svg class="main-menu__icon" aria-hidden="true"><use href="#mm-{{ icon }}"/></svg>
+                                <span>{{ link.label }}</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% for item in menus.main_menu|default([]) %}
+                    {% set u = item.url|default('/') %}
+                    {% set icon = 'link' %}
+                    {% if u == '/' or u|trim('/') == store_root %}{% set icon = 'home' %}
+                    {% elseif '/categor' in u %}{% set icon = 'grid' %}
+                    {% elseif '/product' in u %}{% set icon = 'bag' %}
+                    {% elseif '/offer' in u %}{% set icon = 'tag' %}
+                    {% elseif '/brand' in u %}{% set icon = 'star' %}
+                    {% elseif '/blog' in u %}{% set icon = 'news' %}
+                    {% elseif '/contact' in u %}{% set icon = 'mail' %}
+                    {% endif %}
+                    <li class="main-menu__item{{ item.children|length > 0 ? ' has-children' : '' }}">
+                        <a href="{{ u }}"{{ item.is_new_tab ? ' target="_blank" rel="noopener"' : '' }}>
+                            {% if item.image %}
+                                <img class="main-menu__icon" src="{{ item.image }}" alt="" width="20" height="20">
+                            {% else %}
+                                <svg class="main-menu__icon" aria-hidden="true"><use href="#mm-{{ icon }}"/></svg>
+                            {% endif %}
+                            <span>{{ item.title }}</span>
+                        </a>
+
+                        {% if item.children|length > 0 %}
+                            <ul class="main-menu__submenu">
+                                {% for child in item.children %}
+                                    <li>
+                                        <a href="{{ child.url }}"{{ child.is_new_tab ? ' target="_blank" rel="noopener"' : '' }}>
+                                            {{ child.title }}
+                                        </a>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+
+                {# The categories menu as one expandable entry. Desktop has its
+                   own bar for it (header.twig); the drawer folds it in here so
+                   a phone shopper does not need the second strip to browse.
+
+                   Second in the list as in the mockup — right after Home on
+                   every store that keeps the seeded links. Placed by CSS
+                   `order` (app.css) rather than by position here: Twig scopes a
+                   `set` inside `for` to that loop, so the loop body cannot
+                   record that it already emitted this. There is no categories
+                   index page, so the parent links to the full listing. #}
+                {% if has_cats %}
+                    <li class="main-menu__item has-children main-menu__item--drawer-only main-menu__item--cats">
+                        <a href="/products">
+                            <svg class="main-menu__icon" aria-hidden="true"><use href="#mm-grid"/></svg>
+                            <span>{{ trans('common.categories') }}</span>
+                        </a>
                         <ul class="main-menu__submenu">
-                            {% for child in item.children %}
+                            {% for cat in menus.categories_menu %}
                                 <li>
-                                    <a href="{{ child.url }}"{{ child.is_new_tab ? ' target="_blank" rel="noopener"' : '' }}>
-                                        {{ child.title }}
+                                    <a href="{{ cat.url }}"{{ cat.is_new_tab ? ' target="_blank" rel="noopener"' : '' }}>
+                                        {{ cat.title }}
                                     </a>
                                 </li>
                             {% endfor %}
                         </ul>
-                    {% endif %}
-                </li>
-            {% endfor %}
-        </ul>
+                    </li>
+                {% endif %}
+            </ul>
+
+            {# Account pages. The same four <falak-user-menu> lists; the
+               wishlist row follows the store's wishlist switch (app.js reads
+               store.settings.wishlist_enabled, as the component does). #}
+            <p class="main-menu__section">{{ trans('account.title') }}</p>
+
+            <ul class="main-menu__list main-menu__list--account">
+                <li class="main-menu__item"><a href="/customer/profile"><svg class="main-menu__icon" aria-hidden="true"><use href="#mm-user"/></svg><span>{{ trans('account.profile') }}</span></a></li>
+                <li class="main-menu__item"><a href="/customer/orders"><svg class="main-menu__icon" aria-hidden="true"><use href="#mm-box"/></svg><span>{{ trans('account.orders') }}</span></a></li>
+                <li class="main-menu__item" data-menu-feature="wishlist_enabled"><a href="/customer/wishlist"><svg class="main-menu__icon" aria-hidden="true"><use href="#mm-heart"/></svg><span>{{ trans('account.wishlist') }}</span></a></li>
+            </ul>
+        </div>
+
+        {# ------------------------------------------------- drawer: footer #}
+        {# Second instances of the header's two switchers. Each is only a pill:
+           with <falak-localization-modal> on the page they open that one
+           sheet through the SDK bus rather than rendering a dropdown of their
+           own, and each hides itself when the store has nothing to switch. The
+           header's own copies are display:none under 860px (app.css).
+           Sign-out shows for a signed-in customer only (app.js). #}
+        <div class="main-menu__foot">
+            <div class="main-menu__prefs">
+                <falak-language></falak-language>
+                <falak-currency></falak-currency>
+            </div>
+            <button type="button" class="main-menu__logout" data-menu-logout hidden>
+                <svg class="main-menu__icon" aria-hidden="true"><use href="#mm-logout"/></svg>
+                <span>{{ trans('account.logout') }}</span>
+            </button>
+        </div>
     </nav>
 </falak-menu>

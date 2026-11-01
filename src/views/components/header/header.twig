@@ -65,7 +65,9 @@
 
                 {# Language and currency in one sheet. Replaces the two-language
                    toggle: a store with more than one currency needs both. #}
-                <falak-localization-modal show-trigger></falak-localization-modal>
+                <falak-localization-modal></falak-localization-modal>
+                <falak-language></falak-language>
+                <falak-currency></falak-currency>
 
                 {# Signed out, this is the sign-in entry point; signed in, the
                    account dropdown. It redraws itself on auth events. #}
@@ -82,6 +84,19 @@
                 <falak-cart-summary class="cart-link" show-cart-label href="/cart"></falak-cart-summary>
             </div>
         </div>
+
+        {# Phones only (app.css): the search field as its own row under the
+           icons, where the mockup has it. A plain GET to the same /search?q=
+           the live <falak-search> above submits to — that trigger leaves the
+           row on phones, this takes its place. #}
+        <form class="container site-header__search" action="/search" method="get" role="search">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+                 stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="6"/><path d="M20 20l-4.3-4.3"/>
+            </svg>
+            <input type="search" name="q" placeholder="{{ trans('search.placeholder') }}"
+                   aria-label="{{ trans('search.placeholder') }}" autocomplete="off">
+        </form>
     </div>
 
     {% if menus.categories_menu|default([])|length > 0 %}
@@ -89,6 +104,10 @@
             <div class="container">
                 <nav class="cat-bar" aria-label="{{ trans('common.categories') }}">
                     <ul>
+                        {# Leads the strip: the whole listing, which every category
+                           chip narrows. app.js fills the chip whose link matches the
+                           page, so on /products this one reads as selected. #}
+                        <li class="cat-bar__all"><a href="/products" data-cat-all>{{ trans('common.all') }}</a></li>
                         {% for item in menus.categories_menu %}
                             <li>
                                 <a href="{{ item.url }}"{{ item.is_new_tab ? ' target="_blank" rel="noopener"' : '' }}>

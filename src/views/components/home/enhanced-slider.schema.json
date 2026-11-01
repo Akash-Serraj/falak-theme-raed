@@ -6,6 +6,7 @@
         "en": "Hero Slider"
     },
     "icon": "image-carousel-line",
+    "preview": "images/sections/enhanced-slider.png",
     "is_default": true,
     "default_sort": 10,
     "areas": [
@@ -44,10 +45,25 @@
                         "en": "Banner image"
                     },
                     "description": {
-                        "ar": "المقاس المناسب 1400×580 بكسل",
-                        "en": "Recommended size 1400x580 px"
+                        "ar": "المقاس المناسب 1400×580 بكسل. تظهر كلقطة أولية إن أُضيف فيديو",
+                        "en": "Recommended size 1400x580 px. Shown as the poster when a video is added"
                     },
                     "required": true
+                },
+                {
+                    "id": "slides.video",
+                    "type": "string",
+                    "format": "video",
+                    "label": {
+                        "ar": "فيديو الخلفية",
+                        "en": "Background video"
+                    },
+                    "description": {
+                        "ar": "اختياري. يُعرض بدلاً من الصورة ويعمل صامتاً بشكل متكرر، وتبقى الصورة كلقطة أولية له",
+                        "en": "Optional. Plays muted on a loop instead of the image, which stays as its poster"
+                    },
+                    "required": false,
+                    "maxLength": 255
                 },
                 {
                     "id": "slides.title",

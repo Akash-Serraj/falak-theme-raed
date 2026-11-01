@@ -6,6 +6,7 @@
         "en": "All Categories"
     },
     "icon": "grid-line",
+    "preview": "images/sections/categories-circles.png",
     "is_default": true,
     "default_sort": 20,
     "areas": ["home", "pages"],

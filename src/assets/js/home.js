@@ -1,17 +1,47 @@
 /*
-    Falak Theme 2026 — home page behavior: hero slider rotation + dots.
-    Respects prefers-reduced-motion by not auto-rotating.
+    Falak Theme 2026 — home page behavior: hero slider rotation + dots, and
+    the slides' background clips.
+    Respects prefers-reduced-motion by not auto-rotating and by leaving every
+    background video on its poster.
 */
 (function () {
     'use strict';
 
+    var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
     document.querySelectorAll('.hero-slider').forEach(function (slider) {
         var slides = slider.querySelectorAll('.hero-slider__slide');
-        if (slides.length < 2) return;
+        if (!slides.length) return;
 
         var dotsWrap = slider.querySelector('.hero-slider__dots');
         var current = 0;
         var timer = null;
+
+        /*
+         * A slide's background clip runs only while that slide is on screen.
+         * The other slides are display:none, which hides a <video> but does
+         * not stop it, so each one is paused explicitly and only the active
+         * one is played (the markup autoplays just the first). Under reduced
+         * motion nothing plays: the poster, the slide's own image, stands in.
+         *
+         * play() returns a promise that rejects when the browser declines
+         * (a policy, or a pause that beat it); the poster covers that case,
+         * so the rejection is swallowed rather than logged as an error.
+         */
+        function syncVideos() {
+            slides.forEach(function (slide, i) {
+                var video = slide.querySelector('.hero-slider__video');
+                if (!video) return;
+
+                if (i !== current || reduceMotion) {
+                    video.pause();
+                    return;
+                }
+
+                var playing = video.play();
+                if (playing && typeof playing.catch === 'function') playing.catch(function () {});
+            });
+        }
 
         function show(index) {
             current = (index + slides.length) % slides.length;
@@ -25,7 +55,13 @@
                     dot.classList.toggle('is-active', i === current);
                 });
             }
+
+            syncVideos();
         }
+
+        syncVideos();
+
+        if (slides.length < 2) return;
 
         if (dotsWrap) {
             dotsWrap.addEventListener('click', function (event) {
@@ -62,7 +98,7 @@
         function restart() {
             if (timer) window.clearInterval(timer);
             if (delay === 0) return;
-            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            if (reduceMotion) return;
             timer = window.setInterval(function () { show(current + 1); }, delay);
         }
 

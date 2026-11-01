@@ -42,8 +42,37 @@
 #}
 {% set show_button = component.show_button is defined ? component.show_button : true %}
 
-<section class="block block--countdown" id="countdown-{{ position }}" {{ falak_section() }}>
+{#
+    Expiry. The clock stops itself when the moment passes, but a row of zeros
+    under "offer ends in" is a dead section no shopper should meet, so a passed
+    `ends_at` drops the whole section from the LIVE page. The customizer still
+    renders it, greyed and flagged: the merchant has to see what the shopper
+    no longer does, and the note is a pencil to the date that fixes it.
+
+    The comparison runs in the store's clock (the app timezone), which is the
+    zone <falak-countdown> reads a zone-less value in, so both agree on the
+    moment. Anything the clock could not read (free text) is left to it: the
+    component prints its own "enter a valid date" line, which is also
+    something the merchant should see.
+
+    The page that is open when the moment arrives is app.js's job: it hides
+    the section on the component's `ended` event, but only where
+    data-countdown-hide-on-end says so, which is never in the preview.
+#}
+{% set preview = theme.mode == 'preview' %}
+{% set ends_at = component.ends_at|default('')|trim %}
+{% set expired = false %}
+{% if ends_at matches '/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])([ T]([01][0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?)?$/' %}
+    {% set expired = ends_at|date('Y-m-d') < 'now'|date('Y-m-d') %}
+{% endif %}
+{% if not expired or preview %}
+<section class="block block--countdown{{ expired ? ' is-expired' }}" id="countdown-{{ position }}"
+         {% if not preview %}data-countdown-hide-on-end{% endif %} {{ falak_section() }}>
     <div class="container">
+        {% if expired %}
+            <p class="block__expired-note"
+               data-falak-field="ends_at" data-falak-label="{{ trans('editor.field.date') }}" data-falak-bind="none">{{ trans('editor.countdown_expired', {date: ends_at}) }}</p>
+        {% endif %}
         <falak-countdown date="{{ component.ends_at }}" end-of-day boxed labeled size="lg"
                          theme="{{ component.style|default('dark') }}"
                          title="{{ component.title }}"
@@ -62,3 +91,4 @@
                          data-falak-bind-attr-theme="style"></falak-countdown>
     </div>
 </section>
+{% endif %}

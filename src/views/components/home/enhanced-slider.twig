@@ -2,6 +2,7 @@
     Hero slider — merchant-placeable home component.
     | Variable                       | Type     | Description                              |
     | component.slides[].image       | string   | image URL (wide, ~1400×580)              |
+    | component.slides[].video       | ?string  | background clip; the image is its poster |
     | component.slides[].title       | ?string  | localized server-side                    |
     | component.slides[].description | ?string  | localized server-side                    |
     | component.slides[].button_text | ?string  | CTA label, localized server-side         |
@@ -38,8 +39,24 @@
          data-autoplay="{{ autoplay ? (component.autoplay_speed|default('5000')) : '0' }}">
         {% for slide in component.slides %}
             <div class="hero-slider__slide{{ loop.first ? ' is-active' : '' }}" data-falak-field="slides" data-falak-label="{{ trans('editor.field.slides') }}" data-falak-bind="none">
-                <img class="hero-slider__img" src="{{ slide.image }}"
-                     alt="{{ slide.title|default('') }}"{{ loop.first ? '' : ' loading="lazy"' }}>
+                {% if slide.video|default(null) %}
+                    {#
+                        A background clip. Muted + playsinline is what lets it
+                        autoplay at all; the slide image is its poster, so the
+                        slide never flashes empty and a browser that refuses to
+                        play still shows the merchant's picture. Only the first
+                        slide autoplays from markup: the others are display:none
+                        until home.js brings them in, and it starts their clip
+                        then (and leaves every clip on its poster under reduced
+                        motion). Decorative, so hidden from assistive tech.
+                    #}
+                    <video class="hero-slider__video" src="{{ slide.video }}" poster="{{ slide.image }}"
+                           muted loop playsinline aria-hidden="true"
+                           {% if loop.first %}autoplay preload="auto"{% else %}preload="none"{% endif %}></video>
+                {% else %}
+                    <img class="hero-slider__img" src="{{ slide.image }}"
+                         alt="{{ slide.title|default('') }}"{{ loop.first ? '' : ' loading="lazy"' }}>
+                {% endif %}
                 <div class="hero-slider__content container" data-falak-part="slide_content">
                     {% if slide.title %}<h2 data-falak-part="slide_title">{{ slide.title }}</h2>{% endif %}
                     {% if slide.description %}<p data-falak-part="slide_text">{{ slide.description }}</p>{% endif %}

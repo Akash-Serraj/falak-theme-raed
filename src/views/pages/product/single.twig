@@ -1,13 +1,12 @@
 {#
     Product detail page.
     | Variable | Type  | Description                                                        |
-    | product  | array | id, name, description, price (formatted), price_amount, currency,  |
-    |          |       | image, images[], url                                               |
+    | product  | array | id, name, description, long_description, price (formatted),       |
+    |          |       | price_amount, currency, image, images[], url                       |
 #}
 {% extends "layouts.master" %}
 
 {% block title %}{{ product.name }} — {{ store.name }}{% endblock %}
-{% block meta_description %}{{ product.description|default(product.name)|escape }}{% endblock %}
 
 {% block content %}
     <div class="container product-single">
@@ -44,7 +43,21 @@
             </div>
 
             <div class="product-single__info">
+                {# Every category the product is filed under, primary first, as a
+                   row of links above the title. `categories` is empty only for a
+                   caller that did not load the pivot; fall back to the primary then.
+                   The slashes between them are CSS, so RTL needs no special case. #}
+                {% set cats = product.categories ?: (product.category ? [product.category] : []) %}
+                {% if cats %}
+                    <nav class="product-single__categories" aria-label="{{ trans('common.categories') }}">
+                        {% for cat in cats %}<a href="{{ cat.url }}">{{ cat.name }}</a>{% endfor %}
+                    </nav>
+                {% endif %}
                 <h1>{{ product.name }}</h1>
+
+                {% if product.sku %}
+                    <p class="product-single__sku">{{ trans('product.sku') }}: <span dir="ltr">{{ product.sku }}</span></p>
+                {% endif %}
 
                 {#
                     Platform component. `fetch` is opt-in per element — here it
@@ -67,7 +80,21 @@
                 </p>
 
                 {% if product.description %}
-                    <div class="product-single__description">{{ product.description }}</div>
+                    {# Clamped preview + "see more". app.css owns the line count
+                       (--description-lines); app.js switches the clamp on only when
+                       the copy actually overflows it, so a short description never
+                       fades and never grows a button, and with JS off nothing is
+                       hidden. The long description sits in the details panel below. #}
+                    <div class="product-single__description" data-description>
+                        <div class="product-single__description-body" data-description-body>{{ product.description }}</div>
+                        <button type="button" class="product-single__description-toggle" data-description-toggle
+                                aria-expanded="false" hidden
+                                data-label-more="{{ trans('product.see_more') }}"
+                                data-label-less="{{ trans('product.see_less') }}">
+                            <span data-description-label>{{ trans('product.see_more') }}</span>
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                        </button>
+                    </div>
                 {% endif %}
 
                 {# Size guide — renders nothing unless the merchant set one. #}
@@ -86,6 +113,27 @@
                                            variations="{{ product.variations|json_encode|escape('html_attr') }}"
                                            options="{{ product.options|default([])|json_encode|escape('html_attr') }}"
                                            class="product-single__options"></falak-product-options>
+                {% endif %}
+
+                {# Weight and dimensions, under the variants. Each one is optional on its
+                   own, so each carries its own label rather than an ambiguous "L × W × H". #}
+                {% if product.weight or product.length or product.width or product.height %}
+                    <ul class="product-specs">
+                        {% if product.weight %}
+                            <li class="product-specs__item">
+                                <span class="product-specs__label">{{ trans('product.weight') }}</span>
+                                <span class="product-specs__value">{{ product.weight }} {{ trans('product.weight_unit') }}</span>
+                            </li>
+                        {% endif %}
+                        {% for key in ['length', 'width', 'height'] %}
+                            {% if product[key] %}
+                                <li class="product-specs__item">
+                                    <span class="product-specs__label">{{ trans('product.' ~ key) }}</span>
+                                    <span class="product-specs__value">{{ product[key] }} {{ trans('product.dimension_unit') }}</span>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
                 {% endif %}
 
                 <div class="buy-box">
@@ -142,47 +190,85 @@
                 <falak-offers below-product product-id="{{ product.id }}" limit="3"
                               class="product-single__offers"></falak-offers>
 
-                {# Collapsible detail panels — state is data-collapsed, styling is CSS. #}
-                <div class="product-single__panels">
-                    {% if product.description %}
-                        <falak-accordion collapsible bordered name="details">
-                            <falak-accordion-head>
-                                <span slot="title">{{ trans('product.details') }}</span>
-                            </falak-accordion-head>
-                            <falak-accordion-body>{{ product.description }}</falak-accordion-body>
-                        </falak-accordion>
-                    {% endif %}
+                {# Collapsible detail panels — state is data-collapsed, styling is CSS.
+                   The shipping panel prints the store-level "Shipping & returns
+                   note" (theme settings, Product page options); an empty note
+                   would open to a blank panel, so it stands down with it, and
+                   the wrapper goes too when neither panel has anything to say. #}
+                {% set shipping_note = theme.settings.get('shipping_note')|default('')|trim %}
+                {% if product.long_description|default('') or shipping_note %}
+                    <div class="product-single__panels">
+                        {# The merchant's long description. No fallback to the short
+                           one: that already shows under the title, and repeating
+                           it here would print the same copy twice. #}
+                        {% if product.long_description|default('') %}
+                            <falak-accordion collapsible bordered name="details">
+                                <falak-accordion-head>
+                                    <span slot="title">{{ trans('product.details') }}</span>
+                                </falak-accordion-head>
+                                <falak-accordion-body>{{ product.long_description|raw }}</falak-accordion-body>
+                            </falak-accordion>
+                        {% endif %}
 
-                    <falak-accordion collapsible bordered name="shipping">
-                        <falak-accordion-head>
-                            <span slot="title">{{ trans('product.shipping_returns') }}</span>
-                        </falak-accordion-head>
-                        <falak-accordion-body>
-                            {{ theme.settings.get('shipping_note', '') }}
-                        </falak-accordion-body>
-                    </falak-accordion>
-                </div>
+                        {% if shipping_note %}
+                            <falak-accordion collapsible bordered name="shipping">
+                                <falak-accordion-head>
+                                    <span slot="title">{{ trans('product.shipping_returns') }}</span>
+                                </falak-accordion-head>
+                                <falak-accordion-body>{{ shipping_note }}</falak-accordion-body>
+                            </falak-accordion>
+                        {% endif %}
+                    </div>
+                {% endif %}
 
                 {# Share — a quiet, labelled secondary action closing the info
-                   column, after the purchase flow rather than inside it. #}
-                <falak-social mode="share" class="product-single__share"
-                              share-text="{{ product.name }}"></falak-social>
+                   column, after the purchase flow rather than inside it.
+                   The SDK's share set ends on Telegram; the theme hides that
+                   one and closes the row with a copy-link button instead. #}
+                <div class="product-single__share">
+                    <falak-social mode="share" share-text="{{ product.name }}"></falak-social>
+                    <button type="button" class="product-single__copy-link" data-copy-link
+                            data-copied-text="{{ trans('product.link_copied') }}" data-failed-text="{{ trans('product.link_copy_failed') }}"
+                            aria-label="{{ trans('product.copy_link') }}" title="{{ trans('product.copy_link') }}">
+                        <svg class="product-single__copy-icon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3A5 5 0 0 0 13.5 3.5l-1.7 1.7M14 11a5 5 0 0 0-7.5-.5l-3 3A5 5 0 0 0 10.5 20.5l1.7-1.7"/></svg>
+                        <svg class="product-single__copied-icon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+                    </button>
+                </div>
             </div>
         </div>
 
-        {# Approved reviews, plus a form for signed-in customers. Stands down
-           entirely when the merchant has reviews switched off. #}
+        {# Approved reviews, plus a form for customers with a delivered order
+           containing this product. Stands down entirely when the merchant has
+           reviews switched off. No heading of its own: the section reads as
+           the summary + list, and app.css hides the component's "Reviews"
+           subheading and its sign-in / purchase-required gates, so a visitor
+           who can't review sees only the reviews that exist. #}
         <section class="product-single__reviews">
-            <h2>{{ trans('reviews.title') }}</h2>
-            {# The reviews at a glance: average, count, one bar per star. #}
-            <falak-reviews-summary product-id="{{ product.id }}" class="product-single__reviews-summary"></falak-reviews-summary>
+            {# The reviews at a glance: average, count, one bar per star.
+               hide-empty: with no reviews there is nothing to summarise, and
+               its "no reviews yet" box sat right above the list's identical
+               one — the sign-in gate below already carries the call to act. #}
+            <falak-reviews-summary product-id="{{ product.id }}" class="product-single__reviews-summary" hide-empty></falak-reviews-summary>
             <falak-comments product-id="{{ product.id }}" per-page="5"></falak-comments>
         </section>
 
-        {# Fetches and renders its own <falak-product-card> children. #}
+        {# Product Q&A — questions with their replies, plus an ask form for
+           signed-in customers. The component renders its own header, so the
+           section adds no heading of its own. #}
+        <section class="product-single__questions">
+            <falak-questions product-id="{{ product.id }}"></falak-questions>
+        </section>
+
+        {# Fetches and renders its own <falak-product-card> children.
+           limit is one MORE than the grid shows: the endpoint doesn't know
+           which product this page is on, so app.js drops it from the fetched
+           list (data-exclude-product) and trims back to four
+           (data-max-cards) — the rail stays full either way, and a product
+           never suggests itself. #}
         <section class="product-single__related">
             <h2>{{ trans('product.related') }}</h2>
-            <falak-products-list limit="4" columns="4" card-button source="product.single"></falak-products-list>
+            <falak-products-list limit="5" columns="4" card-button source="product.single"
+                data-exclude-product="{{ product.id }}" data-max-cards="4"></falak-products-list>
         </section>
     </div>
 {% endblock %}

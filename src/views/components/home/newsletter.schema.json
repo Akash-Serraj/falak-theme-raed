@@ -6,6 +6,7 @@
         "en": "Newsletter"
     },
     "icon": "mail-send-line",
+    "preview": "images/sections/newsletter.png",
     "is_default": false,
     "areas": [
         "home",

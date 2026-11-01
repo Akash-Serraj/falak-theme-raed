@@ -17,6 +17,11 @@
 
 {% block content %}
     <div class="container cart-page" data-cart-page>
+        {# The store's special offers as the cart sees them: applied ones
+           ticked, the rest with how much is still missing. Draws nothing when
+           offers are off or none is in reach. #}
+        <falak-cart-offers class="cart-page__offers"></falak-cart-offers>
+
         <header class="page-head">
             <h1>{{ trans('cart.title') }}</h1>
             {% if cart_items|length > 0 %}
@@ -45,6 +50,10 @@
                                 {% elseif item.product.video %}
                                     <video class="cart-item__clip" preload="metadata" muted playsinline
                                            tabindex="-1" src="{{ item.product.video }}#t=0.1"></video>
+                                {% else %}
+                                    {# An empty tile rather than an empty anchor: without it the line
+                                       loses its first column and the name slides under the gutter. #}
+                                    <span class="cart-item__placeholder" aria-hidden="true"></span>
                                 {% endif %}
                             </a>
 
@@ -53,38 +62,54 @@
                                 {# `variation.options` names the choice the way the
                                    product page did — the merchant's labels, in
                                    their order. The raw attribute map is the
-                                   fallback for a cart built before it existed. #}
+                                   fallback for a cart built before it existed.
+
+                                   One CHIP per option group rather than one run of
+                                   "label: value · label: value" text. Three groups
+                                   ran together into a sentence the eye had to parse;
+                                   boxed, each choice is a thing the shopper can pick
+                                   out at a glance, and the row wraps instead of
+                                   pushing the price column sideways.
+
+                                   The value is both SHOWN and NAMED: the swatch alone
+                                   asked the shopper to remember which green the
+                                   merchant had called "Olive", and said nothing at all
+                                   for a value whose display is missing. #}
                                 {% if item.variation and item.variation.options is defined and item.variation.options %}
-                                    <span class="cart-item__variation">
-                                        {%- for option in item.variation.options -%}
-                                            {%- if option.display and option.type == 'color' -%}
-                                                {#- "اللون: ●" — the option is still named, but the swatch stands
-                                                    in for the value, which a colour shows better than its own
-                                                    name does. The name survives as the accessible label. -#}
-                                                {{ option.label }}: <i class="cart-item__swatch" role="img"
-                                                   aria-label="{{ option.value_label }}"
-                                                   title="{{ option.value_label }}"
-                                                   style="background: {{ option.display }}"></i>
-                                            {%- elseif option.display and option.type == 'image' -%}
-                                                {{ option.label }}: <img class="cart-item__swatch cart-item__swatch--image"
-                                                     src="{{ option.display }}" loading="lazy"
-                                                     alt="{{ option.value_label }}"
-                                                     title="{{ option.value_label }}">
-                                            {%- else -%}
-                                                {{ option.label }}: {{ option.value_label }}
-                                            {%- endif -%}
-                                            {{- not loop.last ? ' · ' : '' -}}
-                                        {%- endfor -%}
-                                    </span>
+                                    <ul class="cart-item__options">
+                                        {% for option in item.variation.options %}
+                                            <li class="cart-item__option">
+                                                {# Decorative — aria-hidden, because the value is
+                                                   spelled out in the two spans beside it and a
+                                                   screen reader would otherwise say it twice. #}
+                                                {% if option.display and option.type == 'color' %}
+                                                    <i class="cart-item__swatch" aria-hidden="true"
+                                                       style="background: {{ option.display }}"></i>
+                                                {% elseif option.display and option.type == 'image' %}
+                                                    <img class="cart-item__swatch cart-item__swatch--image"
+                                                         src="{{ option.display }}" loading="lazy" alt="">
+                                                {% endif %}
+                                                <span class="cart-item__option-label">{{ option.label }}:</span>
+                                                <span class="cart-item__option-value">{{ option.value_label }}</span>
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
                                 {% elseif item.variation and item.variation.attributes is defined and item.variation.attributes %}
-                                    <span class="cart-item__variation">
-                                        {%- for key, value in item.variation.attributes -%}
-                                            {{ key }}: {{ value }}{{ not loop.last ? ' · ' : '' }}
-                                        {%- endfor -%}
-                                    </span>
+                                    <ul class="cart-item__options">
+                                        {% for key, value in item.variation.attributes %}
+                                            <li class="cart-item__option">
+                                                <span class="cart-item__option-label">{{ key }}:</span>
+                                                <span class="cart-item__option-value">{{ value }}</span>
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
                                 {% endif %}
+                                {# "340.00 ر.س / unit" — the line total sits in its own
+                                   column to the side, so this one has to say that it is
+                                   the price of ONE. #}
                                 <span class="cart-item__unit">
                                     {{ falak_currency(item.unit_amount) }}
+                                    <span class="cart-item__unit-suffix">{{ trans('cart.per_unit') }}</span>
                                     {% if item.old_amount %}<del>{{ falak_currency(item.old_amount) }}</del>{% endif %}
                                 </span>
                             </div>

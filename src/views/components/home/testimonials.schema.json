@@ -6,6 +6,7 @@
         "en": "Testimonials"
     },
     "icon": "chat-smile-line",
+    "preview": "images/sections/testimonials.png",
     "is_default": true,
     "default_sort": 50,
     "areas": [
@@ -97,6 +98,53 @@
             "value": true
         },
         {
+            "id": "source",
+            "type": "items",
+            "format": "dropdown-list",
+            "label": {
+                "ar": "المصدر",
+                "en": "Source"
+            },
+            "description": {
+                "ar": "التقييمات الحقيقية تُجلب من تقييمات العملاء المعتمدة",
+                "en": "Real reviews are pulled from your approved customer reviews"
+            },
+            "value": "manual",
+            "options": [
+                {
+                    "label": {
+                        "ar": "تقييمات المتجر الحقيقية",
+                        "en": "Real store reviews"
+                    },
+                    "value": "reviews"
+                },
+                {
+                    "label": {
+                        "ar": "آراء مكتوبة يدوياً",
+                        "en": "Manually written"
+                    },
+                    "value": "manual"
+                }
+            ]
+        },
+        {
+            "id": "limit",
+            "type": "number",
+            "format": "integer",
+            "label": {
+                "ar": "عدد الآراء",
+                "en": "How many"
+            },
+            "required": false,
+            "min": 2,
+            "max": 12,
+            "value": 6,
+            "description": {
+                "ar": "عدد التقييمات الحقيقية المعروضة في الشبكة",
+                "en": "How many real reviews the grid shows"
+            }
+        },
+        {
             "id": "items",
             "type": "collection",
             "format": "collection",
@@ -108,7 +156,7 @@
                 "ar": "تقييم",
                 "en": "Review"
             },
-            "required": true,
+            "required": false,
             "minLength": 1,
             "maxLength": 30,
             "value": [

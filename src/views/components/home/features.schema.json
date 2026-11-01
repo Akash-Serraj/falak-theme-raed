@@ -6,6 +6,7 @@
         "en": "Store Features"
     },
     "icon": "star-line",
+    "preview": "images/sections/features.png",
     "is_default": true,
     "default_sort": 40,
     "areas": ["home", "pages"],

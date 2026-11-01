@@ -49,6 +49,7 @@
             {% if component.show_count %}show-count{% endif %}
             {# Each card carries the platform add-to-cart button. #}
             card-button
+            empty-message="{{ trans('product.none_added') }}"
             source="home.products"></falak-products-list>
     </div>
 </section>

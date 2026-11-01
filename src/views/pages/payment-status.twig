@@ -1,6 +1,11 @@
 {#
     Return page for online payment gateways. The component reads
     ?order_number=… from the URL, verifies with the platform and moves on.
+
+    A declined or cancelled payment does not stop here: app.js listens for
+    the component's verdict on the bus and sends the shopper to the order
+    page (order-url below), whose banner and "Retry payment" button cover
+    the failed case. Pending and success keep the component's own flow.
 #}
 {% extends "layouts.master" %}
 

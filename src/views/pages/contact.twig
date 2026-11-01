@@ -1,0 +1,18 @@
+{#
+    The store contact page, at /contact-us (a fixed route, so every store has
+    one). The theme's own contact section, with the platform's contact form.
+#}
+{% extends "layouts.master" %}
+
+{% block title %}{{ theme.is_rtl ? "تواصل معنا" : "Contact us" }} — {{ store.name }}{% endblock %}
+
+{% block content %}
+    {% include "components.home.contact" with {
+        component: {
+            title: theme.is_rtl ? "تواصل معنا" : "Contact us",
+            subtitle: theme.is_rtl ? "سنرد عليك في أقرب وقت" : "We will get back to you shortly",
+            show_subject: true
+        },
+        position: 0
+    } %}
+{% endblock %}
