@@ -24,9 +24,10 @@
     | Variable             | Type    | Description                     |
     | component.title      | ?string | section title                   |
     | component.subtitle   | ?string | line under the title            |
-    | component.limit      | ?int    | how many categories             |
+    | component.limit      | ?string | how many, or 'all'              |
     | component.columns    | ?string | tiles per row on desktop        |
     | component.show_text  | ?bool   | render the description line     |
+    | component.show_subcategories | ?bool | include sub-categories; off (default) shows only top-level ones |
     | position             | int     |                                 |
 
     Customizer bindings — full rules in README, "Customizer annotations".
@@ -43,6 +44,7 @@
          data-category-grid
          data-limit="{{ component.limit|default(12) }}"
          data-text="{{ show_text ? '1' : '0' }}"
+         data-subcategories="{{ component.show_subcategories ? '1' : '0' }}"
          hidden {{ falak_section() }}>
     <div class="container">
         {% if component.title %}

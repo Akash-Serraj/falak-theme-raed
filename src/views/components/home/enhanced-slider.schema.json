@@ -51,6 +51,20 @@
                     "required": true
                 },
                 {
+                    "id": "slides.image_mobile",
+                    "type": "string",
+                    "format": "image",
+                    "label": {
+                        "ar": "صورة البنر للجوال",
+                        "en": "Banner image (mobile)"
+                    },
+                    "description": {
+                        "ar": "اختياري. صورة مربعة تُعرض على الجوال بدل الصورة الأساسية، المقاس المناسب 450×450 بكسل",
+                        "en": "Optional. A square image shown on phones instead of the main one, recommended 450x450 px"
+                    },
+                    "required": false
+                },
+                {
                     "id": "slides.video",
                     "type": "string",
                     "format": "video",
@@ -61,6 +75,21 @@
                     "description": {
                         "ar": "اختياري. يُعرض بدلاً من الصورة ويعمل صامتاً بشكل متكرر، وتبقى الصورة كلقطة أولية له",
                         "en": "Optional. Plays muted on a loop instead of the image, which stays as its poster"
+                    },
+                    "required": false,
+                    "maxLength": 255
+                },
+                {
+                    "id": "slides.video_mobile",
+                    "type": "string",
+                    "format": "video",
+                    "label": {
+                        "ar": "فيديو الخلفية للجوال",
+                        "en": "Background video (mobile)"
+                    },
+                    "description": {
+                        "ar": "اختياري. نسخة عمودية أو أخف تُعرض على الجوال بدل الفيديو الأساسي",
+                        "en": "Optional. A portrait or lighter file shown on phones instead of the main video"
                     },
                     "required": false,
                     "maxLength": 255

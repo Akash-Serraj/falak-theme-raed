@@ -201,10 +201,10 @@ a { color: var(--color-primary); }
     Because this copy is unlayered, an override must match the copied rule's
     specificity (e.g. two classes beat one) — unlike the SDK's layered sheet.
     Regenerate after an SDK update:
-      node packages/falak-components/scripts/sync-theme-css.mjs <this file>
+      npx falak-sync-theme-css <this file>
 */
 
-/* ---- from packages/falak-components/src/components.css ---- */
+/* ---- from @falakcart/components/src/components.css ---- */
 
 /*
     FalakCart storefront components — default stylesheet.
@@ -2330,7 +2330,89 @@ body.f-drawer-open { overflow: hidden; }
 .f-categories--list .f-categories__link { grid-template-columns: 3rem minmax(0, 1fr); align-items: center; text-align: start; gap: 0.75rem; }
 .f-categories--list .f-categories__image { inline-size: 3rem; }
 
-/* ---- from packages/falak-components/src/components.chrome.css ---- */
+/* ------------------------------------------------------------------ combobox
+ *
+ * The city picker: one control, not two.
+ *
+ * A separate search box beside a separate <select> was two controls for one
+ * decision, and nothing said the box filtered the list. This is the shape a
+ * select2-style widget has, built from a button and a panel so it needs no
+ * library — and the field falls back to a plain text input where a carrier has
+ * no city list at all, which is the Aramex case.
+ */
+.f-combo { position: relative; min-inline-size: 0; }
+
+.f-combo__toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    text-align: start;
+    cursor: pointer;
+}
+
+.f-combo__toggle:disabled { cursor: default; opacity: 0.6; }
+
+.f-combo__value {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Reads as a placeholder until a city is chosen. */
+.f-combo__value.is-placeholder { color: var(--f-muted, #6b7280); }
+
+.f-combo__caret { flex: none; font-size: 0.7em; opacity: 0.7; }
+.f-combo.is-open .f-combo__caret { transform: rotate(180deg); }
+
+.f-combo__panel {
+    position: absolute;
+    z-index: 30;
+    inset-inline: 0;
+    inset-block-start: calc(100% + 0.25rem);
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 0.5rem;
+    border: 1px solid var(--f-border);
+    border-radius: var(--f-radius);
+    background: var(--f-surface);
+    box-shadow: 0 12px 32px rgb(0 0 0 / 12%);
+}
+
+.f-combo__list {
+    /* Scrolls rather than growing: 100 options are rendered at a time. */
+    max-block-size: 15rem;
+    overflow-y: auto;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.f-combo__option {
+    inline-size: 100%;
+    padding: 0.45rem 0.6rem;
+    border: 0;
+    border-radius: calc(var(--f-radius) / 1.5);
+    background: transparent;
+    color: var(--f-text);
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+}
+
+.f-combo__option:hover,
+.f-combo__option:focus-visible { background: var(--f-surface-alt, rgb(0 0 0 / 5%)); }
+.f-combo__option.is-chosen { font-weight: 600; }
+
+.f-combo__empty,
+.f-combo__hint {
+    padding: 0.35rem 0.6rem;
+    color: var(--f-muted, #6b7280);
+    font-size: 0.8rem;
+}
+
+/* ---- from @falakcart/components/src/components.chrome.css ---- */
 
 /*
     Storefront chrome — button, modal, slider, menu, breadcrumb and the footer
@@ -3073,52 +3155,6 @@ body.f-modal-open { overflow: hidden; }
 
 /* Slightly smaller than the footer set — this is a secondary action. */
 .f-social--share .f-social__link { inline-size: 2rem; block-size: 2rem; }
-
-/*
-    Product share row: the divider moves from the component to this wrapper so
-    the copy-link button sits on the same strip. Telegram is dropped in favour
-    of copying the URL.
-*/
-.product-single__share {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    margin-block-start: 1rem;
-    padding-block-start: 1rem;
-    border-block-start: 1px solid var(--f-border);
-}
-
-.product-single__share .f-social--share { margin: 0; padding: 0; border: 0; }
-.product-single__share .f-social__item:has(.f-social__link--telegram) { display: none; }
-
-.product-single__copy-link {
-    inline-size: 2rem;
-    block-size: 2rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    border: 1px solid var(--f-border);
-    border-radius: 50%;
-    background: none;
-    color: inherit;
-    cursor: pointer;
-    transition: background-color 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
-}
-
-.product-single__copy-link:hover,
-.product-single__copy-link.is-copied {
-    background: var(--color-primary, #1d9e75);
-    border-color: transparent;
-    color: var(--color-on-primary, #fff);
-}
-
-.product-single__copy-link:hover { transform: translateY(-1px); }
-.product-single__copy-link:focus-visible { outline: 2px solid var(--color-primary, #1d9e75); outline-offset: 2px; }
-.product-single__copied-icon,
-.product-single__copy-link.is-copied .product-single__copy-icon { display: none; }
-.product-single__copy-link.is-copied .product-single__copied-icon { display: block; }
 
 /* ========================================================================
    Announcement bar
@@ -4132,7 +4168,7 @@ body.f-modal-open { overflow: hidden; }
 .f-filters__footer .f-btn { inline-size: 100%; justify-content: center; }
 .f-filters__footer { padding-block-start: 0.5rem; }
 
-/* ---- from packages/falak-components/src/components.account.css ---- */
+/* ---- from @falakcart/components/src/components.account.css ---- */
 
 /*
     Account surface — login sheet, user menu, localization sheet, offer modal
@@ -5015,6 +5051,25 @@ body.f-modal-open { overflow: hidden; }
     text-align: center;
     cursor: pointer;
     margin-block-end: 1.25rem;
+}
+
+/* `compact-empty`: the heading row carries the sign-in button while there are
+   no questions yet, so the block collapses to a single line. */
+.f-questions__header--compact { margin-block-end: 0; }
+.f-questions__header-row--compact { flex-wrap: wrap; }
+.f-questions--compact .f-questions__body { margin-block-start: 1rem; }
+
+.f-questions__gate--inline {
+    display: inline-flex;
+    align-items: center;
+    inline-size: auto;
+    margin: 0;
+    margin-inline-start: auto;
+    padding: 0.55rem 1rem;
+    border-style: solid;
+    border-radius: 999px;
+    font-weight: 600;
+    white-space: nowrap;
 }
 
 .f-questions__form {
@@ -6030,6 +6085,70 @@ falak-announcement.f-announce--scroll[dir="rtl"] .f-announce__track { animation-
 .cat-bar__more-panel a:hover { background: var(--color-surface); }
 .cat-bar__more-panel a.is-active { color: var(--color-primary); }
 
+/* ---------------------------------- categories strip: subcategories */
+
+/* A chip with sub-categories (header.twig nests them in .cat-bar__submenu)
+   opens them below itself. The panel wears the More panel's dressing, and its
+   closed state takes two classes for the same reason as there: `.cat-bar ul`
+   (0,1,1) would outrank a single class and leave every panel open. Opened by
+   app.js (.is-open) for pointer and touch, and by :focus-within so a keyboard
+   reaches the children without a script. */
+.cat-bar__item { position: relative; }
+
+.cat-bar__caret { flex: none; transition: transform var(--transition); }
+.cat-bar__item.is-open > a .cat-bar__caret { transform: rotate(180deg); }
+
+.cat-bar__item.is-open > a {
+    color: var(--color-primary);
+    border-bottom-color: var(--color-primary);
+}
+
+.cat-bar .cat-bar__submenu {
+    position: absolute;
+    inset-inline-start: 0;
+    top: 100%;
+    min-width: 12rem;
+    max-height: min(24rem, 70vh);
+    overflow-y: auto;
+    margin: 0;
+    padding: 0.4rem;
+    list-style: none;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    display: none;
+    z-index: 60;
+}
+
+.cat-bar .cat-bar__item.is-open > .cat-bar__submenu,
+.cat-bar .cat-bar__item:focus-within > .cat-bar__submenu { display: block; }
+
+/* app.js sets this when the panel would run past the window's edge. */
+.cat-bar .cat-bar__submenu.is-flipped {
+    inset-inline-start: auto;
+    inset-inline-end: 0;
+}
+
+.cat-bar__submenu a {
+    display: block;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 0;
+    border-radius: var(--radius-sm);
+    font-weight: 500;
+    white-space: normal;
+}
+
+.cat-bar__submenu a:hover { background: var(--color-surface); }
+.cat-bar__submenu a.is-active { color: var(--color-primary); }
+
+/* A folded chip's sub-categories in the More panel sit indented under it. */
+.cat-bar__more-panel .is-child a {
+    padding-inline-start: 1.6rem;
+    font-size: 0.9rem;
+    color: var(--color-text-soft);
+}
+
 .site-header__logo {
     display: inline-flex;
     align-items: center;
@@ -6041,9 +6160,13 @@ falak-announcement.f-announce--scroll[dir="rtl"] .f-announce__track { animation-
     flex-shrink: 0;
 }
 
+/* --falak-logo-scale is the merchant's "Logo size" from the customizer's
+   branding panel, printed by the platform at head:end (1 = untouched). The
+   theme's own cap is the base and the merchant's choice multiplies it, so the
+   same store-level number reads right in every theme. */
 .site-header__logo img {
-    max-width: 180px;
-    max-height: 52px;
+    max-width: calc(180px * var(--falak-logo-scale, 1));
+    max-height: calc(52px * var(--falak-logo-scale, 1));
     width: auto;
     height: auto;
     object-fit: contain;
@@ -6299,7 +6422,7 @@ img.main-menu__icon { object-fit: contain; border-radius: 4px; }
         min-width: 0;
     }
 
-    .site-header__logo img { max-height: 2.4rem; }
+    .site-header__logo img { max-height: calc(2.4rem * var(--falak-logo-scale, 1)); }
 
     .site-header__logo span {
         min-width: 0;
@@ -6478,6 +6601,13 @@ img.main-menu__icon { object-fit: contain; border-radius: 4px; }
     }
 
     .cat-bar li { scroll-snap-align: start; }
+
+    /* No dropdown in the strip: it is a scroller and would clip the panel.
+       The chip links to the parent listing and the drawer holds the
+       sub-categories as accordion rows. */
+    .cat-bar__caret { display: none; }
+    .cat-bar .cat-bar__item.is-open > .cat-bar__submenu,
+    .cat-bar .cat-bar__item:focus-within > .cat-bar__submenu { display: none; }
 
 
     /* ------------------------------------------------- the drawer itself */
@@ -7352,6 +7482,35 @@ img.main-menu__icon { object-fit: contain; border-radius: 4px; }
     pointer-events: none;
     -webkit-user-drag: none;
 }
+
+/* The <picture> exists only to carry the phone <source>; it contributes
+   no box of its own, so the img keeps sitting in the slide exactly as it
+   did before (absolute cover, or in-flow for a text-less banner). */
+.hero-slider__picture { display: contents; }
+
+/* A slide whose two viewports want different element kinds (a video for
+   one, a still for the other) renders both; these show one at a time.
+   The 767px line is shared with the <source media> and home.js. */
+@media (max-width: 767px) {
+    .hero-slider__video--desktop-only,
+    .hero-slider__picture--desktop-only { display: none; }
+
+    /* A slide the merchant gave phone media is a square on phones: the
+       mobile upload is a 450×450 still (or a square clip), and a square
+       box shows it whole instead of cropping it to the wide slide's
+       height. Slides without phone media keep the wide box and the
+       desktop picture, cropped as before. */
+    .hero-slider__slide--mobile-media {
+        min-height: 0;
+        aspect-ratio: 1 / 1;
+    }
+}
+
+@media (min-width: 768px) {
+    .hero-slider__video--mobile-only,
+    .hero-slider__picture--mobile-only { display: none; }
+}
+
 
 /* A slide with no title, text or button is a banner whose words are baked
    into the picture, so cropping it to the slide's fixed height cuts them
@@ -8386,6 +8545,53 @@ img.main-menu__icon { object-fit: contain; border-radius: 4px; }
 }
 
 .product-single__categories a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+/*
+    Product share row (theme rule — it used to sit inside the generated SDK
+    block above, which a re-sync discards): the divider moves from the component to this wrapper so
+    the copy-link button sits on the same strip. Telegram is dropped in favour
+    of copying the URL.
+*/
+.product-single__share {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-block-start: 1rem;
+    padding-block-start: 1rem;
+    border-block-start: 1px solid var(--f-border);
+}
+
+.product-single__share .f-social--share { margin: 0; padding: 0; border: 0; }
+.product-single__share .f-social__item:has(.f-social__link--telegram) { display: none; }
+
+.product-single__copy-link {
+    inline-size: 2rem;
+    block-size: 2rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid var(--f-border);
+    border-radius: 50%;
+    background: none;
+    color: inherit;
+    cursor: pointer;
+    transition: background-color 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
+}
+
+.product-single__copy-link:hover,
+.product-single__copy-link.is-copied {
+    background: var(--color-primary, #1d9e75);
+    border-color: transparent;
+    color: var(--color-on-primary, #fff);
+}
+
+.product-single__copy-link:hover { transform: translateY(-1px); }
+.product-single__copy-link:focus-visible { outline: 2px solid var(--color-primary, #1d9e75); outline-offset: 2px; }
+.product-single__copied-icon,
+.product-single__copy-link.is-copied .product-single__copy-icon { display: none; }
+.product-single__copy-link.is-copied .product-single__copied-icon { display: block; }
 
 .product-single__categories a + a::before {
     content: "/";
@@ -10107,6 +10313,13 @@ a.photo-tile:hover img { transform: scale(1.04); }
 /* ------------------------------ availability / size guide / reviews summary */
 .product-single__availability { margin-block-start: 0.75rem; }
 
+/* "Ask on WhatsApp": the merchant's per-product contact, in WhatsApp's own
+   green so it reads as the app rather than as one more buy button. */
+.product-single__whatsapp { display: inline-flex; align-items: center; gap: 0.5rem; margin-block-start: 0.75rem; color: #128c7e; border-color: #25d366; }
+.product-single__whatsapp:hover,
+.product-single__whatsapp:focus-visible { color: #fff; background: #25d366; border-color: #25d366; }
+.product-single__whatsapp svg { flex: none; inline-size: 1.25rem; block-size: 1.25rem; }
+
 /* Sold out: add-to-cart already says so — the buy-now twin would only
    repeat it. Hidden here (not in the shared SDK) so it comes back the
    moment a variant with stock is picked. */
@@ -11045,3 +11258,26 @@ a.photo-tile:hover img { transform: scale(1.04); }
    the processor, not the currency, and read as a mislabel. The method row
    already says how the order was paid; the reference chip there is a <code>. */
 .f-order__pay-row > span.f-order__badge { display: none; }
+
+/* ------------------------------------------------- merchant menu ink */
+/*
+ * The merchant's menu text colour (customizer: Menus -> Style, setting
+ * menu_text_color). master.twig emits --color-menu-text only when one is
+ * set, so an unset value falls through to the fallback, which is what the
+ * link already had in every state (light, dark top bar, dark mode).
+ *
+ * Desktop bar only: below the drawer breakpoint the menu is the off-canvas
+ * drawer, a surface of its own whose ink must stay readable against it.
+ * Top-level links only, for the reason the hero rules give: dropdowns are
+ * panels of their own. Hover and the current or open item keep their own
+ * highlight. The transparent-header rules above outrank this and read the
+ * same variable, so a chosen colour also holds over the hero.
+ */
+@media (min-width: 861px) {
+    .site-header .main-menu__list > .main-menu__item:not(.is-open):not(.is-active) > a:not(:hover):not([aria-current]):not(.is-active) {
+        color: var(--color-menu-text, currentColor);
+    }
+    .cat-bar > ul > li:not(.is-open) > a:not(:hover):not(.is-active) {
+        color: var(--color-menu-text, var(--color-text));
+    }
+}

@@ -54,8 +54,9 @@
             <div class="site-footer__brand">
                 {% if store.logo %}
                     <img src="{{ store.logo }}" alt="{{ store.name }}" width="220" height="88" loading="lazy">
+                {% else %}
+                    <span class="site-footer__brand-name">{{ store.name }}</span>
                 {% endif %}
-                <span class="site-footer__brand-name">{{ store.name }}</span>
 
                 {% if theme.settings.get('footer_about') %}
                     <p class="site-footer__about"

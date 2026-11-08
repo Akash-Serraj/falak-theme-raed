@@ -180,6 +180,90 @@
         chips.forEach(function (chip) {
             if (key(chip.href) === current) chip.classList.add('is-active');
         });
+
+        /* A sub-category page fills its parent's chip too: the phone strip
+           hides the dropdown, so the parent chip is the only trace there of
+           where the shopper is. */
+        document.querySelectorAll('.cat-bar__submenu a.is-active').forEach(function (child) {
+            var parent = child.closest('.cat-bar__item');
+            var link = parent && parent.querySelector(':scope > a');
+            if (link) link.classList.add('is-active');
+        });
+    }
+
+    /* ------------------------------------- categories strip: subcategories */
+
+    /*
+        A chip whose category has sub-categories (header.twig nests them in
+        .cat-bar__submenu) opens them as a dropdown. The chip stays a link to
+        the parent listing, so the two gestures are split the way the old
+        header split them: a pointer that can hover opens on hover and the
+        click follows the link; a touch opens on the first tap and follows the
+        link on the second. A keyboard gets the panel from :focus-within
+        (app.css) and Enter follows the link — a keyboard click has detail 0.
+
+        Desktop only. The phone strip is a scroller that would clip the panel;
+        the drawer carries the same tree as accordion rows (menu.twig).
+    */
+    var catParents = Array.from(document.querySelectorAll('.cat-bar__item.has-children'));
+    if (catParents.length) {
+        var desktopStrip = window.matchMedia('(min-width: 861px)');
+        var noHover = window.matchMedia('(hover: none)');
+
+        var setCatOpen = function (li, open) {
+            li.classList.toggle('is-open', open);
+            var trigger = li.querySelector(':scope > a');
+            if (trigger) trigger.setAttribute('aria-expanded', String(open));
+        };
+
+        var closeCats = function (except) {
+            catParents.forEach(function (li) {
+                if (li !== except) setCatOpen(li, false);
+            });
+        };
+
+        var openCat = function (li) {
+            closeCats(li);
+            setCatOpen(li, true);
+
+            /* A panel near the window's edge opens inward. Measured after the
+               open class lands — a hidden element has no useful box. */
+            var panel = li.querySelector(':scope > .cat-bar__submenu');
+            if (!panel) return;
+            panel.classList.remove('is-flipped');
+            var box = panel.getBoundingClientRect();
+            if (box.right > window.innerWidth - 8 || box.left < 8) panel.classList.add('is-flipped');
+        };
+
+        catParents.forEach(function (li) {
+            var trigger = li.querySelector(':scope > a');
+            if (!trigger) return;
+
+            trigger.addEventListener('click', function (event) {
+                if (!desktopStrip.matches || event.detail === 0) return;
+                if (li.classList.contains('is-open')) return;
+                event.preventDefault();
+                openCat(li);
+            });
+
+            li.addEventListener('pointerenter', function () {
+                if (desktopStrip.matches && !noHover.matches) openCat(li);
+            });
+
+            li.addEventListener('pointerleave', function () {
+                if (!noHover.matches) setCatOpen(li, false);
+            });
+        });
+
+        document.addEventListener('click', function (event) {
+            if (!event.target.closest('.cat-bar__item.has-children')) closeCats();
+        });
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') closeCats();
+        });
+        if (desktopStrip.addEventListener) {
+            desktopStrip.addEventListener('change', function () { closeCats(); });
+        }
     }
 
     /* ------------------------------------------ categories strip: overflow */
@@ -297,6 +381,23 @@
                 if (link.classList.contains('is-active')) a.classList.add('is-active');
                 row.appendChild(a);
                 morePanel.appendChild(row);
+
+                /* A folded chip's sub-categories come along as indented rows,
+                   so nothing the strip could reach is lost in the fold. */
+                li.querySelectorAll('.cat-bar__submenu a').forEach(function (childLink) {
+                    var childRow = document.createElement('li');
+                    childRow.className = 'is-child';
+                    var childA = document.createElement('a');
+                    childA.href = childLink.getAttribute('href') || '#';
+                    if (childLink.getAttribute('target')) {
+                        childA.target = childLink.getAttribute('target');
+                        childA.rel = 'noopener';
+                    }
+                    childA.textContent = (childLink.textContent || '').trim();
+                    if (childLink.classList.contains('is-active')) childA.classList.add('is-active');
+                    childRow.appendChild(childA);
+                    morePanel.appendChild(childRow);
+                });
             });
 
             moreTrigger.querySelector('[data-more-count]').textContent = String(collapsed.length);
@@ -762,8 +863,14 @@
     if (!section || !window.falak) return;
 
     var list = section.querySelector('[data-category-grid-list]');
-    var limit = Number(section.getAttribute('data-limit') || 12);
+    /* 'all' is the count dropdown's "All" option: no cap at all. */
+    var limitAttr = section.getAttribute('data-limit');
+    var limit = limitAttr === 'all' ? Infinity : Number(limitAttr || 12);
     var withText = section.getAttribute('data-text') !== '0';
+    /* Off by default: a sub-category comes back from the endpoint as its own
+       row, so without this filter the band repeats every child beside its
+       parent. The switch lets a merchant with a flat catalogue opt back in. */
+    var withSubcategories = section.getAttribute('data-subcategories') === '1';
 
     window.falak.onReady(function () {
         window.falak.api.withoutNotifier(function () {
@@ -775,6 +882,7 @@
                merchant arranged them in the catalogue. */
             var categories = rows
                 .filter(function (c) { return c && c.id && (c.status === undefined || c.status === 'active'); })
+                .filter(function (c) { return withSubcategories || c.parent_id === null || c.parent_id === undefined; })
                 .sort(function (a, b) { return (a.sort_order || 0) - (b.sort_order || 0); })
                 .slice(0, limit);
 

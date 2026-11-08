@@ -704,6 +704,21 @@
                     "required": false
                 },
                 {
+                    "id": "menu_text_color",
+                    "type": "string",
+                    "format": "color",
+                    "css_var": "--color-menu-text",
+                    "label": {
+                        "ar": "لون نص القائمة",
+                        "en": "Menu text colour"
+                    },
+                    "description": {
+                        "ar": "روابط القائمة الرئيسية وشريط التصنيفات. اتركه فارغًا لاستخدام لون القالب الافتراضي",
+                        "en": "Main menu and categories bar links. Leave empty to keep the theme's own colour"
+                    },
+                    "required": false
+                },
+                {
                     "id": "body_bg_color",
                     "type": "string",
                     "format": "color",

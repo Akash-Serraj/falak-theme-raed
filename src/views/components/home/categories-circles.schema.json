@@ -37,17 +37,34 @@
         },
         {
             "id": "limit",
-            "type": "number",
-            "format": "integer",
+            "type": "items",
+            "format": "dropdown-list",
             "label": { "ar": "عدد الأقسام", "en": "How many categories" },
             "description": {
                 "ar": "تُؤخذ من تصنيفات المتجر بصورها ووصفها",
                 "en": "Taken from the store's categories, with their own images and descriptions"
             },
-            "required": false,
-            "min": 2,
-            "max": 24,
-            "value": 12
+            "value": "12",
+            "options": [
+                { "label": { "ar": "الكل", "en": "All" }, "value": "all" },
+                { "label": { "ar": "4", "en": "4" }, "value": "4" },
+                { "label": { "ar": "6", "en": "6" }, "value": "6" },
+                { "label": { "ar": "8", "en": "8" }, "value": "8" },
+                { "label": { "ar": "12", "en": "12" }, "value": "12" },
+                { "label": { "ar": "16", "en": "16" }, "value": "16" },
+                { "label": { "ar": "24", "en": "24" }, "value": "24" }
+            ]
+        },
+        {
+            "id": "show_subcategories",
+            "type": "boolean",
+            "format": "switch",
+            "label": { "ar": "إظهار الأقسام الفرعية", "en": "Show subcategories" },
+            "description": {
+                "ar": "عند الإيقاف تظهر الأقسام الرئيسية فقط",
+                "en": "Off shows only top-level categories"
+            },
+            "value": false
         },
         {
             "id": "columns",

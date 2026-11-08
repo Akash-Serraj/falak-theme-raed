@@ -198,11 +198,28 @@
                             <span>{{ trans('common.categories') }}</span>
                         </a>
                         <ul class="main-menu__submenu">
+                            {# A category with sub-categories (`children`, derived
+                               by the platform from the Categories screen) is an
+                               accordion row of its own: <falak-menu> finds any
+                               <li> with a nested <ul>, whatever its depth, and
+                               turns its first tap into "open" and the second
+                               into the link. The caret comes with has-children. #}
                             {% for cat in menus.categories_menu %}
-                                <li>
+                                <li{{ cat.children|length > 0 ? ' class="main-menu__item has-children"' : '' }}>
                                     <a href="{{ cat.url }}"{{ cat.is_new_tab ? ' target="_blank" rel="noopener"' : '' }}>
                                         {{ cat.title }}
                                     </a>
+                                    {% if cat.children|length > 0 %}
+                                        <ul class="main-menu__submenu">
+                                            {% for child in cat.children %}
+                                                <li>
+                                                    <a href="{{ child.url }}"{{ child.is_new_tab ? ' target="_blank" rel="noopener"' : '' }}>
+                                                        {{ child.title }}
+                                                    </a>
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
                                 </li>
                             {% endfor %}
                         </ul>

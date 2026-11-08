@@ -182,6 +182,18 @@
                                             button-class="btn btn--outline btn--notify"
                                             class="product-single__availability"></falak-product-availability>
 
+                {# "Ask about this product on WhatsApp" — the merchant's per-product
+                   switch and number. The platform hands the wa.me link over
+                   ready-made (product named in the opening message), or null when
+                   the switch is off, so the page tests one key and prints the other. #}
+                {% if product.whatsapp_url %}
+                    <a class="btn btn--outline product-single__whatsapp"
+                       href="{{ product.whatsapp_url }}" target="_blank" rel="noopener noreferrer">
+                        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M12 2a9.9 9.9 0 0 0-8.5 15L2 22l5.2-1.4A9.9 9.9 0 1 0 12 2m0 1.8a8.1 8.1 0 1 1-4.1 15.1l-.3-.2-3.1.8.8-3-.2-.3A8.1 8.1 0 0 1 12 3.8m-3.1 4c-.2 0-.5.1-.7.4-.3.3-.9.9-.9 2.1s.9 2.4 1 2.6c.1.2 1.7 2.7 4.2 3.7 2 .8 2.4.7 2.9.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.2.1-1.3l-.6-.3-1.5-.7c-.2-.1-.4-.1-.5.1l-.7.9c-.1.2-.3.2-.5.1a6.8 6.8 0 0 1-2-1.2 7.5 7.5 0 0 1-1.4-1.7c-.1-.2 0-.4.1-.5l.4-.5.3-.4v-.5l-.7-1.6c-.2-.4-.4-.4-.5-.4z"/></svg>
+                        <span>{{ trans('product.whatsapp.ask') }}</span>
+                    </a>
+                {% endif %}
+
 
                 {# Offers targeting THIS product — the legacy ProductSpecialOffers
                    port. Gated by the dashboard Marketing Settings (enable special

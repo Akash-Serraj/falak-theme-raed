@@ -1,13 +1,26 @@
 {#
     Hero slider — merchant-placeable home component.
     | Variable                       | Type     | Description                              |
-    | component.slides[].image       | string   | image URL (wide, ~1400×580)              |
-    | component.slides[].video       | ?string  | background clip; the image is its poster |
-    | component.slides[].title       | ?string  | localized server-side                    |
+    | component.slides[].image        | string   | image URL (wide, ~1400×580)              |
+    | component.slides[].image_mobile | ?string  | square image, shown under 768px          |
+    | component.slides[].video        | ?string  | background clip; the image is its poster |
+    | component.slides[].video_mobile | ?string  | phone file for the clip                  |
+    | component.slides[].title        | ?string  | localized server-side                    |
     | component.slides[].description | ?string  | localized server-side                    |
     | component.slides[].button_text | ?string  | CTA label, localized server-side         |
-    | component.slides[].button_url  | ?string  | CTA target                               |
-    | position                       | int      | render order index, starts at 0          |
+    | component.slides[].button_url   | ?string  | CTA target                               |
+    | position                        | int      | render order index, starts at 0          |
+
+    Mobile media: each viewport prefers its own uploads — video first, then
+    image — and falls back to the other viewport's media only when it has none
+    of its own. So a mobile-only video plays on phones while desktop keeps the
+    still, and vice versa. When the two viewports want different element kinds
+    (one a video, one an image) both are rendered and a media query shows one
+    at a time via the --desktop-only / --mobile-only classes. The image swap is
+    a <picture> source, so the browser picks it before paint and re-evaluates
+    on resize; the video swap lives in home.js because `src` has to be chosen
+    once, off the data-hero-src / data-hero-src-mobile attributes. "Phone"
+    is max-width 767px in all three places (source, CSS, JS).
 
     Customizer bindings — full rules in README, "Customizer annotations".
     | Element             | Tag                                             |
@@ -38,24 +51,64 @@
     <div class="hero-slider"
          data-autoplay="{{ autoplay ? (component.autoplay_speed|default('5000')) : '0' }}">
         {% for slide in component.slides %}
-            <div class="hero-slider__slide{{ loop.first ? ' is-active' : '' }}" data-falak-field="slides" data-falak-label="{{ trans('editor.field.slides') }}" data-falak-bind="none">
-                {% if slide.video|default(null) %}
+            {#
+                What each viewport plays: its own video if uploaded,
+                otherwise its own image, otherwise the other viewport's
+                media. `video_desktop` / `video_mobile` end up holding the
+                file that viewport should PLAY — empty means that viewport
+                shows an image instead.
+
+                Only a URL counts as a video. The fields are free text in
+                the customizer, and a stray word there would turn the slide
+                into a <video> that 404s, with the image cropped as its
+                poster instead of shown as the picture.
+            #}
+            {% set image_mobile = slide.image_mobile|default('')|trim %}
+            {% set video_desktop = slide.video|default('')|trim %}
+            {% set video_mobile = slide.video_mobile|default('')|trim %}
+            {% if not (video_desktop starts with 'http' or video_desktop starts with '/') %}{% set video_desktop = '' %}{% endif %}
+            {% if not (video_mobile starts with 'http' or video_mobile starts with '/') %}{% set video_mobile = '' %}{% endif %}
+            {# Whether the merchant uploaded anything for phones at all: that
+               is what turns the phone slide into a square (see app.css),
+               before the fallbacks below borrow the desktop media. #}
+            {% set has_mobile_media = image_mobile or video_mobile %}
+            {% if not video_mobile and not image_mobile %}
+                {% set video_mobile = video_desktop %}
+            {% endif %}
+            {% if not video_desktop and not slide.image %}
+                {% set video_desktop = video_mobile %}
+            {% endif %}
+            <div class="hero-slider__slide{{ loop.first ? ' is-active' : '' }}{{ has_mobile_media ? ' hero-slider__slide--mobile-media' : '' }}" data-falak-field="slides" data-falak-label="{{ trans('editor.field.slides') }}" data-falak-bind="none">
+                {% if video_desktop or video_mobile %}
                     {#
                         A background clip. Muted + playsinline is what lets it
                         autoplay at all; the slide image is its poster, so the
                         slide never flashes empty and a browser that refuses to
-                        play still shows the merchant's picture. Only the first
-                        slide autoplays from markup: the others are display:none
-                        until home.js brings them in, and it starts their clip
-                        then (and leaves every clip on its poster under reduced
-                        motion). Decorative, so hidden from assistive tech.
+                        play still shows the merchant's picture. No `src` in the
+                        markup: home.js picks the phone or desktop file (and the
+                        phone poster) once, off the data-hero-* attributes, then
+                        plays only the visible slide's clip — and leaves every
+                        clip on its poster under reduced motion. A viewport with
+                        no data-hero-src of its own shows the <picture> instead.
+                        Decorative, so hidden from assistive tech.
                     #}
-                    <video class="hero-slider__video" src="{{ slide.video }}" poster="{{ slide.image }}"
+                    <video class="hero-slider__video{{ not video_mobile ? ' hero-slider__video--desktop-only' : '' }}{{ not video_desktop ? ' hero-slider__video--mobile-only' : '' }}"
+                           data-hero-video
+                           {% if video_desktop %}data-hero-src="{{ video_desktop }}"{% endif %}
+                           {% if video_mobile %}data-hero-src-mobile="{{ video_mobile }}"{% endif %}
+                           {% if slide.image %}poster="{{ slide.image }}"{% endif %}
+                           {% if image_mobile %}data-hero-poster-mobile="{{ image_mobile }}"{% endif %}
                            muted loop playsinline aria-hidden="true"
-                           {% if loop.first %}autoplay preload="auto"{% else %}preload="none"{% endif %}></video>
-                {% else %}
-                    <img class="hero-slider__img" src="{{ slide.image }}"
-                         alt="{{ slide.title|default('') }}"{{ loop.first ? '' : ' loading="lazy"' }}>
+                           preload="{{ loop.first ? 'auto' : 'none' }}"></video>
+                {% endif %}
+                {% if not video_desktop or not video_mobile %}
+                    <picture class="hero-slider__picture{{ video_desktop ? ' hero-slider__picture--mobile-only' : '' }}{{ video_mobile ? ' hero-slider__picture--desktop-only' : '' }}">
+                        {% if image_mobile and not video_mobile %}
+                            <source media="(max-width: 767px)" srcset="{{ image_mobile }}">
+                        {% endif %}
+                        <img class="hero-slider__img" src="{{ slide.image|default(image_mobile) }}"
+                             alt="{{ slide.title|default('') }}"{{ loop.first ? '' : ' loading="lazy"' }}>
+                    </picture>
                 {% endif %}
                 <div class="hero-slider__content container" data-falak-part="slide_content">
                     {% if slide.title %}<h2 data-falak-part="slide_title">{{ slide.title }}</h2>{% endif %}

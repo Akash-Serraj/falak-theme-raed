@@ -108,11 +108,35 @@
                            chip narrows. app.js fills the chip whose link matches the
                            page, so on /products this one reads as selected. #}
                         <li class="cat-bar__all"><a href="/products" data-cat-all>{{ trans('common.all') }}</a></li>
+                        {# A category's sub-categories ride along as `children`
+                           (the platform derives them from the Categories screen;
+                           this menu has no hand-built sub-items). Such a chip
+                           opens a dropdown of them: on hover, or on a first tap
+                           where there is no hover, while the chip itself still
+                           links to the parent listing — app.js, "categories
+                           strip: subcategories". The phone strip hides the
+                           dropdown; the drawer carries the same tree (menu.twig).
+                           The id feeds aria-controls; it is unique per chip. #}
                         {% for item in menus.categories_menu %}
-                            <li>
-                                <a href="{{ item.url }}"{{ item.is_new_tab ? ' target="_blank" rel="noopener"' : '' }}>
+                            {% set kids = item.children|default([]) %}
+                            <li class="cat-bar__item{{ kids|length > 0 ? ' has-children' : '' }}">
+                                <a href="{{ item.url }}"{{ item.is_new_tab ? ' target="_blank" rel="noopener"' : '' }}{% if kids|length > 0 %} aria-haspopup="true" aria-expanded="false" aria-controls="cat-bar-sub-{{ loop.index }}"{% endif %}>
                                     {{ item.title }}
+                                    {% if kids|length > 0 %}
+                                        <svg class="cat-bar__caret" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+                                    {% endif %}
                                 </a>
+                                {% if kids|length > 0 %}
+                                    <ul class="cat-bar__submenu" id="cat-bar-sub-{{ loop.index }}">
+                                        {% for child in kids %}
+                                            <li>
+                                                <a href="{{ child.url }}"{{ child.is_new_tab ? ' target="_blank" rel="noopener"' : '' }}>
+                                                    {{ child.title }}
+                                                </a>
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
                             </li>
                         {% endfor %}
                     </ul>

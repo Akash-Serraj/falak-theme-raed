@@ -8,6 +8,9 @@
     'use strict';
 
     var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    /* Same "phone" as the <picture> source and the --mobile-only CSS in
+       enhanced-slider.twig / app.css, so the three never disagree. */
+    var isPhone = window.matchMedia('(max-width: 767px)').matches;
 
     document.querySelectorAll('.hero-slider').forEach(function (slider) {
         var slides = slider.querySelectorAll('.hero-slider__slide');
@@ -16,6 +19,32 @@
         var dotsWrap = slider.querySelector('.hero-slider__dots');
         var current = 0;
         var timer = null;
+
+        /*
+         * Each clip ships without a `src`: the template resolves the
+         * per-viewport fallbacks (own video → own image → the other
+         * viewport's media) into data-hero-src / data-hero-src-mobile, and
+         * the pick here is strict — no attribute for this viewport means it
+         * shows the <picture> instead, and fetching anyway would pull a file
+         * a display:none element never plays. Chosen once: a <source media>
+         * on a <video> is evaluated at load and never re-read, so a resize
+         * would not swap it either.
+         *
+         * The phone poster is swapped before the reduced-motion exit on
+         * purpose: a visitor who gets no video still gets the portrait still
+         * the merchant uploaded for phones.
+         */
+        slider.querySelectorAll('[data-hero-video]').forEach(function (video) {
+            var posterMobile = video.getAttribute('data-hero-poster-mobile');
+            if (isPhone && posterMobile) video.setAttribute('poster', posterMobile);
+
+            if (reduceMotion) return;   // poster stays, no download
+
+            var src = isPhone
+                ? video.getAttribute('data-hero-src-mobile')
+                : video.getAttribute('data-hero-src');
+            if (src) video.src = src;
+        });
 
         /*
          * A slide's background clip runs only while that slide is on screen.

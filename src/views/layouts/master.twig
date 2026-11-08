@@ -53,7 +53,7 @@
 
     {% block styles %}{% endblock %}
     {# ?v= busts browser caches from before the dev no-cache header; bump on asset changes #}
-    <link rel="stylesheet" href="{{ 'styles/app.css'|asset }}?v=54">
+    <link rel="stylesheet" href="{{ 'styles/app.css'|asset }}?v=57">
 
     <style>
         :root {
@@ -80,6 +80,9 @@
             {% endif %}
             {% if theme.settings.get('header_bg_color') %}
             --color-header-bg: {{ theme.settings.get('header_bg_color') }};
+            {% endif %}
+            {% if theme.settings.get('menu_text_color') %}
+            --color-menu-text: {{ theme.settings.get('menu_text_color') }};
             {% endif %}
             {% if theme.settings.get('footer_bg_color') %}
             --color-footer-bg: {{ theme.settings.get('footer_bg_color') }};
