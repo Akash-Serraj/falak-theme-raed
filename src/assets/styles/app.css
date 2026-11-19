@@ -761,7 +761,7 @@ falak-rating-stars[data-busy] { opacity: 0.5; }
 
 /* ------------------------------------------------- product card variants */
 /*
-    Theme-raed's custom-salla-product-card vocabulary, as attributes:
+    Product card variants, chosen by attribute:
     minimal · full-image · special · horizontal. Same data, four treatments.
 */
 
@@ -5949,7 +5949,7 @@ falak-announcement.f-announce--scroll[dir="rtl"] .f-announce__track { animation-
 
 /* ---------------------------------------------------------------- header */
 
-/* Two-row header: brand bar on top, navigation bar below (Al-Mahud style). */
+/* Two-row header: brand bar on top, navigation bar below. */
 .site-header {
     /* --color-header-bg is only emitted when the merchant sets one, so an
        unset value falls through to the page background rather than pinning
@@ -6431,7 +6431,7 @@ img.main-menu__icon { object-fit: contain; border-radius: 4px; }
         text-overflow: ellipsis;
         font-size: 1.05rem;
         /* The name's own script sets its direction, so truncation always
-           keeps the START of the name ("Tahseen U…"), never the tail
+           keeps the START of the name ("Golden Sp…"), never the tail
            ("…o Store") — e.g. a Latin store name on the RTL storefront. */
         unicode-bidi: plaintext;
         text-align: start;
@@ -7405,7 +7405,7 @@ img.main-menu__icon { object-fit: contain; border-radius: 4px; }
     margin-bottom: 2rem;
 }
 
-/* Raed-style accent: a short primary bar anchors every section heading. */
+/* Accent: a short primary bar anchors every section heading. */
 .block__title::after {
     content: '';
     display: block;
@@ -7422,8 +7422,8 @@ img.main-menu__icon { object-fit: contain; border-radius: 4px; }
     Every `format: "textarea"` field in this theme's schemas lands in one of
     the elements below. A merchant who presses Enter in one of those boxes
     means it, so the newline is honoured in CSS rather than in markup:
-    `nl2br` is not on the sandbox's filter allowlist (ThemeRenderer::
-    securityPolicy), and building <br> out of merchant-typed text would mean
+    `nl2br` is not on the sandbox's filter allowlist, and
+     building <br> out of merchant-typed text would mean
     emitting markup from a field that is deliberately plain.
 
     `pre-line` also makes the TEMPLATE's own whitespace visible, so each of
@@ -7439,7 +7439,7 @@ img.main-menu__icon { object-fit: contain; border-radius: 4px; }
     white-space: pre-line;
 }
 
-/* hero slider — full-bleed photography with a directional scrim (Al-Mahud style) */
+/* hero slider — full-bleed photography with a directional scrim */
 /* The optional line under a section heading (contact, and any block that
    wants one). Sits below the accent bar the title draws. */
 .block__subtitle {
@@ -9954,7 +9954,7 @@ a.photo-tile:hover img { transform: scale(1.04); }
 
 /* The colour/image a variant was chosen by, so a cart line shows the same
    swatch the product page did beside the value's name. The value is
-   validated server-side (ProductOptionPresenter::safeDisplay) before it
+   validated server-side before it
    reaches the style attribute.
 
    Scoped under .cart-item__option deliberately. `.cart-item img` up in the

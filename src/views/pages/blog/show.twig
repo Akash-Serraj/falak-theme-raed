@@ -3,7 +3,7 @@
 
     A SHELL, like the index. <custom-falak-blog-article> reads
     GET /api/storefront/blogs/{slug} for the article — that endpoint is also
-    what bumps view_count — and GET /api/storefront/blogs for the sidebar.
+    what counts the view — and GET /api/storefront/blogs for the sidebar.
     The thread under the article is <custom-falak-blog-comments>, which the
     article element renders itself.
 
@@ -11,7 +11,7 @@
     |      |        | have to re-parse the URL                                 |
 
     The <title>, description, canonical and Article JSON-LD come from the
-    server (StorefrontController::blogShow reads the SEO columns), so nothing
+    server from the article's SEO fields, so nothing
     here prints them.
 #}
 {% extends "layouts.master" %}

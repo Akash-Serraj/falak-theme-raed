@@ -2,7 +2,7 @@
     Main navigation — consumes the platform-resolved `menus` global.
     Each item: title (localized), url (resolved live from typed link), is_new_tab, image, children[].
 
-    Server-rendered on purpose. `MenuResolver` already has these items at render
+    Server-rendered on purpose. The platform already has these items at render
     time, so the markup below costs nothing extra and ships in the initial HTML
     where crawlers and no-JS visitors can see it — with no skeleton flash while
     a request completes.

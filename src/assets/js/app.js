@@ -851,7 +851,7 @@
 
     Fetched rather than rendered in Twig: a home block gets no page data, the
     sandbox exposes no categories function, and there is no categories
-    component in the SDK. Ported from Nova's wireCategoryGrid.
+    component in the SDK.
 
     Lives in app.js rather than home.js because the block is placeable on
     merchant pages too, and home.js only loads on the home page.
@@ -1280,9 +1280,9 @@
         }
 
         /*
-         * The API's raw row, which is the only shape that ever reaches here:
-         * both the wall's own endpoint and product.show return the model. The
-         * quick view carries a second branch for the server's mapProduct shape
+         * The API's raw product, which is the only shape that ever reaches here:
+         * both the wall's own endpoint and the product endpoint return it. The
+         * quick view carries a second branch for the server-rendered card shape,
          * because server-rendered cards open that one; nothing server-rendered
          * opens this.
          */
@@ -1301,12 +1301,12 @@
                labels, swatch colours, and which groups are drawn as a <select>
                rather than as pills. Without it the picker falls back to plain
                pills derived from the variation attributes, which is why the
-               wall's endpoint eager-loads `options.values`. */
+               wall's endpoint includes `options.values`. */
             const options = Array.isArray(p.options) ? p.options : [];
             const backorders = !!p.allow_backorders;
 
             /* A variant product is in stock while ANY variant is — the same
-               rule the server's productInStock() applies.
+               rule the storefront applies on the server.
 
                A null (or absent) quantity is UNLIMITED, not zero: a store that
                does not count stock sends no number at all, and reading that as
@@ -1333,8 +1333,8 @@
                  * The PATH first, not the absolute URL — the same order the
                  * card uses.
                  *
-                 * `video_thumbnail_url` is the model's accessor and points at
-                 * the CENTRAL domain; media() turns the bare path into a
+                 * `video_thumbnail_url` is an absolute URL on another host;
+                 * media() turns the bare path into a
                  * storefront-relative `/storage/…`. Preferring the URL here
                  * meant the viewer asked for the very picture the card was
                  * already showing under a different origin — so the browser
@@ -2579,11 +2579,10 @@
         }
 
         /*
-         * featured_image_url is the model's accessor, and it runs the stored
-         * value through the disk's url() unconditionally — which mangles a
-         * value that is already absolute into ".../storage/https://…". So an
-         * absolute stored path wins over the accessor, matching what the
-         * server's blogImage() does for the same row.
+         * featured_image_url is not safe to use as-is: when the stored value is
+         * already absolute it comes back mangled as ".../storage/https://…". So
+         * an absolute stored path wins, matching the server-rendered blog
+         * pages.
          */
         rawImage(row) {
             const stored = String(row.featured_image || '').trim();
@@ -2665,7 +2664,7 @@
  *
  * Reads GET /api/storefront/blogs, the endpoint that already existed. It owns
  * the published scope, the ?category / ?tag / ?search filters and the per-post
- * "show author" rule, so none of that is restated here or in the controller.
+ * "show author" rule, so none of that is restated here.
  *
  * Filters come off the page's own query string, so /blogs?tag=x is a real,
  * shareable URL and the server needs to know nothing about it.
@@ -2791,8 +2790,8 @@
  * <custom-falak-blog-article> — one article and its sidebar.
  *
  * Two calls to the endpoint that already existed:
- *   GET /blogs/{slug}   the article. This is also what bumps view_count —
- *                       the controller does it, so nothing here has to.
+ *   GET /blogs/{slug}   the article. This is also what counts the view —
+ *                       the server does it, so nothing here has to.
  *   GET /blogs          the sidebar. Scoped to the article's own category
  *                       when it has one, and falling back to the newest of
  *                       anything when that returns too little: a sidebar that
@@ -2891,9 +2890,9 @@
             return '/storage/' + s.replace(/^[/]+/, '');
         }
 
-        /* featured_image_url runs the stored value through the disk's url()
-           unconditionally, which mangles a path that is already absolute into
-           ".../storage/https://…". Absolute wins over the accessor. */
+        /* featured_image_url comes back mangled as ".../storage/https://…"
+           when the stored path is already absolute, so an absolute stored
+           path wins. */
         image(row) {
             const stored = String(row.featured_image || '').trim();
             if (stored && /^(https?:)?[/][/]/i.test(stored)) return stored;
@@ -2918,8 +2917,8 @@
 
         /*
          * A category name is an {ar, en} pair, and the endpoint hands it over
-         * as the raw column — a JSON STRING, not an object, because the model
-         * has no cast for it. Printed as-is it reads {"ar": …, "en": …} on
+         * as a JSON STRING, not an object.
+         * Printed as-is it reads {"ar": …, "en": …} on
          * the page, so it is parsed here and the current language picked;
          * a plain string passes straight through.
          */
@@ -3061,8 +3060,8 @@
  * <custom-falak-blog-comments> — the article's comment thread and form.
  *
  * Reads GET /api/storefront/blogs/{slug}/comments, which is public, and posts
- * to POST /api/customer/blog-comments, which is not: that route sits behind
- * auth:sanctum + tenant.customer, so the author comes from the session and a
+ * to POST /api/customer/blog-comments, which is not: it needs a signed-in
+ * customer, so the author comes from the session and a
  * guest is offered the sign-in modal instead of a form that would fail on
  * submit — the same courtesy <falak-comments> extends for product reviews.
  *
