@@ -15,22 +15,75 @@
         {% endif %}
 
         <div class="product-single__layout">
-            <div class="product-single__gallery">
-                {% if product.images|length > 0 %}
+            {#
+                A PRINTING product (a photo balloon, a printed mug) is designed
+                before it is bought, and its variants are things that look
+                different. So its gallery lists each variant's picture after
+                the product's own photos, runs the thumbs down the side, puts
+                arrows and a "customised" tag on the picture, and the buy box
+                below swaps add / buy-now for one "Customize now" button.
+                `is_printing` without templates means the merchant has not
+                set one up yet — the product is then sold plainly.
+            #}
+            {% set is_printing = product.is_printing|default(false) %}
+            {% set is_designable = is_printing and product.print_templates|default([])|length > 0 %}
+            {% set variant_images = product.variant_images|default([]) %}
+            {% set own_images = product.images|default([]) %}
+            {% set gallery_count = own_images|length + variant_images|length %}
+            {% set first_image = own_images|length > 0 ? own_images|first : (variant_images|length > 0 ? (variant_images|first).url : '') %}
+
+            <div class="product-single__gallery{{ is_printing ? ' product-single__gallery--rail' : '' }}" data-gallery>
+                {% if first_image %}
                     <div class="gallery__main">
-                        <img src="{{ product.images|first }}" alt="{{ product.name }}"
+                        <img src="{{ first_image }}" alt="{{ product.name }}"
                              data-gallery-main
                              class="product-image--{{ theme.settings.get('product_image_fit', 'contain') }}">
+
+                        {% if is_designable %}
+                            <span class="gallery__custom">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>
+                                </svg>
+                                {{ trans('product.customized_badge') }}
+                            </span>
+                        {% endif %}
+
+                        {% if is_printing and gallery_count > 1 %}
+                            <button type="button" class="gallery__arrow gallery__arrow--prev" data-gallery-step="-1"
+                                    aria-label="{{ trans('product.gallery_prev') }}">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+                            </button>
+                            <button type="button" class="gallery__arrow gallery__arrow--next" data-gallery-step="1"
+                                    aria-label="{{ trans('product.gallery_next') }}">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                            </button>
+                        {% endif %}
                     </div>
 
-                    {% if product.images|length > 1 %}
+                    {% if gallery_count > 1 %}
                         <div class="gallery__thumbs">
-                            {% for image in product.images %}
+                            {% for image in own_images %}
                                 <button type="button"
                                         class="gallery__thumb{{ loop.first ? ' is-active' : '' }}"
                                         data-gallery-thumb="{{ image }}"
                                         aria-label="{{ product.name }} {{ loop.index }}">
                                     <img src="{{ image }}" alt="{{ product.name }}" loading="lazy">
+                                </button>
+                            {% endfor %}
+                            {# One thumb per variant picture. data-variant-* are
+                               the picker's own strings: app.js shows the picture
+                               when that value is picked, and picks the value
+                               when its thumb is clicked. #}
+                            {% for picture in variant_images %}
+                                <button type="button"
+                                        class="gallery__thumb{{ own_images|length == 0 and loop.first ? ' is-active' : '' }}"
+                                        data-gallery-thumb="{{ picture.url }}"
+                                        data-variant-key="{{ picture.key }}" data-variant-value="{{ picture.value }}"
+                                        aria-label="{{ picture.label }}" title="{{ picture.label }}">
+                                    <img src="{{ picture.url }}" alt="{{ picture.label }}" loading="lazy">
                                 </button>
                             {% endfor %}
                         </div>
@@ -148,6 +201,30 @@
                         value="1"
                         min="1"{% if product.available is defined and product.available is not null %} max="{{ product.available }}"{% endif %}></falak-quantity-input>
 
+                    {#
+                        "Add a name to this product" — a paid add-on the merchant
+                        switches on per product. The add / buy-now buttons pick the
+                        name up from this element; the server prices it.
+                    #}
+                    {% if product.personalization %}
+                    <falak-product-personalization class="product-personalization"
+                        product-id="{{ product.id }}"
+                        fee="{{ product.personalization.fee }}"
+                        max-length="{{ product.personalization.max_length }}"></falak-product-personalization>
+                    {% endif %}
+
+                    {% if is_designable %}
+                    {# One button: it opens the designer dialog at the foot
+                       of this template, which holds the real add / buy-now
+                       pair — so a design can never be skipped. #}
+                    <button type="button" class="btn btn--primary buy-box__design" data-designer-open>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>
+                        </svg>
+                        <span>{{ trans('product.design_now') }}</span>
+                    </button>
+                    {% else %}
                     {# SDK add button: reads the stepper above via
                        quantity-selector, adds for guest or customer, and
                        reports back itself. Sold out disables it. #}
@@ -171,6 +248,7 @@
                                      product-price="{{ product.price }}"
                                      mini-checkout
                                      source="product"></falak-quick-buy>
+                    {% endif %}
 
                     {# Save for later — the platform heart, works signed out too. #}
                     <falak-wishlist-button product-id="{{ product.id }}" button-class="btn btn--outline btn--wishlist f-card__wishlist"></falak-wishlist-button>
@@ -283,4 +361,43 @@
                 data-exclude-product="{{ product.id }}" data-max-cards="4"></falak-products-list>
         </section>
     </div>
+
+    {#
+        The designer dialog of a printing product. <falak-product-designer>
+        draws the shopper's photo and text on the product picture and on the
+        flat print area; the two buttons under it are the ordinary add and
+        buy-now controls, pointed at it through `designer-selector`, so the
+        design is checked, uploaded and attached to the line before the cart
+        hears about it. The stepper and the variant picker of the buy box
+        above drive quantity and variant; the dialog only adds the design.
+    #}
+    {% if is_designable %}
+        {# layout="studio": a large picture of the product to drag and resize
+           things on, with the item's tabs and controls in a panel beside it
+           (under it on a phone) and the two buy buttons at the panel's foot.
+           The designer is `display: contents` in this layout, so the grid
+           below is what places its stage, its panel and the actions. #}
+        <falak-modal data-product-designer-modal
+                     modal-title="{{ trans('product.design_modal_title') }}"
+                     width="xl" no-padding>
+            <div class="designer-dialog designer-dialog--studio">
+                <falak-product-designer data-product-designer
+                                        layout="studio"
+                                        product-id="{{ product.id }}"
+                                        templates="{{ product.print_templates|json_encode|escape('html_attr') }}"></falak-product-designer>
+
+                <div class="designer-dialog__actions">
+                    <falak-add-product-button class="designer-dialog__add"
+                        product-id="{{ product.id }}"
+                        product-status="{{ (product.in_stock is defined and not product.in_stock) ? 'out' : 'sale' }}"
+                        quantity-selector="falak-quantity-input"
+                        designer-selector="[data-product-designer]"
+                        button-class="btn btn--primary designer-dialog__add-btn"
+                        source="product">
+                        {{ trans('product.add_to_cart') }}
+                    </falak-add-product-button>
+                </div>
+            </div>
+        </falak-modal>
+    {% endif %}
 {% endblock %}

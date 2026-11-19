@@ -633,33 +633,54 @@
 
     /* --------------------------------------------- variant price display */
     // <falak-product-options> announces the chosen variant; the page shows
-    // its price where the product's price was.
+    // its price where the product's price was. The Buy-now button's
+    // `product-price` follows too: the mini-checkout dialog reads that
+    // attribute at click time and would otherwise head itself with the
+    // product's base price next to the variant's line total.
 
     if (window.falak) {
         window.falak.event.on('product::options.changed', function (payload) {
             var el = document.querySelector('[data-product-price]');
             if (!el || !payload) return;
+
+            // Only this page's product: a related product's quick-add dialog
+            // announces its own choice on the same bus.
+            var own = document.querySelector('.product-single__options');
+            if (own && String(own.getAttribute('product-id')) !== String(payload.productId)) return;
+
             if (!el.dataset.basePrice) el.dataset.basePrice = el.innerHTML;
+
+            var buyNow = Array.prototype.slice.call(
+                document.querySelectorAll('falak-quick-buy[product-price], falak-add-product-button[mini-checkout][product-price]')
+            ).filter(function (btn) { return String(btn.getAttribute('product-id')) === String(payload.productId); });
+            buyNow.forEach(function (btn) {
+                if (btn.dataset.basePrice === undefined) btn.dataset.basePrice = btn.getAttribute('product-price');
+            });
 
             if (payload.price === null || payload.price === undefined) {
                 el.innerHTML = el.dataset.basePrice;
+                buyNow.forEach(function (btn) { btn.setAttribute('product-price', btn.dataset.basePrice); });
                 return;
             }
 
-            var html = window.falak.money(payload.price);
+            var money = window.falak.money(payload.price);
+            var html = money;
             if (payload.comparePrice) html += ' <del>' + window.falak.money(payload.comparePrice) + '</del>';
             el.innerHTML = html;
+            buyNow.forEach(function (btn) { btn.setAttribute('product-price', money); });
         });
     }
 
     /* -------------------------------------------------- product gallery */
 
-    document.addEventListener('click', function (event) {
-        var thumb = event.target.closest('[data-gallery-thumb]');
-        if (!thumb) return;
+    // One big picture and a strip of thumbs; a thumb's picture is its
+    // data-gallery-thumb. A thumb that is a VARIANT's picture also carries
+    // data-variant-key / -value (the picker's own strings), and the two move
+    // together: clicking it picks that value, picking the value shows it.
 
+    function showGalleryThumb(thumb) {
         var main = document.querySelector('[data-gallery-main]');
-        if (!main) return;
+        if (!main || !thumb) return;
 
         main.src = thumb.getAttribute('data-gallery-thumb');
 
@@ -669,7 +690,103 @@
         document.querySelectorAll('[data-gallery-thumb]').forEach(function (el) {
             el.classList.toggle('is-active', el === thumb);
         });
+
+        // Inside the strip only: scrollIntoView would move the page too.
+        var strip = thumb.parentNode;
+        if (strip && strip.getBoundingClientRect) {
+            var box = strip.getBoundingClientRect();
+            var item = thumb.getBoundingClientRect();
+
+            if (item.top < box.top) strip.scrollTop -= box.top - item.top;
+            else if (item.bottom > box.bottom) strip.scrollTop += item.bottom - box.bottom;
+
+            if (item.left < box.left) strip.scrollLeft -= box.left - item.left;
+            else if (item.right > box.right) strip.scrollLeft += item.right - box.right;
+        }
+    }
+
+    document.addEventListener('click', function (event) {
+        // The arrows only browse, and wrap around.
+        var step = event.target.closest('[data-gallery-step]');
+        if (step) {
+            var thumbs = Array.prototype.slice.call(document.querySelectorAll('[data-gallery-thumb]'));
+            if (!thumbs.length) return;
+
+            var current = thumbs.findIndex(function (el) { return el.classList.contains('is-active'); });
+            var next = (Math.max(0, current) + Number(step.getAttribute('data-gallery-step')) + thumbs.length) % thumbs.length;
+
+            showGalleryThumb(thumbs[next]);
+            return;
+        }
+
+        var thumb = event.target.closest('[data-gallery-thumb]');
+        if (!thumb) return;
+
+        showGalleryThumb(thumb);
+
+        // A variant's thumb picks that value — only one the picker would
+        // let the shopper click; a sold-out one just shows its picture.
+        var key = thumb.getAttribute('data-variant-key');
+        if (key === null) return;
+
+        var value = thumb.getAttribute('data-variant-value');
+        var picker = document.querySelector('falak-product-options');
+        if (!picker || typeof picker.choose !== 'function') return;
+        if ((picker.selected || {})[key] === value) return;
+        if (typeof picker.status === 'function' && picker.status(key, value) !== 'available') return;
+
+        picker.choose(key, value);
     });
+
+    if (window.falak) {
+        window.falak.event.on('product::options.changed', function (payload) {
+            var selected = (payload && payload.selected) || {};
+            var thumbs = document.querySelectorAll('[data-gallery-thumb][data-variant-key]');
+
+            for (var i = 0; i < thumbs.length; i++) {
+                var key = thumbs[i].getAttribute('data-variant-key');
+
+                if (selected[key] !== undefined && selected[key] === thumbs[i].getAttribute('data-variant-value')) {
+                    showGalleryThumb(thumbs[i]);
+                    return;
+                }
+            }
+        });
+    }
+
+    /* --------------------------------------------- printing: designer dialog */
+    // A printing product's buy box carries one "Customize now" button
+    // ([data-designer-open]). It opens the <falak-modal> at the foot of the
+    // product page, which holds <falak-product-designer> and the real add and
+    // buy-now buttons. The options come first: they decide which picture the
+    // design is shown on and which fields it asks for, so the picker is asked
+    // to flag whatever is still missing before the dialog opens. Once the add
+    // succeeds the dialog closes, so the shopper sees the cart feedback.
+
+    document.addEventListener('click', function (event) {
+        if (!event.target.closest('[data-designer-open]')) return;
+
+        var modal = document.querySelector('[data-product-designer-modal]');
+        if (!modal) return;
+
+        event.preventDefault();
+
+        var picker = document.querySelector('falak-product-options');
+        if (picker && typeof picker.reportValidity === 'function' && !picker.reportValidity()) return;
+
+        if (typeof modal.open === 'function') modal.open();
+        else modal.setAttribute('visible', '');
+    });
+
+    document.addEventListener('success', function (event) {
+        if (!event.target.closest || !event.target.closest('.designer-dialog__add')) return;
+
+        var modal = document.querySelector('[data-product-designer-modal]');
+        if (!modal) return;
+
+        if (typeof modal.close === 'function') modal.close();
+        else modal.removeAttribute('visible');
+    }, true);
 
     /* -------------------------------------------- product description clamp */
     // The clamp height itself is CSS (--description-lines); this only measures
@@ -1352,6 +1469,12 @@
                 variations: variations,
                 options: options,
                 inStock: inStock,
+                /* "Add a name to this product" ({fee, maxLength} or null), read by the
+                   SDK so the theme and the platform agree on both product shapes. */
+                personalization: (window.customElements && customElements.get('falak-product-card')
+                    && customElements.get('falak-product-card').personalizationOffer)
+                    ? customElements.get('falak-product-card').personalizationOffer(p)
+                    : null,
                 /* The record never arrived — everything below the name would be
                    a guess, so the dialog says so and offers the page instead. */
                 partial: !raw,
@@ -1577,6 +1700,14 @@
                             + ' product-id="' + this.escape(p.id) + '"'
                             + ' product-status="' + (p.inStock ? 'sale' : 'out') + '"'
                             + (p.variations.length ? ' options-selector="[data-vv-options]"' : '')
+                            /* "Add a name": opens <falak-quick-add> with the name box. */
+                            + (p.personalization
+                                ? ' personalization-fee="' + this.escape(p.personalization.fee) + '"'
+                                    + ' personalization-max-length="' + this.escape(p.personalization.maxLength) + '"'
+                                    + ' product-name="' + this.escape(p.name) + '"'
+                                    + ' product-image="' + this.escape(p.image || '') + '"'
+                                    + ' product-price="' + this.escape(window.falak.money(p.price)) + '"'
+                                : '')
                             + ' source="video-view"'
                             + ' button-class="btn btn--primary vv__add-btn">'
                             + this.escape(t('product.add_to_cart'))
@@ -3419,6 +3550,20 @@
         if (proto._theme2026Search) return;
         proto._theme2026Search = true;
 
+        /* "Add a name to this product": the result's add button then opens
+           <falak-quick-add> with the name box instead of adding a nameless line.
+           The offer is read by the SDK card, which knows both product shapes. */
+        proto.personalizationAttrs = function (product, isService) {
+            const Card = customElements.get('falak-product-card');
+            const offer = !isService && product.product_type !== 'printing' && Card && Card.personalizationOffer
+                ? Card.personalizationOffer(product)
+                : null;
+
+            return offer
+                ? `personalization-fee="${this.escape(offer.fee)}" personalization-max-length="${this.escape(offer.maxLength)}"`
+                : '';
+        };
+
         /* ------------------------------------------- field: the clear × */
 
         proto.render = function () {
@@ -3493,6 +3638,10 @@
              * variants alone, never by its own product-level quantity.
              */
             const hasOptions = Array.isArray(product.variations) && product.variations.length > 0;
+            /* A service is booked through the wizard, never added. */
+            const isService = product.is_service !== undefined
+                ? !!product.is_service
+                : product.product_type === 'service';
             const inStock = product.in_stock !== undefined
                 ? !!product.in_stock
                 : (!!product.allow_backorders || (hasOptions
@@ -3517,7 +3666,8 @@
                     </a>
                     <falak-add-product-button product-id="${product.id}"
                                               product-status="${inStock ? 'sale' : 'out'}"
-                                              ${hasOptions ? 'has-options' : ''}
+                                              ${isService ? 'product-type="booking"' : (hasOptions ? 'has-options' : '')}
+                                              ${this.personalizationAttrs(product, isService)}
                                               product-name="${this.escape(name || '')}"
                                               product-image="${this.escape(image || '')}"
                                               product-price="${this.escape(this.money(price, product.currency))}"
@@ -3528,7 +3678,9 @@
                                               product-in-stock="${inStock ? 'true' : 'false'}"
                                               button-class="f-search__add-btn"
                                               source="search">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                        ${isService
+                            ? `<svg data-booking-label width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>`
+                            : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>`}
                     </falak-add-product-button>
                     <span class="f-search__chevron" aria-hidden="true">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>

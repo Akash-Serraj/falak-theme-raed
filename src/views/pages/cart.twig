@@ -104,6 +104,16 @@
                                         {% endfor %}
                                     </ul>
                                 {% endif %}
+                                {# A printing product's design: the typed lines, named the
+                                   way the designer labelled them. The picture of the line
+                                   is already the shopper's composited preview. #}
+                                {% if item.design is defined and item.design and item.design.fields|length > 0 %}
+                                    <ul class="f-line-design__fields cart-item__design">
+                                        {% for field in item.design.fields %}
+                                            <li><b>{{ field.label }}:</b> {{ field.value }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
                                 {# "340.00 ر.س / unit" — the line total sits in its own
                                    column to the side, so this one has to say that it is
                                    the price of ONE. #}
